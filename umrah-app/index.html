@@ -50,7 +50,7 @@ main{padding:16px}
 .note svg.i{width:17px;height:17px;margin-top:1px}
 
 /* hero */
-.hero{position:relative;border-radius:22px;overflow:hidden;background:var(--red);color:#fff;padding:20px 20px 18px}
+.hero{position:relative;border-radius:22px;overflow:hidden;background:var(--red) center/cover;color:#fff;padding:20px 20px 18px}
 .hero::before{content:"";position:absolute;inset:0;opacity:.13;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23fff' stroke-width='1.2'%3E%3Cpath d='M28 4l7 17 17 7-17 7-7 17-7-17-17-7 17-7z'/%3E%3Ccircle cx='28' cy='28' r='6'/%3E%3C/g%3E%3C/svg%3E");background-size:56px}
 .hero > *{position:relative}
 .hero .hi{font-size:14px;opacity:.9}
@@ -182,6 +182,31 @@ main{padding:16px}
 .offline{display:none;align-items:center;gap:8px;font-size:13px;background:#fff;border-radius:12px;padding:9px 12px;color:var(--muted)}
 .offline.on{display:flex}
 
+/* solat */
+.solcard{display:flex;gap:12px;align-items:center;background:#fff;border-radius:18px;padding:14px;box-shadow:0 1px 2px rgba(60,40,20,.05),0 4px 14px rgba(60,40,20,.05)}
+.solcard .ic{width:44px;height:44px;border-radius:14px;background:#0f3d3a;color:#f6d77a;display:grid;place-items:center;flex:none}
+.solcard span{display:block;font-size:12.5px;color:var(--muted)}
+.solcard b{display:block;font-size:17px;font-weight:700;margin:1px 0}
+.solcard b small,.li.sol small,.solhero small{font-size:.62em;font-weight:500;color:var(--muted)}
+.solcard .go{color:var(--red)}
+.solhero{border-radius:22px;padding:20px;color:#fff;text-align:center;background:linear-gradient(160deg,#0f3d3a,#16615a)}
+.solhero span{display:block;font-size:13px;opacity:.85}
+.solhero b{display:block;font-size:24px;font-weight:700;margin-top:4px}
+.solhero .tm{font-size:40px;font-weight:700;line-height:1.1;margin:2px 0 4px}
+.solhero small{color:#d6efe9}
+.li.sol{justify-content:space-between;padding:15px 18px}
+.li.sol b{font-size:16px}
+.li.sol .t{font-size:17px;font-weight:600;color:var(--ink)}
+.li.sol.next{background:var(--red-soft)}
+.li.sol.next b,.li.sol.next .t{color:var(--red)}
+.li.sol.dim b,.li.sol.dim .t{color:#a8a29e;font-weight:500}
+/* galeri */
+.gal{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gal figure{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:1;background:#ddd}
+.gal figure.w{grid-column:span 2;aspect-ratio:16/9}
+.gal img{width:100%;height:100%;object-fit:cover}
+.gal figcaption{position:absolute;left:0;right:0;bottom:0;padding:22px 12px 10px;font-size:12.5px;font-weight:500;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.65))}
+.place .ph.pic{height:170px}
 /* nav */
 nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;background:rgba(255,255,255,.97);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;padding:8px 6px calc(8px + env(safe-area-inset-bottom));z-index:30}
 nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:500;color:#9a938a;padding:4px 0}
@@ -241,7 +266,7 @@ const KURSUS = [
 ];
 const ZIARAH = {
   madinah:[
-    {h:'Hari 1',n:'Masjid Nabawi',ar:'المسجد النبوي',p:'Dibina oleh Rasulullah SAW bersama para sahabat selepas peristiwa hijrah. Di dalamnya terletak makam Rasulullah SAW, Saidina Abu Bakar dan Saidina Umar.',tip:'Solat jemaah di sini sepanjang berada di Madinah'},
+    {h:'Hari 1',img:'img/nabawi.jpg',n:'Masjid Nabawi',ar:'المسجد النبوي',p:'Dibina oleh Rasulullah SAW bersama para sahabat selepas peristiwa hijrah. Di dalamnya terletak makam Rasulullah SAW, Saidina Abu Bakar dan Saidina Umar.',tip:'Solat jemaah di sini sepanjang berada di Madinah'},
     {h:'Hari 2',n:'Raudhah',ar:'الروضة الشريفة',p:'Kawasan antara mimbar dan rumah Rasulullah SAW, yang disebut dalam hadis sebagai salah satu taman dari taman syurga.',tip:'Perlu permit melalui app Nusuk, mutawwif bantu uruskan'},
     {h:'Hari 3',n:'Masjid Quba',ar:'مسجد قباء',p:'Masjid pertama yang dibina dalam Islam, ketika Rasulullah SAW tiba di Madinah semasa hijrah. Solat 2 rakaat di sini besar ganjarannya.',tip:'Ambil wuduk di hotel sebelum bertolak'},
     {h:'Hari 3',n:'Jabal Uhud',ar:'جبل أحد',p:'Lokasi Perang Uhud pada tahun ketiga Hijrah. Di kakinya terletak makam Saidina Hamzah dan para syuhada Uhud.',tip:'Kawasan terbuka, bawa air dan payung'},
@@ -249,7 +274,7 @@ const ZIARAH = {
     {h:'Hari 4',n:'Perkuburan Baqi',ar:'بقيع الغرقد',p:'Tanah perkuburan utama Madinah, tempat bersemadi ramai sahabat dan ahli keluarga Rasulullah SAW.',tip:'Lelaki sahaja dibenarkan masuk pada waktu tertentu'}
   ],
   makkah:[
-    {h:'Hari 6',n:'Masjidil Haram',ar:'المسجد الحرام',p:'Masjid paling mulia, tempat letaknya Kaabah, kiblat umat Islam. Tawaf dan saie umrah dilakukan di sini.',tip:'Ingat nombor pintu masuk anda untuk balik ke hotel'},
+    {h:'Hari 6',img:'img/kaabah.jpg',n:'Masjidil Haram',ar:'المسجد الحرام',p:'Masjid paling mulia, tempat letaknya Kaabah, kiblat umat Islam. Tawaf dan saie umrah dilakukan di sini.',tip:'Ingat nombor pintu masuk anda untuk balik ke hotel'},
     {h:'Hari 8',n:'Jabal Nur dan Gua Hira',ar:'جبل النور وغار حراء',p:'Gua tempat Rasulullah SAW beruzlah dan menerima wahyu pertama, iaitu ayat awal surah Al Alaq.',tip:'Dilihat dari kaki bukit dalam ziarah luar'},
     {h:'Hari 8',n:'Jabal Thur',ar:'جبل ثور',p:'Bukit tempat Rasulullah SAW dan Saidina Abu Bakar bersembunyi selama 3 hari ketika hijrah ke Madinah.',tip:'Dilihat dari bas'},
     {h:'Hari 8',n:'Arafah dan Jabal Rahmah',ar:'عرفة وجبل الرحمة',p:'Padang tempat wukuf pada musim haji, rukun haji yang paling utama.',tip:'Kawasan panas, jaga minum air'},
@@ -278,6 +303,13 @@ const VIDEOS = [
   {id:'rI2-3icfL-c', title:'Video Juara Travel'},
   {id:'G6hw9K2DZ74', title:'Video Juara Travel'}
 ];
+const GALERI = [
+  {f:'makkah-kumpulan', c:'Jemaah Juara di Masjidil Haram', w:1},
+  {f:'nabawi-kumpulan', c:'Pagi di Masjid Nabawi'},
+  {f:'doa', c:'Saat paling dekat dengan-Nya'},
+  {f:'madinah-bas', c:'Lawatan malam kota Madinah', w:1},
+  {f:'petugas', c:'Petugas Juara layan jemaah'}
+];
 const PEMBIMBING = [
   {n:'Ustaz Haji Mohd Nasib bin Zawawi', img:'https://haji.juaratravel.com.my/img/pakej/pembimbing-nasib.jpg'},
   {n:'Ustaz Hj. Mohammad Hasnil bin Abu Bakar', img:'https://haji.juaratravel.com.my/img/pakej/pembimbing-hasnil.jpg'}
@@ -286,7 +318,7 @@ const store = {
   get(k, d){ try{ const v = localStorage.getItem('jj_'+k); return v==null ? d : JSON.parse(v); }catch(e){ return d; } },
   set(k, v){ try{ localStorage.setItem('jj_'+k, JSON.stringify(v)); }catch(e){} }
 };
-const S = { done: store.get('done', ['rukun']), docs: store.get('docs', [0,1,2,3,4]), remind: store.get('remind', true), loc: store.get('loc','madinah'), zloc: store.get('zloc','madinah') };
+const S = { done: store.get('done', ['rukun']), docs: store.get('docs', [0,1,2,3,4]), remind: store.get('remind', true), loc: store.get('loc','madinah'), zloc: store.get('zloc','madinah'), sol: store.get('sol', {on:false, loc:null}) };
 const P = {
   home:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
   book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/><path d="M9 7h6"/>',
@@ -307,7 +339,7 @@ const P = {
   scissors:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.5 7.5L20 18M8.5 16.5L20 6"/>',
   bank:'<path d="M3 10l9-6 9 6"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3 20h18"/>',
   wifi:'<path d="M2 8.5a15 15 0 0 1 20 0"/><path d="M5 12a10 10 0 0 1 14 0"/><path d="M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 19h.01"/>',
-  play:'<path d="M7 4l13 8-13 8z"/>', ext:'<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'
+  play:'<path d="M7 4l13 8-13 8z"/>', moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>', ext:'<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'
 };
 const ic = (k, cls='') => `<svg class="i ${cls}" viewBox="0 0 24 24">${P[k]||''}</svg>`;
 const $ = id => document.getElementById(id);
@@ -345,17 +377,20 @@ function vUtama(){
   const kp = Math.round(S.done.length / KURSUS.length * 100);
   return bar() + `
   <main>
-    <div class="hero">
+    <div class="hero" style="background-image:linear-gradient(160deg,rgba(200,21,27,.93) 35%,rgba(120,8,12,.72)),url(img/makkah-kumpulan.jpg)">
       <div class="hi">Assalamualaikum,</div>
       <div class="nm">${esc(J.nama)}</div>
       <div class="cd"><div class="big">${Math.max(d,0)}</div><span>hari lagi ke Tanah Suci</span></div>
       <div class="meta"><div>${esc(J.pakej)}</div><div>Berlepas ${tarikh(J.berlepas)}</div></div>
     </div>
     <div class="stack" style="margin-top:14px">
+      ${solatCard()}
       ${baki>0?`<a class="alert" href="#bayaran"><div class="ic">${ic('bell')}</div><div><b>Baki ${RM(baki)}</b><span>Jelaskan sebelum ${tarikh(J.akhir)}${dl>0?' ('+dl+' hari lagi)':''}</span></div>${ic('chev','go')}</a>`:''}
     </div>
     <div class="h2">Tonton: Podcast Juara <small>${VIDEOS.length} video</small></div>
     <div class="vrow">${VIDEOS.map(vcard).join('')}</div>
+    <div class="h2">Bersama Juara</div>
+    <div class="gal">${GALERI.map(g=>`<figure class="${g.w?'w':''}"><img loading="lazy" src="img/${g.f}.jpg" alt="${esc(g.c)}"><figcaption>${esc(g.c)}</figcaption></figure>`).join('')}</div>
     <div class="h2">Persediaan anda</div>
     <div class="grid">
       <a class="tile" href="#kursus"><div class="ic" style="background:var(--green-soft);color:var(--green)">${ic('book')}</div><div><b>Kursus umrah</b><span>${S.done.length} daripada ${KURSUS.length} topik siap</span></div><div class="bar2"><i style="width:${kp}%"></i></div></a>
@@ -413,10 +448,10 @@ function vZiarah(){
     <div class="muted small" style="margin:4px 0 14px">Sejarah ringkas ikut jadual kumpulan</div>
     <div class="seg"><button data-z="madinah" class="${loc==='madinah'?'on':''}">Madinah</button><button data-z="makkah" class="${loc==='makkah'?'on':''}">Makkah</button></div>
     <div class="stack">${list.map((z,n)=>`<div class="card place">
-      <div class="ph" style="background:${n%2?c[1]:c[0]}"><span class="day">${z.h}</span><div class="ar">${z.ar}</div></div>
+      <div class="ph ${z.img?'pic':''}" style="background:${z.img?`linear-gradient(180deg,rgba(0,0,0,.05) 30%,rgba(0,0,0,.72)),url(${z.img}) center/cover`:(n%2?c[1]:c[0])}"><span class="day">${z.h}</span><div class="ar">${z.ar}</div></div>
       <div class="bd"><b>${z.n}</b><p>${z.p}</p><div class="tip">${ic('alert')}${z.tip}</div></div>
     </div>`).join('')}</div>
-    <div class="note" style="margin-top:14px">${ic('alert')}<div>Gambar sebenar setiap tempat akan dimasukkan bila Juara sediakan. Fakta akan disemak pembimbing Juara.</div></div>
+    <div class="note" style="margin-top:14px">${ic('alert')}<div>Fakta akan disemak pembimbing Juara.</div></div>
   </main>`;
 }
 function vBayaran(){
@@ -480,17 +515,159 @@ function showDriver(){
   $('show').classList.add('on');
 }
 
+/* ===== Waktu solat ===== */
+const SOL_NAMES = [['subuh','Subuh'],['syuruk','Syuruk'],['zohor','Zohor'],['asar','Asar'],['maghrib','Maghrib'],['isyak','Isyak']];
+const PRESET = {
+  kl:{n:'Kuala Lumpur', lat:3.139, lng:101.687},
+  madinah:{n:'Madinah', lat:24.4672, lng:39.6112},
+  makkah:{n:'Makkah', lat:21.4225, lng:39.8262}
+};
+const D2R = Math.PI/180, R2D = 180/Math.PI;
+const sinD=d=>Math.sin(d*D2R), cosD=d=>Math.cos(d*D2R), tanD=d=>Math.tan(d*D2R);
+const fix=(a,b)=>{ a = a - b*Math.floor(a/b); return a<0?a+b:a; };
+function inSaudi(lat,lng){ return lat>16 && lat<32.5 && lng>34 && lng<56; }
+function locTz(loc){ if(inSaudi(loc.lat,loc.lng)) return 3; if(loc.lat>0.5 && loc.lat<7.5 && loc.lng>99 && loc.lng<119.5) return 8; return -new Date().getTimezoneOffset()/60; }
+function sun(jd){
+  const D = jd - 2451545.0, g = fix(357.529 + 0.98560028*D,360), q = fix(280.459 + 0.98564736*D,360);
+  const L = fix(q + 1.915*sinD(g) + 0.020*sinD(2*g),360), e = 23.439 - 0.00000036*D;
+  const RA = Math.atan2(cosD(e)*sinD(L), cosD(L))*R2D/15;
+  return { decl: Math.asin(sinD(e)*sinD(L))*R2D, eqt: q/15 - fix(RA,24) };
+}
+/* Pulangkan objek Date (masa sebenar) untuk tarikh tempatan y-m-d di lokasi */
+function prayerTimes(loc, y, m, d){
+  const saudi = inSaudi(loc.lat, loc.lng);
+  const jd = Date.UTC(y, m, d, 12)/86400000 + 2440587.5 - loc.lng/360;
+  const s = sun(jd), lat = loc.lat;
+  const noon = 12 - loc.lng/15 - s.eqt;
+  const T = ang => Math.acos((-sinD(ang) - sinD(s.decl)*sinD(lat)) / (cosD(s.decl)*cosD(lat)))*R2D/15;
+  const asrAng = -Math.atan(1/(1 + tanD(Math.abs(lat - s.decl))))*R2D;
+  const fajrA = saudi ? 18.5 : 20, rise = 0.833;
+  const h = {
+    subuh: noon - T(fajrA), syuruk: noon - T(rise), zohor: noon + (saudi?0:2/60),
+    asar: noon + T(asrAng), maghrib: noon + T(rise)
+  };
+  h.isyak = saudi ? h.maghrib + 1.5 : noon + T(18);
+  if(!saudi){ h.subuh += 2/60; h.asar += 2/60; h.maghrib += 2/60; h.isyak += 2/60; h.syuruk -= 2/60; }
+  const base = Date.UTC(y, m, d);
+  const out = {};
+  for(const [k] of SOL_NAMES){ out[k] = new Date(base + Math.round(h[k]*60)*60000); }
+  return out;
+}
+function locDay(loc, offsetDays=0){
+  const tz = locTz(loc), t = new Date(Date.now() + tz*3600000 + offsetDays*86400000);
+  return [t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()];
+}
+function fmtTime(dt, loc){
+  const t = new Date(dt.getTime() + locTz(loc)*3600000);
+  let hh = t.getUTCHours(), mm = String(t.getUTCMinutes()).padStart(2,'0');
+  const ap = hh<12 ? 'pagi' : (hh<14 ? 'tengah hari' : (hh<19 ? 'petang' : 'malam'));
+  const h12 = hh%12 || 12;
+  return `${h12}:${mm} <small>${ap}</small>`;
+}
+function curLoc(){ return S.sol.loc || PRESET.kl; }
+function nextPrayer(loc){
+  const now = Date.now();
+  for(const off of [0,1]){
+    const t = prayerTimes(loc, ...locDay(loc, off));
+    for(const [k,n] of SOL_NAMES){ if(k==='syuruk') continue; if(t[k].getTime() > now) return {k, n, at:t[k]}; }
+  }
+  return null;
+}
+function lagi(ms){ const m = Math.max(0, Math.round(ms/60000)), h = Math.floor(m/60); return h ? `${h} jam ${m%60} minit` : `${m} minit`; }
+function useMyLocation(){
+  if(!navigator.geolocation){ toast('Phone ini tidak benarkan lokasi'); return; }
+  toast('Mencari lokasi anda...');
+  navigator.geolocation.getCurrentPosition(p=>{
+    const lat=p.coords.latitude, lng=p.coords.longitude;
+    let n = 'Lokasi anda';
+    for(const k in PRESET){ const q=PRESET[k]; if(Math.abs(q.lat-lat)<0.4 && Math.abs(q.lng-lng)<0.4) n = q.n; }
+    S.sol.loc = {n, lat:+lat.toFixed(4), lng:+lng.toFixed(4), gps:true}; store.set('sol', S.sol);
+    toast('Waktu solat ikut lokasi anda'); render(); schedulePrayers();
+  }, ()=>toast('Lokasi tidak dibenarkan. Pilih bandar di bawah.'), {enableHighAccuracy:false, timeout:12000, maximumAge:600000});
+}
+let solTimers = [];
+function schedulePrayers(){
+  solTimers.forEach(clearTimeout); solTimers = [];
+  if(!S.sol.on) return;
+  const loc = curLoc(), now = Date.now();
+  for(const off of [0,1]){
+    const t = prayerTimes(loc, ...locDay(loc, off));
+    for(const [k,n] of SOL_NAMES){
+      if(k==='syuruk') continue;
+      const ms = t[k].getTime() - now;
+      if(ms > 0 && ms < 36*3600000) solTimers.push(setTimeout(()=>firePrayer(n, loc), ms));
+    }
+  }
+}
+function firePrayer(n, loc){
+  const title = `Masuk waktu ${n}`, body = `${loc.n}. Jom bersiap untuk solat.`;
+  toast(title); try{ navigator.vibrate && navigator.vibrate([300,150,300]); }catch(e){}
+  if('Notification' in window && Notification.permission==='granted'){
+    (navigator.serviceWorker ? navigator.serviceWorker.ready : Promise.reject()).then(r=>r.showNotification(title,{body, icon:'icon-192.png', badge:'icon-192.png', tag:'solat'}))
+      .catch(()=>{ try{ new Notification(title,{body, icon:'icon-192.png'}); }catch(e){} });
+  }
+  if(location.hash.slice(1).split('/')[0] in {'':1,utama:1,solat:1}) render();
+  schedulePrayers();
+}
+function toggleSolat(){
+  if(!S.sol.on && 'Notification' in window && Notification.permission==='default'){
+    Notification.requestPermission().then(p=>{ S.sol.on = true; store.set('sol',S.sol); schedulePrayers(); render(); toast(p==='granted'?'Peringatan waktu solat dihidupkan':'Peringatan dalam apps sahaja (notifikasi tidak dibenarkan)'); });
+    return;
+  }
+  S.sol.on = !S.sol.on; store.set('sol',S.sol); schedulePrayers(); render(); toast(S.sol.on?'Peringatan waktu solat dihidupkan':'Peringatan dimatikan');
+}
+function downloadIcs(){
+  const loc = curLoc(), pad = n=>String(n).padStart(2,'0');
+  const u = d => `${d.getUTCFullYear()}${pad(d.getUTCMonth()+1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+  const L = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Juara Travel//Jemaah Juara//MS','CALSCALE:GREGORIAN','X-WR-CALNAME:Waktu Solat (Jemaah Juara)'];
+  for(let off=0; off<7; off++){
+    const t = prayerTimes(loc, ...locDay(loc, off));
+    for(const [k,n] of SOL_NAMES){
+      if(k==='syuruk') continue;
+      L.push('BEGIN:VEVENT',`UID:${k}-${u(t[k])}@jemaah-juara`,`DTSTAMP:${u(new Date())}`,`DTSTART:${u(t[k])}`,'DURATION:PT15M',`SUMMARY:Waktu ${n}`,`LOCATION:${loc.n}`,'BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:Masuk waktu ${n}`,'TRIGGER:PT0M','END:VALARM','END:VEVENT');
+    }
+  }
+  L.push('END:VCALENDAR');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([L.join('\r\n')], {type:'text/calendar'}));
+  a.download = 'waktu-solat-juara.ics'; document.body.appendChild(a); a.click(); a.remove();
+  toast('Buka fail itu untuk masukkan ke kalendar phone');
+}
+function solatCard(){
+  const loc = curLoc(), np = nextPrayer(loc);
+  if(!np) return '';
+  return `<a class="solcard" href="#solat"><div class="ic">${ic('moon')}</div><div style="flex:1;min-width:0"><span>Solat seterusnya · ${esc(loc.n)}</span><b>${np.n} ${fmtTime(np.at, loc)}</b><span>dalam ${lagi(np.at - Date.now())}</span></div>${ic('chev','go')}</a>`;
+}
+function vSolat(){
+  const loc = curLoc(), t = prayerTimes(loc, ...locDay(loc)), np = nextPrayer(loc), saudi = inSaudi(loc.lat, loc.lng);
+  const notif = !('Notification' in window) ? 'tiada' : Notification.permission;
+  return bar() + `
+  <main class="stack">
+    <div><div class="h1">Waktu solat</div><div class="muted small" style="margin-top:4px">${esc(loc.n)}${loc.gps?' (ikut lokasi phone)':''}</div></div>
+    ${np?`<div class="solhero"><span>Solat seterusnya</span><b>${np.n}</b><div class="tm">${fmtTime(np.at, loc)}</div><span>dalam ${lagi(np.at - Date.now())}</span></div>`:''}
+    <div class="list">${SOL_NAMES.map(([k,n])=>`<div class="li sol ${np&&np.k===k&&np.at.getTime()===t[k].getTime()?'next':''} ${k==='syuruk'?'dim':''}"><b>${n}</b><span class="t">${fmtTime(t[k], loc)}</span></div>`).join('')}</div>
+    <div class="card"><button class="toggle" data-act="soltoggle"><div style="flex:1"><b style="font-size:15px;font-weight:600">Peringatan masuk waktu</b><div class="small muted">${notif==='denied'?'Notifikasi disekat dalam tetapan phone. Peringatan keluar dalam apps sahaja.':'Bunyi getar dan notifikasi bila masuk waktu'}</div></div><div class="sw ${S.sol.on?'on':''}"></div></button></div>
+    <div class="btns">
+      <button class="btn" data-act="gps">${ic('nav')}Guna lokasi phone saya</button>
+      <button class="btn sec" data-act="ics">${ic('bell')}Simpan ke kalendar phone</button>
+    </div>
+    <div class="seg" style="margin-bottom:0">${Object.entries(PRESET).map(([k,p])=>`<button data-sl="${k}" class="${!loc.gps && loc.n===p.n?'on':''}">${k==='kl'?'KL':p.n}</button>`).join('')}</div>
+    <div class="note">${ic('alert')}<div>Kiraan ${saudi?'kaedah Ummul Qura (Arab Saudi)':'kaedah JAKIM'} dan boleh berbeza 1 hingga 2 minit. Ikut azan masjid berdekatan. Peringatan berbunyi bila apps dibuka atau masih berjalan. Untuk peringatan walaupun apps ditutup, tekan "Simpan ke kalendar phone" (7 hari ke depan).</div></div>
+  </main>`;
+}
+
 /* ===== Router ===== */
-const NAV = [['utama','home','Utama'],['kursus','book','Kursus'],['ziarah','map','Ziarah'],['bayaran','wallet','Bayaran'],['visa','doc','Visa']];
+const NAV = [['utama','home','Utama'],['solat','moon','Solat'],['kursus','book','Kursus'],['ziarah','map','Ziarah'],['bayaran','wallet','Bayaran']];
 function render(){
   const [r, sub] = (location.hash.slice(1) || 'utama').split('/');
-  $('view').innerHTML = r==='kursus' && sub ? vLesson(sub) : ({utama:vUtama,kursus:vKursus,ziarah:vZiarah,bayaran:vBayaran,visa:vVisa,sesat:vSesat}[r] || vUtama)();
+  $('view').innerHTML = r==='kursus' && sub ? vLesson(sub) : ({utama:vUtama,kursus:vKursus,ziarah:vZiarah,bayaran:vBayaran,visa:vVisa,sesat:vSesat,solat:vSolat}[r] || vUtama)();
   $('nav').innerHTML = NAV.map(([k,i,l])=>`<a href="#${k}" class="${r===k?'on':''}">${ic(i)}${l}</a>`).join('');
   window.scrollTo(0,0); loadTitles();
 }
 document.addEventListener('click', e=>{
   const v = e.target.closest('[data-vid]'); if(v){ openVideo(v.dataset.vid); return; }
-  const a = e.target.closest('[data-act],[data-z],[data-l],[data-doc]'); if(!a) return;
+  const a = e.target.closest('[data-act],[data-z],[data-l],[data-doc],[data-sl]'); if(!a) return;
+  if(a.dataset.sl){ S.sol.loc = PRESET[a.dataset.sl]; store.set('sol',S.sol); render(); schedulePrayers(); return; }
   if(a.dataset.z){ S.zloc=a.dataset.z; store.set('zloc',S.zloc); render(); return; }
   if(a.dataset.l){ S.loc=a.dataset.l; store.set('loc',S.loc); render(); return; }
   if(a.dataset.doc!=null){ const i=+a.dataset.doc; S.docs = S.docs.includes(i) ? S.docs.filter(x=>x!==i) : S.docs.concat(i); store.set('docs',S.docs); render(); return; }
@@ -498,6 +675,9 @@ document.addEventListener('click', e=>{
   if(act==='done'){ const id=a.dataset.id; S.done = S.done.includes(id) ? S.done.filter(x=>x!==id) : S.done.concat(id); store.set('done',S.done); render(); if(S.done.includes(id)) toast('Alhamdulillah, topik ditanda siap'); }
   else if(act==='remind'){ S.remind=!S.remind; store.set('remind',S.remind); render(); toast(S.remind?'Peringatan dihidupkan':'Peringatan dimatikan'); }
   else if(act==='copy'){ (navigator.clipboard ? navigator.clipboard.writeText(J.bank.akaun.replace(/\s/g,'')) : Promise.reject()).then(()=>toast('No akaun disalin'), ()=>toast('No akaun: '+J.bank.akaun)); }
+  else if(act==='soltoggle'){ toggleSolat(); }
+  else if(act==='gps'){ useMyLocation(); }
+  else if(act==='ics'){ downloadIcs(); }
   else if(act==='wa'){ toast('Demo: akan buka WhatsApp '+J.agent); }
   else if(act==='show'){ showDriver(); }
   else if(act==='close'){ $('show').classList.remove('on'); }
@@ -505,7 +685,9 @@ document.addEventListener('click', e=>{
 });
 window.addEventListener('hashchange', render);
 window.addEventListener('online', render); window.addEventListener('offline', render);
-render();
+render(); schedulePrayers();
+setInterval(()=>{ const r=location.hash.slice(1)||'utama'; if(r==='utama'||r==='solat'){ const y=scrollY; render(); scrollTo(0,y); } }, 60000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) schedulePrayers(); });
 setTimeout(()=>$('splash').classList.add('off'), 1100);
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 </script>
