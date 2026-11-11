@@ -10,7 +10,7 @@ const jst = {
 };
 const DRAFT0 = () => ({step:1, pakej:null, tarikh:null, bil:1, nama:'', tel:'', emel:'', negeri:'', adaAgent:false, agent:'', kaedah:'deposit'});
 const JS = {
-  negeri:'Semua', cari:'', jenis:'semua', err:{},
+  negeri:'Semua', cari:'', jenis:'semua', err:{}, kn:'Semua', kcari:'', prev:'',
   geo: jst.get('geo', null),
   draft: Object.assign(DRAFT0(), jst.get('draft', {})),
   tempahan: jst.get('tempahan', []),
@@ -65,6 +65,7 @@ function jSalin(text, ok){ (navigator.clipboard ? navigator.clipboard.writeText(
 function vJuara(parts){
   const sub = parts[1] || 'lokasi', id = parts[2];
   if(sub==='lokasi') return id ? jLokasiDetail(id) : jLokasi();
+  if(sub==='kursus') return jKursus();
   if(sub==='pakej') return id ? jPakejDetail(id) : jPakej();
   if(sub==='beli') return jBeli(id);
   if(sub==='berjaya') return jBerjaya(id);
@@ -131,25 +132,17 @@ function jLokasi(){
   }
   return jHead('lokasi') + `
     ${near}
+    <div style="margin-top:12px">${jKursusKad()}</div>
     <div class="h2">Semua cawangan <small>${LOKASI.length} lokasi</small></div>
     <label class="search">${jic('search')}<input type="search" placeholder="Cari nama tempat atau bandar" data-jin="cari" value="${esc(JS.cari)}" aria-label="Cari cawangan"></label>
     <div class="chips">${NEGERI_TAPIS.map(n=>`<button class="chip ${JS.negeri===n?'on':''}" data-j="negeri" data-v="${n}">${n}</button>`).join('')}</div>
     <div id="jlist">${jLokList()}</div>
   </main>`;
 }
-function jJadualKursus(l){
-  const hari = l.jenis==='Pejabat' ? [6] : (['Kedah','Terengganu'].includes(l.negeri) ? [5,6] : [6,0]);
-  const jenis = l.jenis==='Pejabat'
-    ? [['Taklimat pakej umrah dan sesi soal jawab','10:00 pagi hingga 12:00 tengah hari']]
-    : [['Kursus umrah asas','9:00 pagi hingga 1:00 tengah hari'],['Kursus amali tawaf dan saie','9:00 pagi hingga 4:00 petang']];
-  const out = [], d = new Date(); d.setHours(0,0,0,0);
-  while(out.length < 3){ d.setDate(d.getDate()+1); if(hari.includes(d.getDay())){ const k = jenis[out.length % jenis.length]; out.push({t:k[0], w:k[1], d:new Date(d)}); } }
-  return out;
-}
 function jLokasiDetail(id){
   const l = LOKASI.find(x=>x.id===id); if(!l) return jLokasi();
   const km = JS.geo ? fmtKm(jarak(JS.geo, l)) : '';
-  const kursus = jJadualKursus(l);
+  const kursus = KJ_ADA().slice().sort((a,b)=>jarak(l,a)-jarak(l,b)).slice(0,3).sort((a,b)=>(a.t+a.m).localeCompare(b.t+b.m));
   return bar('juara/lokasi', 'Lokasi') + `
   <main class="stack">
     <div><div class="jtags">${jenisPill(l)}${CT}</div><div class="h1" style="margin-top:8px">${esc(l.nama)}</div>${km?`<div class="muted small" style="margin-top:2px">${km}</div>`:''}</div>
@@ -162,12 +155,77 @@ function jLokasiDetail(id){
       <a class="btn sec" href="${jWaLokasi(l)}" ${ext}>${ic('chat')}WhatsApp</a>
       <div class="jbtn2"><a class="btn sec" href="${mapLink(l)}" ${ext}>${ic('map')}Buka peta</a><a class="btn sec" href="${wazeLink(l)}" ${ext}>${jic('car')}Waze</a></div>
     </div>
-    <div><div class="h2" style="margin-top:8px">Kursus akan datang ${CT}</div>
-      <div class="list">${kursus.map(k=>{
-        const msg = `Assalamualaikum Juara Travel. Saya nak daftar ${k.t} di ${l.nama} pada ${HARI[k.d.getDay()]}, ${k.d.getDate()} ${BULAN[k.d.getMonth()]} ${k.d.getFullYear()}.`;
-        return `<a class="li" href="${waLink(JT.waJuara, msg)}" ${ext}><div class="day">${HARI[k.d.getDay()].slice(0,3)}<br>${k.d.getDate()} ${BULAN[k.d.getMonth()]}</div><div><b style="font-size:14px">${k.t}</b><span>${k.w}</span></div><span class="pill p-red" style="margin-left:auto">Daftar</span></a>`;
-      }).join('')}</div></div>
-    <div class="note">${ic('alert')}<div>Alamat, nombor dan jadual ialah contoh. Juara akan kemas kini maklumat sebenar.</div></div>
+    <div><div class="h2" style="margin-top:8px">Kursus berdekatan <small><a href="#juara/kursus">Lihat semua</a></small></div>
+      ${kursus.length ? `<div class="list">${kursus.map(k=>{ const d = new Date(k.t+'T00:00:00');
+        return `<a class="li" href="${kWa(k)}" ${ext}><div class="day">${HARI[d.getDay()]}<br>${d.getDate()} ${BULAN[d.getMonth()]}</div><div style="min-width:0"><b style="font-size:14px">${esc(k.l)}</b><span>${jMasa(k.m)} · ${esc(k.k)}</span></div></a>`; }).join('')}</div>` : `<div class="card small muted">Tiada kursus dijadualkan buat masa ini.</div>`}</div>
+    <div class="note">${ic('alert')}<div>Alamat dan nombor pejabat ialah contoh. Jadual kursus diambil dari laman Juara Travel.</div></div>
+  </main>`;
+}
+
+/* ===== Kursus umrah dan haji (data sebenar dari laman Juara, kursus-data.js) ===== */
+const NEGERI_MY = ['Johor','Kedah','Kelantan','Melaka','Negeri Sembilan','Pahang','Perak','Perlis','Pulau Pinang','Sabah','Sarawak','Selangor','Terengganu','Kuala Lumpur','Labuan','Putrajaya'];
+const KJ_ADA = () => KJ.filter(k => k.t >= hariIni());
+function jMasa(m){ const [h, mi] = m.split(':').map(Number); const ap = h<12 ? 'pagi' : (h<14 ? 'tengah hari' : (h<19 ? 'petang' : 'malam')); return `${h%12||12}:${pad2(mi)} ${ap}`; }
+function jHariPenuh(t){ const d = new Date(t+'T00:00:00'); return `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`; }
+const fmtTel = n => n.replace(/^(01\d)(\d{3,4})(\d{4})$/, '$1-$2 $3').replace(/^(0[2-9])(\d{3,4})(\d{4})$/, '$1-$2 $3');
+const kMap = k => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(k.l)}`;
+const kWaze = k => `https://waze.com/ul?q=${encodeURIComponent(k.l)}&navigate=yes`;
+const kWa = k => waLink(k.tel[0] ? '6'+k.tel[0] : JT.waJuara, `Assalamualaikum. Saya nak daftar kursus umrah Juara pada ${jHariPenuh(k.t)}, ${jMasa(k.m)} di ${k.l}. Boleh saya dapatkan maklumat lanjut?`);
+function jKursusKad(){
+  const all = KJ_ADA(), n = new Set(all.map(k=>k.n)).size;
+  return `<a class="alert" href="#juara/kursus"><div class="ic">${ic('pin')}</div><div><b>Cari kursus umrah berdekatan</b><span>${all.length ? `${all.length} kursus akan datang di ${n} negeri` : 'Lihat jadual kursus Juara'}</span></div>${ic('chev','go')}</a>`;
+}
+function jKCard(k){
+  const km = JS.geo ? jarak(JS.geo, k) : null;
+  return `<div class="card jloc"><div class="jloc-hd">
+      <div class="jtags"><span class="pill p-red">${ic('clock')}${jMasa(k.m)}</span><span class="pill p-grey">${esc(k.n)}</span></div>
+      <b>${esc(k.l)}</b>
+      <div class="jmeta"><span>${jic('users')}${esc(k.p)}</span>${km!=null ? `<span>${ic('pin')}Lebih kurang ${fmtKm(km)}</span>` : ''}</div>
+      ${k.tel.length ? `<div class="jmeta"><span>${ic('phone')}${k.tel.map(t=>`<a href="tel:${t}" style="text-decoration:underline">${fmtTel(t)}</a>`).join(', ')}</span></div>` : ''}
+    </div>
+    <div class="acts">
+      ${k.tel[0] ? `<a class="act" href="tel:${k.tel[0]}">${ic('phone')}Telefon</a>` : ''}
+      <a class="act" href="${kWa(k)}" ${ext}>${ic('chat')}WhatsApp</a>
+      <a class="act" href="${kMap(k)}" ${ext}>${ic('map')}Peta</a>
+      <a class="act" href="${kWaze(k)}" ${ext}>${jic('car')}Waze</a>
+    </div></div>`;
+}
+function jKList(){
+  const q = JS.kcari.trim().toLowerCase();
+  let list = KJ_ADA().filter(k => (JS.kn==='Semua' || k.n===JS.kn) && (!q || (k.l+' '+k.k+' '+k.p+' '+k.n).toLowerCase().includes(q)));
+  if(!list.length) return `<div class="card empty">${jic('search')}<b>Tiada kursus dijumpai</b><span>Cuba negeri lain atau tukar perkataan carian.</span></div>`;
+  const hari = [...new Set(list.map(k=>k.t))];
+  return hari.map(t=>{
+    let L = list.filter(k=>k.t===t);
+    L = JS.geo ? L.sort((a,b)=>jarak(JS.geo,a)-jarak(JS.geo,b)) : L.sort((a,b)=>a.m.localeCompare(b.m));
+    return `<div class="h2" style="margin:18px 2px 10px;font-size:15px">${jHariPenuh(t)} <small>${L.length} kursus</small></div><div class="stack">${L.map(jKCard).join('')}</div>`;
+  }).join('');
+}
+function jKursus(){
+  const all = KJ_ADA(), neg = NEGERI_MY.filter(n => all.some(k=>k.n===n)), tiada = NEGERI_MY.filter(n => !neg.includes(n));
+  if(JS.kn!=='Semua' && !neg.includes(JS.kn)) JS.kn = 'Semua';
+  const back = JS.prev.startsWith('kursus') ? ['kursus','Kursus'] : ['juara/lokasi','Lokasi'];
+  let near = '';
+  if(all.length && JS.geo){
+    const k = all.slice().sort((a,b)=>jarak(JS.geo,a)-jarak(JS.geo,b))[0];
+    near = `<div class="near-hd">${ic('pin')}Kursus paling dekat dengan anda</div><div class="muted small" style="margin:-4px 2px 8px">${jHariPenuh(k.t)}</div>${jKCard(k)}`;
+  } else if(all.length){
+    near = `<div class="card near-ask"><div class="row">${ic('nav')}<div><b>Kursus paling dekat</b><span>Benarkan lokasi phone supaya kami boleh cari kursus terdekat untuk anda.</span></div></div>
+      <button class="btn sec" data-j="geo">${ic('nav')}Guna lokasi saya</button></div>`;
+  }
+  return bar(back[0], back[1]) + `
+  <main>
+    <div class="h1">Kursus umrah dan haji</div>
+    <div class="muted small" style="margin:4px 0 14px">Jadual kursus Juara Travel di seluruh Malaysia</div>
+    ${all.length ? `${near}
+    <div class="h2">Semua kursus <small>${all.length} kursus</small></div>
+    <label class="search">${jic('search')}<input type="search" placeholder="Cari bandar, masjid atau penceramah" data-jin="kcari" value="${esc(JS.kcari)}" aria-label="Cari kursus"></label>
+    <div class="chips"><button class="chip ${JS.kn==='Semua'?'on':''}" data-j="kNeg" data-v="Semua">Semua</button>${neg.map(n=>`<button class="chip ${JS.kn===n?'on':''}" data-j="kNeg" data-v="${n}">${n} (${all.filter(k=>k.n===n).length})</button>`).join('')}</div>
+    <div id="klist">${jKList()}</div>
+    ${tiada.length ? `<div class="card small muted" style="margin-top:14px;line-height:1.55">Belum ada kursus dijadualkan di ${tiada.join(', ')}. WhatsApp Juara untuk tanya kursus terdekat.<a class="btn sec" href="${waLink(JT.waJuara, 'Assalamualaikum Juara Travel. Saya nak tanya jadual kursus umrah di negeri saya.')}" ${ext} style="margin-top:10px">${ic('chat')}Tanya Juara</a></div>` : ''}`
+    : `<div class="card empty">${ic('clock')}<b>Jadual baru akan dikemas kini</b><span>Lihat jadual terkini di laman Juara Travel.</span></div>`}
+    <div class="note" style="margin-top:14px">${ic('alert')}<div>Jadual dari laman Juara Travel, dikemas kini ${tarikh(KJ_TARIKH)}. Jarak ialah anggaran. Hubungi penceramah untuk sahkan sebelum hadir.</div></div>
+    <a class="btn sec" href="${KJ_SUMBER}" ${ext} style="margin-top:12px">${ic('ext')}Lihat jadual terkini di laman Juara</a>
   </main>`;
 }
 
@@ -546,14 +604,14 @@ function jTutup(){ const s = $('jsheet'); if(s) s.classList.remove('on'); }
 document.addEventListener('click', e=>{
   const a = e.target.closest('[data-j]'); if(!a || a.disabled) return;
   const j = a.dataset.j, v = a.dataset.v, d = JS.draft;
-  if(j==='negeri'){ JS.negeri = v; jRerender(); }
+  if(j==='negeri' || j==='kNeg'){ if(j==='negeri') JS.negeri = v; else JS.kn = v; jRerender(); const c = document.querySelector('.chip.on'); if(c) c.scrollIntoView({inline:'center', block:'nearest'}); }
   else if(j==='jenis'){ JS.jenis = v; jRerender(); }
   else if(j==='geo'){
     if(!navigator.geolocation){ toast('Phone ini tidak benarkan lokasi'); return; }
     toast('Mencari lokasi anda...');
     navigator.geolocation.getCurrentPosition(p=>{
       JS.geo = {lat:+p.coords.latitude.toFixed(4), lng:+p.coords.longitude.toFixed(4)}; jst.set('geo', JS.geo);
-      jRerender(); toast('Cawangan disusun ikut jarak dari anda');
+      jRerender(); toast('Disusun ikut jarak dari anda');
     }, ()=>toast('Lokasi tidak dibenarkan. Anda masih boleh cari ikut negeri.'), {enableHighAccuracy:false, timeout:12000, maximumAge:600000});
   }
   else if(j==='tempah'){
@@ -614,7 +672,8 @@ document.addEventListener('input', e=>{
   const t = e.target.closest('[data-jin]'); if(!t) return;
   const k = t.dataset.jin;
   if(k==='cari'){ JS.cari = t.value; const L = $('jlist'); if(L) L.innerHTML = jLokList(); return; }
+  if(k==='kcari'){ JS.kcari = t.value; const L = $('klist'); if(L) L.innerHTML = jKList(); return; }
   JS.draft[k] = t.value; saveDraft();
   if(JS.err[k]){ delete JS.err[k]; const f = $('f-'+k); if(f){ f.classList.remove('err'); const m = f.querySelector('.em'); if(m) m.remove(); } }
 });
-window.addEventListener('hashchange', jTutup);
+window.addEventListener('hashchange', e=>{ jTutup(); try{ JS.prev = new URL(e.oldURL).hash.slice(1); }catch(_){} });

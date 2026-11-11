@@ -6,7 +6,6 @@
 
 const WAKTU_PEJABAT = [['Isnin hingga Jumaat', '9:00 pagi hingga 6:00 petang'], ['Sabtu', '9:00 pagi hingga 1:00 tengah hari'], ['Ahad dan cuti umum', 'Tutup']];
 const WAKTU_PEJABAT_UTARA = [['Ahad hingga Khamis', '9:00 pagi hingga 6:00 petang'], ['Sabtu', '9:00 pagi hingga 1:00 tengah hari'], ['Jumaat dan cuti umum', 'Tutup']];
-const WAKTU_KURSUS = [['Sabtu dan Ahad', 'Ikut jadual kursus'], ['Hari lain', 'Tutup']];
 
 const LOKASI = [
   { id: 'kl', nama: 'Juara Travel Kuala Lumpur', jenis: 'Pejabat', negeri: 'Kuala Lumpur',
@@ -15,24 +14,18 @@ const LOKASI = [
   { id: 'shahalam', nama: 'Juara Travel Shah Alam', jenis: 'Pejabat', negeri: 'Selangor',
     ringkas: 'Seksyen 13, Shah Alam', alamat: 'No. 8, Jalan Contoh 13/2, Seksyen 13, 40100 Shah Alam, Selangor',
     lat: 3.0738, lng: 101.5183, tel: '0300000002', waktu: WAKTU_PEJABAT },
-  { id: 'bangi', nama: 'Pusat Kursus Bangi', jenis: 'Lokasi kursus', negeri: 'Selangor',
-    ringkas: 'Seksyen 9, Bandar Baru Bangi', alamat: 'Dewan Contoh, Jalan Contoh 9/1, Seksyen 9, 43650 Bandar Baru Bangi, Selangor',
-    lat: 2.9644, lng: 101.7577, tel: '0300000003', waktu: WAKTU_KURSUS },
   { id: 'jb', nama: 'Juara Travel Johor Bahru', jenis: 'Pejabat', negeri: 'Johor',
     ringkas: 'Taman Molek, Johor Bahru', alamat: 'No. 21, Jalan Contoh 3, Taman Molek, 81100 Johor Bahru, Johor',
     lat: 1.5232, lng: 103.7930, tel: '0700000004', waktu: WAKTU_PEJABAT },
-  { id: 'muar', nama: 'Pusat Kursus Muar', jenis: 'Lokasi kursus', negeri: 'Johor',
-    ringkas: 'Bandar Muar, Johor', alamat: 'Dewan Contoh, Jalan Contoh, 84000 Muar, Johor',
-    lat: 2.0442, lng: 102.5689, tel: '0600000005', waktu: WAKTU_KURSUS },
   { id: 'penang', nama: 'Juara Travel Pulau Pinang', jenis: 'Pejabat', negeri: 'Pulau Pinang',
     ringkas: 'Bukit Mertajam, Pulau Pinang', alamat: 'No. 5, Jalan Contoh, 14000 Bukit Mertajam, Pulau Pinang',
     lat: 5.3631, lng: 100.4667, tel: '0400000006', waktu: WAKTU_PEJABAT },
   { id: 'kt', nama: 'Juara Travel Kuala Terengganu', jenis: 'Pejabat', negeri: 'Terengganu',
     ringkas: 'Bandar Kuala Terengganu', alamat: 'No. 3, Jalan Contoh, 20000 Kuala Terengganu, Terengganu',
     lat: 5.3302, lng: 103.1408, tel: '0900000007', waktu: WAKTU_PEJABAT_UTARA },
-  { id: 'alorsetar', nama: 'Pusat Kursus Alor Setar', jenis: 'Lokasi kursus', negeri: 'Kedah',
-    ringkas: 'Bandar Alor Setar, Kedah', alamat: 'Dewan Contoh, Jalan Contoh, 05000 Alor Setar, Kedah',
-    lat: 6.1248, lng: 100.3678, tel: '0400000008', waktu: [['Jumaat dan Sabtu', 'Ikut jadual kursus'], ['Hari lain', 'Tutup']] }
+  { id: 'alorsetar', nama: 'Juara Travel Alor Setar', jenis: 'Pejabat', negeri: 'Kedah',
+    ringkas: 'Bandar Alor Setar, Kedah', alamat: 'No. 7, Jalan Contoh, 05000 Alor Setar, Kedah',
+    lat: 6.1248, lng: 100.3678, tel: '0400000008', waktu: WAKTU_PEJABAT_UTARA }
 ];
 
 const NEGERI_TAPIS = ['Semua', 'Johor', 'Kedah', 'Kuala Lumpur', 'Pulau Pinang', 'Selangor', 'Terengganu'];

@@ -228,6 +228,7 @@ nav a.on svg.i{stroke-width:2.2}
 <div class="toast" id="toast"></div>
 <script src="juara-tetapan.js"></script>
 <script src="juara-data.js"></script>
+<script src="kursus-data.js"></script>
 <script src="juara.js"></script>
 <script>
 const J = {
@@ -419,6 +420,7 @@ function vKursus(){
     <div class="h1">Kursus umrah</div>
     <div class="muted small" style="margin:4px 0 14px">${S.done.length} daripada ${KURSUS.length} topik siap</div>
     <div class="card" style="margin-bottom:12px"><div class="bar2"><i style="width:${kp}%"></i></div></div>
+    <div style="margin-bottom:12px">${jKursusKad()}</div>
     <div class="list">${KURSUS.map((k,i)=>{ const done = S.done.includes(k.id);
       return `<a class="li" href="#kursus/${k.id}"><div class="ic" style="${done?'background:var(--green-soft);color:var(--green)':''}">${ic(done?'check':k.ic)}</div><div><b>${i+1}. ${k.t}</b><span>${k.d}</span></div>${done?'<span class="pill p-ok" style="margin-left:auto">Siap</span>':ic('chev','r')}</a>`; }).join('')}</div>
     <div class="h2">Belajar dari video</div>
