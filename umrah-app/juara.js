@@ -37,6 +37,7 @@ const JP = {
   trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3"/><path d="M12 13v4M9 21h6M10 17h4v4h-4z"/>',
   plane:'<path d="M10.5 13.5L4 16v-2l6.5-4.5V5a1.5 1.5 0 0 1 3 0v4.5L20 14v2l-6.5-2.5V18l2 1.5V21L12 20l-3.5 1v-1.5l2-1.5z"/>',
   share:'<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/>',
+  down:'<path d="M6 9l6 6 6-6"/>',
   repeat:'<path d="M4 12a8 8 0 0 1 13.7-5.7L20 8.5"/><path d="M20 4v4.5h-4.5"/><path d="M20 12a8 8 0 0 1-13.7 5.7L4 15.5"/><path d="M4 20v-4.5h4.5"/>'
 };
 const jic = (k, cls='') => `<svg class="i ${cls}" viewBox="0 0 24 24">${JP[k]||P[k]||''}</svg>`;
@@ -134,8 +135,8 @@ function jLokasi(){
     ${near}
     <div style="margin-top:12px">${jKursusKad()}</div>
     <div class="h2">Semua cawangan <small>${LOKASI.length} lokasi</small></div>
+    ${jNegeriBtn('l')}
     <label class="search">${jic('search')}<input type="search" placeholder="Cari nama tempat atau bandar" data-jin="cari" value="${esc(JS.cari)}" aria-label="Cari cawangan"></label>
-    <div class="chips">${NEGERI_TAPIS.map(n=>`<button class="chip ${JS.negeri===n?'on':''}" data-j="negeri" data-v="${n}">${n}</button>`).join('')}</div>
     <div id="jlist">${jLokList()}</div>
   </main>`;
 }
@@ -218,15 +219,37 @@ function jKursus(){
     <div class="h1">Kursus umrah dan haji</div>
     <div class="muted small" style="margin:4px 0 14px">Jadual kursus Juara Travel di seluruh Malaysia</div>
     ${all.length ? `${near}
-    <div class="h2">Semua kursus <small>${all.length} kursus</small></div>
+    <div class="h2">${JS.kn==='Semua' ? 'Semua kursus' : 'Kursus di '+esc(JS.kn)} <small>${JS.kn==='Semua' ? all.length : all.filter(k=>k.n===JS.kn).length} kursus</small></div>
+    ${jNegeriBtn('k')}
     <label class="search">${jic('search')}<input type="search" placeholder="Cari bandar, masjid atau penceramah" data-jin="kcari" value="${esc(JS.kcari)}" aria-label="Cari kursus"></label>
-    <div class="chips"><button class="chip ${JS.kn==='Semua'?'on':''}" data-j="kNeg" data-v="Semua">Semua</button>${neg.map(n=>`<button class="chip ${JS.kn===n?'on':''}" data-j="kNeg" data-v="${n}">${n} (${all.filter(k=>k.n===n).length})</button>`).join('')}</div>
     <div id="klist">${jKList()}</div>
     ${tiada.length ? `<div class="card small muted" style="margin-top:14px;line-height:1.55">Belum ada kursus dijadualkan di ${tiada.join(', ')}. WhatsApp Juara untuk tanya kursus terdekat.<a class="btn sec" href="${waLink(JT.waJuara, 'Assalamualaikum Juara Travel. Saya nak tanya jadual kursus umrah di negeri saya.')}" ${ext} style="margin-top:10px">${ic('chat')}Tanya Juara</a></div>` : ''}`
     : `<div class="card empty">${ic('clock')}<b>Jadual baru akan dikemas kini</b><span>Lihat jadual terkini di laman Juara Travel.</span></div>`}
     <div class="note" style="margin-top:14px">${ic('alert')}<div>Jadual dari laman Juara Travel, dikemas kini ${tarikh(KJ_TARIKH)}. Jarak ialah anggaran. Hubungi penceramah untuk sahkan sebelum hadir.</div></div>
     <a class="btn sec" href="${KJ_SUMBER}" ${ext} style="margin-top:12px">${ic('ext')}Lihat jadual terkini di laman Juara</a>
   </main>`;
+}
+
+/* ===== Pilih negeri (lembaran dari bawah) ===== */
+function jNegeriData(kind){
+  const src = kind==='k' ? KJ_ADA() : LOKASI;
+  const unit = kind==='k' ? 'kursus' : 'lokasi';
+  const cur = kind==='k' ? JS.kn : JS.negeri;
+  const list = NEGERI_MY.map(n => ({n, c: src.filter(x => (x.n||x.negeri)===n).length}));
+  return {src, unit, cur, list};
+}
+function jNegeriBtn(kind){
+  const {src, unit, cur, list} = jNegeriData(kind);
+  const c = cur==='Semua' ? src.length : (list.find(x=>x.n===cur)||{c:0}).c;
+  return `<div class="nrow"><button class="nsel ${cur==='Semua'?'':'on'}" data-j="nPick" data-v="${kind}">${ic('pin')}<div><span>Negeri</span><b>${cur==='Semua'?'Semua negeri':esc(cur)}</b></div><em>${c} ${unit}</em>${jic('down')}</button>
+    ${cur==='Semua' ? '' : `<button class="nclr" data-j="nSet" data-k="${kind}" data-v="Semua" aria-label="Kosongkan penapis negeri">${ic('x')}</button>`}</div>`;
+}
+function jNegeriSheet(kind){
+  const {src, unit, cur, list} = jNegeriData(kind);
+  const opt = (n, label, c) => `<button class="nopt ${cur===n?'on':''}" data-j="nSet" data-k="${kind}" data-v="${n}" ${c?'':'disabled'}><span>${label}</span><small>${c ? c+' '+unit : 'Tiada jadual'}</small>${cur===n?ic('check'):''}</button>`;
+  const ada = list.filter(x=>x.c), tiada = list.filter(x=>!x.c);
+  jSheet(`<div class="hd">${ic('pin')}<div style="flex:1"><b>Pilih negeri</b><span>${ada.length} negeri ada ${unit}</span></div><button class="nclr" data-j="tutup" aria-label="Tutup" style="width:44px;height:44px">${ic('x')}</button></div>
+    <div class="nlist">${opt('Semua','Semua negeri',src.length)}${ada.map(x=>opt(x.n,x.n,x.c)).join('')}${tiada.map(x=>opt(x.n,x.n,0)).join('')}</div>`);
 }
 
 /* ===== 2. Pakej ===== */
@@ -604,7 +627,8 @@ function jTutup(){ const s = $('jsheet'); if(s) s.classList.remove('on'); }
 document.addEventListener('click', e=>{
   const a = e.target.closest('[data-j]'); if(!a || a.disabled) return;
   const j = a.dataset.j, v = a.dataset.v, d = JS.draft;
-  if(j==='negeri' || j==='kNeg'){ if(j==='negeri') JS.negeri = v; else JS.kn = v; jRerender(); const c = document.querySelector('.chip.on'); if(c) c.scrollIntoView({inline:'center', block:'nearest'}); }
+  if(j==='nPick'){ jNegeriSheet(v); }
+  else if(j==='nSet'){ if(a.dataset.k==='k') JS.kn = v; else JS.negeri = v; jTutup(); jRerender(); const L = $(a.dataset.k==='k'?'klist':'jlist'); if(L && v!=='Semua') L.scrollIntoView({block:'start', behavior:'smooth'}); }
   else if(j==='jenis'){ JS.jenis = v; jRerender(); }
   else if(j==='geo'){
     if(!navigator.geolocation){ toast('Phone ini tidak benarkan lokasi'); return; }

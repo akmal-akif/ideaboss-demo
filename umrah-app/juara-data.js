@@ -28,7 +28,6 @@ const LOKASI = [
     lat: 6.1248, lng: 100.3678, tel: '0400000008', waktu: WAKTU_PEJABAT_UTARA }
 ];
 
-const NEGERI_TAPIS = ['Semua', 'Johor', 'Kedah', 'Kuala Lumpur', 'Pulau Pinang', 'Selangor', 'Terengganu'];
 const NEGERI_SEMUA = ['Johor', 'Kedah', 'Kelantan', 'Melaka', 'Negeri Sembilan', 'Pahang', 'Perak', 'Perlis', 'Pulau Pinang', 'Sabah', 'Sarawak', 'Selangor', 'Terengganu', 'Kuala Lumpur', 'Labuan', 'Putrajaya'];
 
 const TERMASUK_UMRAH = ['Tiket penerbangan pergi balik', 'Visa umrah', 'Hotel dan makan 3 kali sehari', 'Bas ziarah berhawa dingin', 'Mutawwif dan pembimbing Juara', 'Kursus umrah sebelum berlepas', 'Air zamzam 5 liter'];

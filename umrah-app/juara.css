@@ -210,3 +210,24 @@
 .jsheet .hd > svg.i{width:46px;height:46px;padding:12px;border-radius:14px;background:var(--red-soft);color:var(--red)}
 .jsheet .hd b{display:block;font-size:17px;font-weight:600}
 .jsheet .hd span{display:block;font-size:13px;color:var(--muted)}
+
+/* pilih negeri */
+.nrow{display:flex;gap:8px;margin-bottom:10px}
+.nsel{flex:1;min-width:0;display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:10px 14px;text-align:left;min-height:56px}
+.nsel > svg.i:first-child{color:var(--red)}
+.nsel div{flex:1;min-width:0}
+.nsel span{display:block;font-size:11.5px;color:var(--muted);line-height:1.2}
+.nsel b{display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nsel em{font-style:normal;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.nsel > svg.i:last-child{color:var(--muted);width:18px;height:18px}
+.nsel.on{border-color:var(--red);background:var(--red-soft)}
+.nclr{width:56px;flex:none;border-radius:14px;background:#fff;border:1.5px solid var(--line);display:grid;place-items:center;color:var(--muted)}
+.nlist{max-height:62vh;overflow-y:auto;margin:0 -16px;padding:0 16px;-webkit-overflow-scrolling:touch}
+.nopt{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:14px 4px;border-bottom:1px solid var(--line);font-size:15px;min-height:52px}
+.nopt span{flex:1}
+.nopt small{font-size:12.5px;color:var(--muted)}
+.nopt svg.i{color:var(--red);width:18px;height:18px}
+.nopt.on{color:var(--red);font-weight:600}
+.nopt:disabled{color:#b5ada3}
+.nopt:disabled small{color:#c9c1b6}
+@media (hover:hover){.nopt:not(:disabled):hover{background:#faf6f1}}
