@@ -392,6 +392,7 @@ function vUtama(){
     <div class="stack" style="margin-top:14px">
       ${solatCard()}
       ${baki>0?`<a class="alert" href="#bayaran"><div class="ic">${ic('bell')}</div><div><b>Baki ${RM(baki)}</b><span>Jelaskan sebelum ${tarikh(J.akhir)}${dl>0?' ('+dl+' hari lagi)':''}</span></div>${ic('chev','go')}</a>`:''}
+      ${jTngKad()}
     </div>
     <div class="h2">Tonton: Podcast Juara <small>${VIDEOS.length} video</small></div>
     <div class="vrow">${VIDEOS.map(vcard).join('')}</div>

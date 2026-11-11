@@ -231,3 +231,19 @@
 .nopt:disabled{color:#b5ada3}
 .nopt:disabled small{color:#c9c1b6}
 @media (hover:hover){.nopt:not(:disabled):hover{background:#faf6f1}}
+
+/* ganjaran Touch 'n Go */
+.tngkad{display:block;background:#fff;border-radius:18px;padding:14px 16px;box-shadow:0 1px 2px rgba(60,40,20,.05),0 4px 14px rgba(60,40,20,.05);border:1.5px solid #e4e6f2}
+.tng-top{display:flex;align-items:center;gap:12px}
+.tng-top img{width:62px;height:40px;border-radius:8px;flex:none}
+.tng-top span:not(.ct){display:block;font-size:12.5px;color:var(--muted)}
+.tng-top b{display:block;font-size:21px;font-weight:700;color:#292c69;line-height:1.2}
+.tng-top b small{font-size:13px;font-weight:500;color:var(--muted)}
+.tng-sub{font-size:12.5px;color:var(--ink2);margin-top:10px}
+.tng-bar{height:7px;background:#eceef6;border-radius:99px;overflow:hidden;margin-top:7px}
+.tng-bar i{display:block;height:100%;background:#292c69;border-radius:99px}
+.tng-go{display:flex;align-items:center;justify-content:flex-end;gap:4px;font-size:13px;font-weight:600;color:var(--red);margin-top:10px}
+.tng-go svg.i{width:16px;height:16px}
+.tngimg{width:96px;aspect-ratio:1;flex:none;border-radius:12px;background:#292c69;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px}
+.tngimg img{width:100%;border-radius:6px}
+.tngimg b{color:#f8e806;font-size:15px;font-weight:700}

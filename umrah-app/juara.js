@@ -566,7 +566,7 @@ function jTebus(){
     <div><div class="h1">Tebus ganjaran</div><div class="muted small" style="margin-top:4px">Tukar mata anda dengan hadiah pilihan</div></div>
     <div class="card stepper-row"><div><span>Baki mata anda</span><b style="font-size:24px;font-weight:700;color:var(--red)">${fmt(baki)}</b></div>${jic('award')}</div>
     ${GANJARAN.map(g=>`<div class="card jgf">
-      <div class="noimg">${jic(g.ic)}Gambar akan dimasukkan</div>
+      ${g.pre==='TNG' ? `<div class="tngimg"><img src="img/tng.svg" alt="Touch 'n Go eWallet"><b>${g.nama.match(/RM\d+/)[0]}</b></div>` : `<div class="noimg">${jic(g.ic)}Gambar akan dimasukkan</div>`}
       <div class="jgf-bd"><div class="jtags"><b>${esc(g.nama)}</b>${CT}</div><span class="small muted">${esc(g.desc)}</span>
         <div class="jgf-ft"><span class="m">${fmt(g.mata)} mata</span>${baki>=g.mata ? `<button class="btn jsm" data-j="tebus" data-v="${g.id}">Tebus</button>` : `<button class="btn jsm" disabled>Kurang ${fmt(g.mata-baki)} mata</button>`}</div></div>
     </div>`).join('')}
@@ -612,6 +612,22 @@ function jPeraturan(){
     <div class="note">${ic('alert')}<div>Peraturan ini contoh. Juara akan muktamadkan sebelum kempen bermula.</div></div>
     <a class="btn sec" href="#juara/ganjaran">Kembali ke ganjaran</a>
   </main>`;
+}
+
+/* ===== Kad ganjaran Touch 'n Go di skrin Utama ===== */
+function jTngKad(){
+  const {baki} = jAgentData();
+  const tng = GANJARAN.filter(g=>g.pre==='TNG').sort((a,b)=>a.mata-b.mata);
+  const boleh = tng.filter(g=>g.mata<=baki).pop(), next = tng.find(g=>g.mata>baki);
+  const rm = g => g.nama.match(/RM\d+/)[0];
+  const sub = boleh ? `Cukup untuk tebus baucar ${rm(boleh)}` : `Kumpul mata untuk baucar ${rm(tng[0])}`;
+  const pct = next ? Math.min(100, Math.round(baki/next.mata*100)) : 100;
+  return `<a class="tngkad" href="#juara/ganjaran">
+    <div class="tng-top"><img src="img/tng.svg" alt="Touch 'n Go eWallet" width="62" height="40"><div style="flex:1;min-width:0"><span>Ganjaran Touch 'n Go eWallet</span><b>${fmt(baki)} <small>mata</small></b></div><span class="ct">Contoh</span></div>
+    <div class="tng-sub">${sub}${next ? ` · lagi ${fmt(next.mata-baki)} mata ke ${rm(next)}` : ''}</div>
+    <div class="tng-bar"><i style="width:${pct}%"></i></div>
+    <div class="tng-go">Tebus ganjaran${ic('chev')}</div>
+  </a>`;
 }
 
 /* ===== Lembaran pengesahan ===== */
