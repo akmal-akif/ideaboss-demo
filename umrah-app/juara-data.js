@@ -93,32 +93,18 @@ const AGENTS = [
   { kod: 'NURUL05', nama: 'Cik Nurul', kawasan: 'Bukit Mertajam' }
 ];
 
-// Mata bulan ini (asas contoh) untuk papan kedudukan
-const KEDUDUKAN = [
-  { kod: 'FAIZAL02', mata: 2150 },
-  { kod: 'ROSNAH03', mata: 1700 },
-  { kod: 'SALMAH01', mata: 1350 },
-  { kod: 'HAKIM04', mata: 900 },
-  { kod: 'NURUL05', mata: 650 }
-];
+// Kod rujukan ahli lain (contoh) yang boleh dipakai semasa tempah
+const KOD_RUJUKAN = ['ZURA77', 'HALIM21', 'FARAH09'];
 
-// Sejarah mata contoh untuk agent demo (JT.agentDemo)
+// Sejarah mata contoh untuk pengguna demo
 const SEJARAH_MATA = [
-  { t: '2026-08-14', a: 'Daftar jemaah baru (2 orang)', m: 100 },
-  { t: '2026-08-14', a: 'Tempahan deposit', m: 200 },
-  { t: '2026-09-02', a: 'Bayaran penuh', m: 500 },
-  { t: '2026-09-20', a: 'Daftar jemaah baru (1 orang)', m: 50 },
-  { t: '2026-09-20', a: 'Tempahan deposit', m: 200 },
-  { t: '2026-10-05', a: "Tebus baucar Touch 'n Go eWallet RM10", m: -1000 },
-  { t: '2026-10-11', a: 'Rujukan jemaah berulang', m: 100 },
-  { t: '2026-10-11', a: 'Bayaran penuh', m: 500 },
-  { t: '2026-10-28', a: 'Daftar jemaah baru (4 orang)', m: 200 },
-  { t: '2026-10-28', a: 'Tempahan deposit', m: 200 },
-  { t: '2026-11-03', a: 'Bayaran penuh', m: 500 },
-  { t: '2026-11-08', a: 'Daftar jemaah baru (3 orang)', m: 150 },
-  { t: '2026-11-08', a: 'Tempahan deposit', m: 200 },
-  { t: '2026-11-09', a: 'Bayaran penuh', m: 500 }
-].map(e => Object.assign({ kod: 'SALMAH01', contoh: true }, e));
+  { t: '2026-08-30', a: 'Daftar dalam apps Jemaah Juara', m: 100 },
+  { t: '2026-09-12', a: 'Tempahan deposit, Umrah Ziarah 12 Hari', m: 200 },
+  { t: '2026-09-25', a: 'Rujuk kawan: Puan Zura tempah pakej umrah', m: 300 },
+  { t: '2026-10-08', a: 'Rujuk kawan: Encik Halim tempah pakej umrah', m: 300 },
+  { t: '2026-10-21', a: 'Rujuk kawan: Cik Farah tempah pakej Turki', m: 300 },
+  { t: '2026-11-04', a: 'Rujuk kawan: Puan Rokiah tempah pakej umrah', m: 300 }
+].map(e => Object.assign({ contoh: true }, e));
 
 const GANJARAN = [
   { id: 'tng10', nama: "Baucar Touch 'n Go eWallet RM10", desc: 'Kredit terus ke eWallet anda', mata: 1000, ic: 'wallet', pre: 'TNG', cara: 'Baucar dihantar melalui WhatsApp ke nombor telefon anda dalam 7 hari bekerja.' },

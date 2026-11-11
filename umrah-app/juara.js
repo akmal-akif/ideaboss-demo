@@ -1,6 +1,6 @@
 /* =========================================================
    Tab Juara: Lokasi, Pakej, Beli, Tempahan saya,
-   Ganjaran Agent, Tebus ganjaran, Peraturan kempen.
+   Mata ganjaran, Tebus ganjaran, Peraturan.
    Data contoh: juara-data.js. Tetapan: juara-tetapan.js.
    Fungsi ic, esc, RM, tarikh, bar, toast, $ dan P datang dari index.html.
    ========================================================= */
@@ -76,10 +76,13 @@ function vJuara(parts){
   if(sub==='peraturan') return jPeraturan();
   return jLokasi();
 }
-/* Pautan kongsi agent: #agent/KOD */
+/* Kod agent atau kod rujukan kawan */
+const jKodSah = k => AGENTS.some(a=>a.kod===k) || KOD_RUJUKAN.includes(k);
+function jNamaKod(k){ const a = AGENTS.find(x=>x.kod===k); return a ? `Agent ${a.nama}` : 'Kod rujukan kawan'; }
+/* Pautan kongsi: #agent/KOD atau #rujuk/KOD */
 function jPakaiAgent(kod){
-  const k = String(kod||'').toUpperCase(), a = AGENTS.find(x=>x.kod===k);
-  if(a){ JS.draft.adaAgent = true; JS.draft.agent = k; saveDraft(); setTimeout(()=>toast(`Kod agent ${a.nama} dipakai untuk tempahan anda`), 300); }
+  const k = String(kod||'').toUpperCase();
+  if(jKodSah(k)){ JS.draft.adaAgent = true; JS.draft.agent = k; saveDraft(); setTimeout(()=>toast(`Kod ${k} dipakai untuk tempahan anda`), 300); }
 }
 
 function jHead(tab){
@@ -89,7 +92,7 @@ function jHead(tab){
     <div class="muted small" style="margin:4px 0 14px">Cawangan, pakej dan tempahan dalam satu tempat</div>
     <div class="jquick">
       <a class="card jq" href="#juara/tempahan">${jic('ticket')}<div><b>Tempahan saya</b><span>${n ? n+' tempahan' : 'Belum ada'}</span></div></a>
-      <a class="card jq" href="#juara/ganjaran">${jic('gift')}<div><b>Ganjaran agent</b><span>Kumpul mata, tebus hadiah</span></div></a>
+      <a class="card jq" href="#juara/ganjaran">${jic('gift')}<div><b>Mata ganjaran</b><span>Kumpul mata, tebus baucar</span></div></a>
     </div>
     <div class="seg">${[['lokasi','Lokasi'],['pakej','Pakej'],['beli','Beli']].map(([k,l])=>`<a href="#juara/${k}" class="${tab===k?'on':''}">${l}</a>`).join('')}</div>`;
 }
@@ -338,8 +341,9 @@ function jSemak2(){
   if(!d.negeri) e.negeri = 'Sila pilih negeri anda.';
   if(d.adaAgent){
     const k = d.agent.trim().toUpperCase();
-    if(!k) e.agent = 'Tulis kod agent anda, atau buang tanda di atas jika tiada.';
-    else if(!AGENTS.find(a=>a.kod===k)) e.agent = 'Kod agent ini tidak dijumpai. Semak semula dengan agent anda.';
+    if(!k) e.agent = 'Tulis kod anda, atau buang tanda di atas jika tiada.';
+    else if(k===JT.kodSaya) e.agent = 'Ini kod rujukan anda sendiri. Kongsi kod ini dengan kawan.';
+    else if(!jKodSah(k)) e.agent = 'Kod ini tidak dijumpai. Semak semula dengan agent atau kawan anda.';
   }
   return e;
 }
@@ -385,8 +389,8 @@ function jBeli2(){
         ${e.negeri?`<div class="em">${ic('alert')}<span>${e.negeri}</span></div>`:''}</div>
     </div>
     <div class="card" style="margin-top:12px">
-      <button class="chk ${d.adaAgent?'on':''}" data-j="adaAgent" style="padding:0;border:0"><div class="box">${d.adaAgent?ic('check'):''}</div><div><b style="font-weight:600">Saya ada kod agent</b><div class="small muted">Pilihan. Agent anda akan bantu urusan tempahan sampai selesai.</div></div></button>
-      ${d.adaAgent ? `<div style="margin-top:12px">${jField('agent','Kod agent','text','Contoh: SALMAH01','autocapitalize="characters" autocomplete="off"')}</div>` : ''}
+      <button class="chk ${d.adaAgent?'on':''}" data-j="adaAgent" style="padding:0;border:0"><div class="box">${d.adaAgent?ic('check'):''}</div><div><b style="font-weight:600">Saya ada kod agent atau rujukan</b><div class="small muted">Pilihan. Kod daripada agent Juara atau kawan yang kongsi apps ini.</div></div></button>
+      ${d.adaAgent ? `<div style="margin-top:12px">${jField('agent','Kod agent atau rujukan','text','Contoh: SALMAH01 atau ZURA77','autocapitalize="characters" autocomplete="off"')}</div>` : ''}
     </div>
     <div class="jbtn2" style="margin-top:16px"><a class="btn sec" href="#juara/beli/1">Kembali</a><button class="btn" data-j="ke3">Seterusnya</button></div>
   </main>`;
@@ -400,7 +404,8 @@ function jKira(){
 function jBeli3(){
   const d = JS.draft, k = jKira();
   const akhirTxt = k.akhir <= hariIni() ? 'secepat mungkin' : 'sebelum '+tarikh(k.akhir);
-  const ag = d.adaAgent ? AGENTS.find(a=>a.kod===d.agent.trim().toUpperCase()) : null;
+  const kod = d.adaAgent ? d.agent.trim().toUpperCase() : '';
+  const mata = d.kaedah==='penuh' ? JT.mata.bayaranPenuh : JT.mata.tempahanDeposit;
   return jHead('beli') + jStep(3, 'Pilih cara bayaran') + `
     <div class="stack">
       <button class="opt ${d.kaedah==='deposit'?'on':''}" data-j="kaedah" data-v="deposit"><span class="radio"></span><div style="flex:1"><b>Bayar deposit</b><span>${RM(JT.depositSeorang)} seorang untuk sahkan kerusi</span></div><span class="amt">${RM(k.dep)}</span></button>
@@ -410,7 +415,8 @@ function jBeli3(){
       <div class="kv"><span class="muted">Pakej</span><b>${esc(k.p.nama)}</b></div>
       <div class="kv"><span class="muted">Berlepas</span><b>${tarikh(d.tarikh)}</b></div>
       <div class="kv"><span class="muted">Jemaah</span><b>${d.bil} orang</b></div>
-      ${ag?`<div class="kv"><span class="muted">Agent</span><b>${esc(ag.nama)} (${ag.kod})</b></div>`:''}
+      ${kod?`<div class="kv"><span class="muted">${jNamaKod(kod)}</span><b>${kod}</b></div>`:''}
+      <div class="kv"><span class="muted">Mata ganjaran anda</span><b style="color:var(--green)">+${fmt(mata)} mata</b></div>
       <div class="kv"><span class="muted">Jumlah harga</span><b>${RM(k.jumlah)}</b></div>
       <div class="kv big"><span class="muted">Bayar sekarang</span><b>${RM(k.bayar)}</b></div>
       <div class="kv"><span class="muted">Baki</span><b>${k.baki ? RM(k.baki)+'<div class="small muted" style="font-weight:400">Jelaskan '+akhirTxt+'</div>' : 'Tiada baki'}</b></div>
@@ -426,14 +432,9 @@ function jCipta(){
   const tel = d.tel.replace(/[\s-]/g,'');
   const b = {no, pakej:k.p.id, pakejNama:k.p.nama, tarikh:d.tarikh, bil:d.bil, nama:d.nama.trim(), tel, emel:d.emel.trim(), negeri:d.negeri,
              agent, kaedah:d.kaedah, jumlah:k.jumlah, bayar:k.bayar, baki:k.baki, status:'menunggu', dibuat:t, mata:0};
-  if(agent){
-    const ulang = JS.tempahan.some(x=>x.tel===tel && x.agent===agent);
-    const ev = [ ulang ? {a:'Rujukan jemaah berulang', m:JT.mata.rujukanBerulang} : {a:`Daftar jemaah baru (${d.bil} orang)`, m:JT.mata.daftarJemaah*d.bil},
-                 d.kaedah==='penuh' ? {a:'Bayaran penuh', m:JT.mata.bayaranPenuh} : {a:'Tempahan deposit', m:JT.mata.tempahanDeposit} ];
-    ev.forEach(x=>JS.mata.push({kod:agent, t, a:`${x.a}, ${no}`, m:x.m}));
-    b.mata = ev.reduce((s,x)=>s+x.m, 0);
-    jst.set('mata', JS.mata);
-  }
+  const ev = d.kaedah==='penuh' ? {a:'Bayaran penuh', m:JT.mata.bayaranPenuh} : {a:'Tempahan deposit', m:JT.mata.tempahanDeposit};
+  JS.mata.push({kod:'saya', t, a:`${ev.a}, ${k.p.nama}`, m:ev.m}); jst.set('mata', JS.mata);
+  b.mata = ev.m;
   JS.tempahan.unshift(b); jst.set('tempahan', JS.tempahan);
   JS.draft = Object.assign(DRAFT0(), agent ? {adaAgent:true, agent} : {}, {nama:d.nama, tel:d.tel, emel:d.emel, negeri:d.negeri});
   saveDraft();
@@ -442,35 +443,32 @@ function jCipta(){
 const STATUS = {menunggu:['Menunggu pengesahan','p-warn'], deposit:['Deposit diterima','p-blue'], lengkap:['Lengkap','p-ok']};
 const jStatus = s => `<span class="pill ${STATUS[s][1]}">${STATUS[s][0]}</span>`;
 function jWaTempahan(b){
-  const ag = b.agent ? AGENTS.find(a=>a.kod===b.agent) : null;
   const L = ['Assalamualaikum Juara Travel. Saya baru buat tempahan dalam apps Jemaah Juara.', '',
     `No tempahan: ${b.no}`, `Nama: ${b.nama}`, `Pakej: ${b.pakejNama}`, `Tarikh berlepas: ${tarikh(b.tarikh)}`, `Bilangan jemaah: ${b.bil} orang`,
     `Bayaran: ${b.kaedah==='penuh'?'Penuh':'Deposit'} ${RM(b.bayar)}`];
-  if(ag) L.push(`Kod agent: ${ag.kod} (${ag.nama})`);
+  if(b.agent) L.push(`Kod agent atau rujukan: ${b.agent}`);
   L.push('', 'Mohon pengesahan. Terima kasih.');
   return waLink(JT.waJuara, L.join('\n'));
 }
 function jRingkas(b){
-  const ag = b.agent ? AGENTS.find(a=>a.kod===b.agent) : null;
   return `<div class="kv"><span class="muted">Nama</span><b>${esc(b.nama)}</b></div>
     <div class="kv"><span class="muted">Pakej</span><b>${esc(b.pakejNama)}</b></div>
     <div class="kv"><span class="muted">Berlepas</span><b>${tarikh(b.tarikh)}</b></div>
     <div class="kv"><span class="muted">Jemaah</span><b>${b.bil} orang</b></div>
-    ${ag?`<div class="kv"><span class="muted">Agent</span><b>${esc(ag.nama)} (${ag.kod})</b></div>`:''}
+    ${b.agent?`<div class="kv"><span class="muted">${jNamaKod(b.agent)}</span><b>${b.agent}</b></div>`:''}
     <div class="kv"><span class="muted">Jumlah</span><b>${RM(b.jumlah)}</b></div>
     <div class="kv"><span class="muted">Dibayar (${b.kaedah==='penuh'?'penuh':'deposit'})</span><b>${RM(b.bayar)}</b></div>
     <div class="kv"><span class="muted">Baki</span><b>${b.baki?RM(b.baki):'Tiada baki'}</b></div>`;
 }
 function jBerjaya(no){
   const b = JS.tempahan.find(x=>x.no===no); if(!b) return jTempahan();
-  const ag = b.agent ? AGENTS.find(a=>a.kod===b.agent) : null;
   return bar('juara/pakej', 'Juara') + `
   <main class="stack">
     <div><div class="muted small">Langkah 4 daripada 4</div><div class="stepbar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div></div>
     <div class="jok">${ic('check')}<div class="h1">Tempahan diterima</div><div class="muted">Terima kasih, ${esc(b.nama.split(' ')[0])}. Hantar butiran ke WhatsApp Juara supaya kami boleh sahkan tempahan anda dengan cepat.</div></div>
     <div class="card"><div class="jtags"><span class="muted small">Nombor tempahan</span>${CT}</div><div class="jno">${b.no}</div>${jStatus(b.status)}</div>
     <div class="card">${jRingkas(b)}</div>
-    ${ag&&b.mata?`<div class="note">${jic('gift')}<div>${esc(ag.nama)} dapat ${fmt(b.mata)} mata ganjaran daripada tempahan ini.</div></div>`:''}
+    ${b.mata?`<a class="tngkad" href="#juara/ganjaran" style="display:flex;gap:12px;align-items:center"><img src="img/tng.svg" alt="" width="52" height="34" style="border-radius:7px"><div style="flex:1"><b style="display:block;font-size:15px">+${fmt(b.mata)} mata ganjaran</b><span class="small muted">Kumpul dan tebus baucar Touch 'n Go eWallet</span></div>${ic('chev')}</a>`:''}
     <div class="btns">
       <a class="btn" href="${jWaTempahan(b)}" ${ext}>${ic('chat')}Hantar ke WhatsApp Juara</a>
       <a class="btn sec" href="#juara/tempahan">Lihat tempahan saya</a>
@@ -502,13 +500,12 @@ function jTempahan(){
   </main>`;
 }
 
-/* ===== Ganjaran agent ===== */
-function jAgentData(){
-  const a = AGENTS.find(x=>x.kod===JT.agentDemo);
-  const ev = SEJARAH_MATA.filter(e=>e.kod===a.kod).concat(JS.mata.filter(m=>m.kod===a.kod)).map((e,i)=>Object.assign({i}, e))
+/* ===== Mata ganjaran (jemaah dan bakal jemaah) ===== */
+function jMataData(){
+  const ev = SEJARAH_MATA.concat(JS.mata.filter(m=>m.kod==='saya')).map((e,i)=>Object.assign({i}, e))
     .sort((x,y)=> y.t.localeCompare(x.t) || y.i - x.i);
   const baki = ev.reduce((s,e)=>s+e.m, 0), terkumpul = ev.filter(e=>e.m>0).reduce((s,e)=>s+e.m, 0);
-  return {a, ev, baki, terkumpul};
+  return {ev, baki, terkumpul};
 }
 function jTahap(t){
   const T = JT.tahap; let i = 0;
@@ -517,51 +514,42 @@ function jTahap(t){
   const pct = next ? Math.round((t-now.min)/(next.min-now.min)*100) : 100;
   return {now, next, pct};
 }
-function jMataBulan(kod){
-  const ym = hariIni().slice(0,7);
-  return (KEDUDUKAN.find(k=>k.kod===kod)?.mata || 0) + JS.mata.filter(m=>m.kod===kod && m.m>0 && m.t.slice(0,7)===ym).reduce((s,e)=>s+e.m, 0);
-}
-const jLinkAgent = kod => location.href.split('#')[0] + '#agent/' + kod;
+const jLinkRujuk = kod => location.href.split('#')[0] + '#rujuk/' + kod;
 function jGanjaran(){
-  const {a, ev, baki, terkumpul} = jAgentData(), tp = jTahap(terkumpul);
-  const nama2 = a.nama.replace(/^(Puan|Encik|Cik)\s+/,'');
-  const share = `Assalamualaikum. Nak tunaikan umrah atau melancong bersama Juara Travel? Lihat pakej dan tempah terus dalam apps Jemaah Juara. Guna kod agent saya ${a.kod}, saya bantu sampai selesai.\n\n${jLinkAgent(a.kod)}`;
-  const rank = AGENTS.map(x=>({x, m:jMataBulan(x.kod)})).sort((p,q)=>q.m-p.m);
-  const pos = rank.findIndex(r=>r.x.kod===a.kod) + 1, now = new Date();
-  const cara = [['users','Daftar jemaah baru','Setiap jemaah yang daftar guna kod anda', JT.mata.daftarJemaah],
-                ['ticket','Tempahan deposit','Bila jemaah bayar deposit', JT.mata.tempahanDeposit],
-                ['check','Bayaran penuh','Bila jemaah selesai bayar penuh', JT.mata.bayaranPenuh],
-                ['repeat','Rujukan jemaah berulang','Jemaah lama tempah semula guna kod anda', JT.mata.rujukanBerulang]];
+  const {ev, baki, terkumpul} = jMataData(), tp = jTahap(terkumpul);
+  const kod = JT.kodSaya;
+  const share = `Assalamualaikum. Saya guna apps Jemaah Juara untuk urusan umrah dengan Juara Travel. Anda boleh lihat pakej dan tempah terus dalam apps. Guna kod rujukan saya ${kod} semasa tempah.\n\n${jLinkRujuk(kod)}`;
+  const cara = [['phone','Daftar dalam apps','Sekali sahaja, bila anda mula guna apps', JT.mata.daftarApps],
+                ['ticket','Tempah pakej dan bayar deposit','Setiap tempahan dalam apps', JT.mata.tempahanDeposit],
+                ['check','Bayar penuh','Setiap tempahan yang dibayar penuh', JT.mata.bayaranPenuh],
+                ['users','Rujuk kawan','Bila kawan tempah guna kod rujukan anda', JT.mata.rujukKawan]];
   return bar('juara/pakej', 'Juara') + `
   <main class="stack">
     <div class="jagent">
-      <div class="jag-top"><div class="jav">${esc(nama2.slice(0,1))}</div><div style="flex:1"><b>${esc(a.nama)}</b><span>Agent Juara · ${esc(a.kawasan)}</span></div><span class="ct w">Contoh</span></div>
+      <div class="jag-top"><img src="img/tng.svg" alt="Touch 'n Go eWallet" width="62" height="40" style="border-radius:8px;flex:none"><div style="flex:1;min-width:0"><b>Mata ganjaran</b><span>${esc(J.nama)} · ahli Jemaah Juara</span></div><span class="ct w">Contoh</span></div>
       <div class="jag-pts"><span>Baki mata</span><b>${fmt(baki)} <small>mata</small></b></div>
-      <div class="jag-tier"><span class="tier t-${tp.now.n}">${jic('award')}${tp.now.n}</span><span>${tp.next ? `Lagi ${fmt(tp.next.min-terkumpul)} mata ke ${tp.next.n}` : 'Tahap tertinggi'}</span></div>
+      <div class="jag-tier"><span class="tier t-${tp.now.n}">${jic('award')}Ahli ${tp.now.n}</span><span>${tp.next ? `Lagi ${fmt(tp.next.min-terkumpul)} mata ke ${tp.next.n}` : 'Tahap tertinggi'}</span></div>
       <div class="jag-bar"><i style="width:${tp.pct}%"></i></div>
       <div class="jag-sub">Tahap ikut jumlah mata terkumpul: ${fmt(terkumpul)} mata</div>
-    </div>
-    <div class="card">
-      <div class="muted small">Kod agent anda</div>
-      <div class="jkod">${a.kod}</div>
-      <div class="small muted">Jemaah guna kod ini semasa tempah, anda terus dapat mata.</div>
-      <div class="jbtn2" style="margin-top:12px"><a class="btn" href="${waLink('', share)}" ${ext}>${ic('chat')}Kongsi</a><button class="btn sec" data-j="salinLink">${jic('copy')}Salin pautan</button></div>
     </div>
     <div class="jbtn2"><a class="btn" href="#juara/tebus">${jic('gift')}Tebus ganjaran</a><a class="btn sec" href="#juara/peraturan">${jic('rules')}Peraturan</a></div>
     <div><div class="h2" style="margin-top:8px">Cara dapat mata ${CT}</div>
       <div class="list">${cara.map(c=>`<div class="li"><div class="ic">${jic(c[0])}</div><div><b style="font-size:14.5px">${c[1]}</b><span>${c[2]}</span></div><b class="jpts">+${fmt(c[3])}</b></div>`).join('')}</div></div>
-    <div><div class="h2" style="margin-top:8px">Kedudukan ${BULAN_PENUH[now.getMonth()]} ${CT}</div>
-      <div class="jme">${jic('trophy')}<span>Anda di tempat <b>ke-${pos}</b> daripada ${rank.length} agent bulan ini</span></div>
-      <div class="list">${rank.map((r,i)=>`<div class="li ${r.x.kod===a.kod?'me':''}"><div class="jrank ${i===0?'r1':''}">${i+1}</div><div><b style="font-size:14.5px">${esc(r.x.nama)}${r.x.kod===a.kod?' (anda)':''}</b><span>${esc(r.x.kawasan)}</span></div><b style="margin-left:auto;font-size:14.5px">${fmt(r.m)} mata</b></div>`).join('')}</div></div>
+    <div class="card">
+      <div class="muted small">Kod rujukan anda</div>
+      <div class="jkod">${kod}</div>
+      <div class="small muted">Kongsi dengan kawan dan keluarga. Bila mereka tempah guna kod ini, anda dapat ${fmt(JT.mata.rujukKawan)} mata.</div>
+      <div class="jbtn2" style="margin-top:12px"><a class="btn" href="${waLink('', share)}" ${ext}>${ic('chat')}Kongsi</a><button class="btn sec" data-j="salinLink">${jic('copy')}Salin pautan</button></div>
+    </div>
     <div><div class="h2" style="margin-top:8px">Sejarah mata ${CT}</div>
       <div class="list">${ev.map(e=>`<div class="li"><div class="ic" style="${e.m<0?'background:#f1ece5;color:var(--muted)':'background:var(--green-soft);color:var(--green)'}">${jic(e.m<0?'gift':'plus')}</div><div style="min-width:0"><b style="font-size:14px">${esc(e.a)}</b><span>${tarikh(e.t)} · ${e.m<0?'Tebus':'Masuk'}</span></div><b class="jpts ${e.m<0?'jneg':''}">${e.m<0?'-':'+'}${fmt(Math.abs(e.m))}</b></div>`).join('')}</div></div>
-    <div class="note">${ic('alert')}<div>Profil, mata dan kedudukan ialah contoh untuk demo. Nilai mata boleh diubah dalam fail tetapan.</div></div>
+    <div class="note">${ic('alert')}<div>Mata dan sejarah ialah contoh untuk demo. Nilai mata boleh diubah dalam fail tetapan.</div></div>
   </main>`;
 }
 function jTebus(){
-  const {baki} = jAgentData();
+  const {baki} = jMataData();
   const mine = JS.tebusan;
-  return bar('juara/ganjaran', 'Ganjaran agent') + `
+  return bar('juara/ganjaran', 'Mata ganjaran') + `
   <main class="stack">
     <div><div class="h1">Tebus ganjaran</div><div class="muted small" style="margin-top:4px">Tukar mata anda dengan hadiah pilihan</div></div>
     <div class="card stepper-row"><div><span>Baki mata anda</span><b style="font-size:24px;font-weight:700;color:var(--red)">${fmt(baki)}</b></div>${jic('award')}</div>
@@ -577,8 +565,8 @@ function jTebus(){
 }
 function jTebusOk(kod){
   const r = JS.tebusan.find(x=>x.kod===kod); if(!r) return jTebus();
-  const g = GANJARAN.find(x=>x.id===r.id), {baki} = jAgentData();
-  return bar('juara/ganjaran', 'Ganjaran agent') + `
+  const g = GANJARAN.find(x=>x.id===r.id), {baki} = jMataData();
+  return bar('juara/ganjaran', 'Mata ganjaran') + `
   <main class="stack">
     <div class="jok">${ic('check')}<div class="h1">Ganjaran berjaya ditebus</div><div class="muted">${esc(g.nama)}</div></div>
     <div class="jcode"><div class="jtags" style="justify-content:center"><span class="muted small">Kod tebus anda</span>${CT}</div><b>${r.kod}</b><button class="jlink" data-j="salinKod" data-v="${r.kod}" style="text-decoration:none">${jic('copy')}Salin kod</button></div>
@@ -594,29 +582,29 @@ function jTebusOk(kod){
 function jPeraturan(){
   const k = JT.kempen, m = JT.mata, t = JT.tahap;
   const P2 = [
-    'Kempen ini terbuka kepada agent Juara yang berdaftar dan ada kod agent aktif.',
-    `Tempoh kempen: ${tarikh(k.mula)} hingga ${tarikh(k.tamat)}.`,
-    `Mata diberi bila jemaah daftar atau tempah guna kod anda: daftar jemaah baru ${fmt(m.daftarJemaah)} mata seorang, tempahan deposit ${fmt(m.tempahanDeposit)} mata, bayaran penuh ${fmt(m.bayaranPenuh)} mata, rujukan jemaah berulang ${fmt(m.rujukanBerulang)} mata.`,
-    'Mata hanya sah selepas Juara sahkan bayaran jemaah. Jika tempahan dibatalkan, mata untuk tempahan itu ditarik balik.',
-    'Satu tempahan hanya boleh dikaitkan dengan satu kod agent.',
-    `Tahap agent ikut jumlah mata terkumpul: ${t.map(x=>`${x.n} (${fmt(x.min)} mata)`).join(', ')}.`,
+    'Terbuka kepada semua pengguna apps Jemaah Juara, sama ada jemaah atau bakal jemaah.',
+    `Tempoh: ${tarikh(k.mula)} hingga ${tarikh(k.tamat)}.`,
+    `Cara dapat mata: daftar dalam apps ${fmt(m.daftarApps)} mata (sekali), tempahan dengan deposit ${fmt(m.tempahanDeposit)} mata, bayaran penuh ${fmt(m.bayaranPenuh)} mata, rujuk kawan ${fmt(m.rujukKawan)} mata bagi setiap kawan yang tempah.`,
+    'Mata hanya sah selepas Juara sahkan bayaran. Jika tempahan dibatalkan, mata untuk tempahan itu ditarik balik.',
+    'Kod rujukan tidak boleh dipakai untuk tempahan sendiri.',
+    `Tahap ahli ikut jumlah mata terkumpul: ${t.map(x=>`${x.n} (${fmt(x.min)} mata)`).join(', ')}.`,
     `Mata sah selama ${k.luputBulan} bulan dari tarikh diterima.`,
-    `Baucar Touch 'n Go eWallet dihantar ke nombor telefon agent yang berdaftar dalam ${k.hariHantarBaucar} hari bekerja.`,
+    `Baucar Touch 'n Go eWallet dihantar ke nombor telefon anda yang berdaftar dalam ${k.hariHantarBaucar} hari bekerja.`,
     'Ganjaran yang sudah ditebus tidak boleh ditukar kepada wang tunai atau dipindah kepada orang lain.',
-    'Juara berhak mengubah peraturan dan ganjaran dengan notis awal kepada semua agent.'
+    'Juara berhak mengubah peraturan dan ganjaran dengan notis awal kepada semua pengguna.'
   ];
-  return bar('juara/ganjaran', 'Ganjaran agent') + `
+  return bar('juara/ganjaran', 'Mata ganjaran') + `
   <main class="stack">
-    <div><div class="jtags"><div class="h1">Peraturan kempen</div>${CT}</div><div class="muted small" style="margin-top:4px">${esc(k.nama)}</div></div>
+    <div><div class="jtags"><div class="h1">Peraturan mata ganjaran</div>${CT}</div><div class="muted small" style="margin-top:4px">${esc(k.nama)}</div></div>
     <div class="card"><div class="steps" style="margin-top:0">${P2.map(x=>`<div class="step">${x}</div>`).join('')}</div></div>
-    <div class="note">${ic('alert')}<div>Peraturan ini contoh. Juara akan muktamadkan sebelum kempen bermula.</div></div>
+    <div class="note">${ic('alert')}<div>Peraturan ini contoh. Juara akan muktamadkan sebelum dilancarkan.</div></div>
     <a class="btn sec" href="#juara/ganjaran">Kembali ke ganjaran</a>
   </main>`;
 }
 
 /* ===== Kad ganjaran Touch 'n Go di skrin Utama ===== */
 function jTngKad(){
-  const {baki} = jAgentData();
+  const {baki} = jMataData();
   const tng = GANJARAN.filter(g=>g.pre==='TNG').sort((a,b)=>a.mata-b.mata);
   const boleh = tng.filter(g=>g.mata<=baki).pop(), next = tng.find(g=>g.mata>baki);
   const rm = g => g.nama.match(/RM\d+/)[0];
@@ -688,10 +676,10 @@ document.addEventListener('click', e=>{
     const s = ['menunggu','deposit','lengkap']; b.status = s[(s.indexOf(b.status)+1) % s.length];
     jst.set('tempahan', JS.tempahan); jRerender(); toast('Status: '+STATUS[b.status][0]);
   }
-  else if(j==='salinLink'){ jSalin(jLinkAgent(JT.agentDemo), 'Pautan agent disalin'); }
+  else if(j==='salinLink'){ jSalin(jLinkRujuk(JT.kodSaya), 'Pautan rujukan disalin'); }
   else if(j==='salinKod'){ jSalin(v, 'Kod tebus disalin'); }
   else if(j==='tebus'){
-    const g = GANJARAN.find(x=>x.id===v), {baki} = jAgentData(); if(!g) return;
+    const g = GANJARAN.find(x=>x.id===v), {baki} = jMataData(); if(!g) return;
     jSheet(`<div class="hd">${jic('gift')}<div><b>Tebus ganjaran ini?</b><span>${esc(g.nama)}</span></div></div>
       <div class="kv"><span class="muted">Mata diperlukan</span><b>${fmt(g.mata)}</b></div>
       <div class="kv"><span class="muted">Baki sekarang</span><b>${fmt(baki)}</b></div>
@@ -699,10 +687,10 @@ document.addEventListener('click', e=>{
       <div class="btns" style="margin-top:16px"><button class="btn" data-j="tebusYa" data-v="${g.id}">Ya, tebus sekarang</button><button class="btn sec" data-j="tutup">Batal</button></div>`);
   }
   else if(j==='tebusYa'){
-    const g = GANJARAN.find(x=>x.id===v), {a: ag, baki} = jAgentData();
+    const g = GANJARAN.find(x=>x.id===v), {baki} = jMataData();
     if(!g || baki < g.mata){ jTutup(); toast('Mata tidak mencukupi'); return; }
     const kod = `${g.pre}-${rnd4()}-${rnd4()}`, t = hariIni();
-    JS.mata.push({kod:ag.kod, t, a:`Tebus ${g.nama}`, m:-g.mata}); jst.set('mata', JS.mata);
+    JS.mata.push({kod:'saya', t, a:`Tebus ${g.nama}`, m:-g.mata}); jst.set('mata', JS.mata);
     JS.tebusan.unshift({kod, id:g.id, t}); jst.set('tebusan', JS.tebusan);
     jTutup(); location.hash = 'juara/tebus/' + kod;
   }
@@ -716,4 +704,4 @@ document.addEventListener('input', e=>{
   JS.draft[k] = t.value; saveDraft();
   if(JS.err[k]){ delete JS.err[k]; const f = $('f-'+k); if(f){ f.classList.remove('err'); const m = f.querySelector('.em'); if(m) m.remove(); } }
 });
-window.addEventListener('hashchange', e=>{ jTutup(); try{ JS.prev = new URL(e.oldURL).hash.slice(1); }catch(_){} });
+window.addEventListener('hashchange', e=>{ jTutup(); const tt = $('toast'); if(tt) tt.classList.remove('on'); try{ JS.prev = new URL(e.oldURL).hash.slice(1); }catch(_){} });

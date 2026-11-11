@@ -12,15 +12,15 @@ const JT = {
   // Baki penuh perlu dijelaskan berapa hari sebelum berlepas
   bakiSebelumHari: 45,
 
-  // Mata ganjaran agent
+  // Mata ganjaran untuk jemaah dan bakal jemaah
   mata: {
-    daftarJemaah: 50,      // setiap jemaah baru yang daftar guna kod agent
-    tempahanDeposit: 200,  // bila jemaah bayar deposit
-    bayaranPenuh: 500,     // bila jemaah bayar penuh
-    rujukanBerulang: 100   // jemaah lama tempah semula guna kod agent
+    daftarApps: 100,       // sekali, bila daftar dalam apps
+    tempahanDeposit: 200,  // setiap tempahan dengan bayaran deposit
+    bayaranPenuh: 500,     // setiap tempahan yang dibayar penuh
+    rujukKawan: 300        // bila kawan tempah guna kod rujukan anda
   },
 
-  // Tahap agent ikut jumlah mata terkumpul
+  // Tahap ahli ikut jumlah mata terkumpul
   tahap: [
     { n: 'Perak', min: 0 },
     { n: 'Emas', min: 3000 },
@@ -29,13 +29,13 @@ const JT = {
 
   // Maklumat kempen
   kempen: {
-    nama: 'Kempen Mata Ganjaran Agent Juara',
+    nama: 'Mata Ganjaran Jemaah Juara',
     mula: '2026-12-01',
     tamat: '2027-03-31',
     luputBulan: 12,
     hariHantarBaucar: 7
   },
 
-  // Agent yang dipaparkan dalam skrin Ganjaran Agent (demo)
-  agentDemo: 'SALMAH01'
+  // Kod rujukan pengguna dalam demo
+  kodSaya: 'AMINAH88'
 };

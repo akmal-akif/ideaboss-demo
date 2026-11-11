@@ -668,7 +668,7 @@ function vSolat(){
 const NAV = [['utama','home','Utama'],['solat','moon','Solat'],['kursus','book','Kursus'],['ziarah','map','Ziarah'],['bayaran','wallet','Bayaran'],['juara','bag','Juara']];
 function render(){
   const parts = (location.hash.slice(1) || 'utama').split('/'), [r, sub] = parts;
-  if(r==='agent'){ jPakaiAgent(sub); location.replace('#juara/pakej'); return; }
+  if(r==='agent' || r==='rujuk'){ jPakaiAgent(sub); location.replace('#juara/pakej'); return; }
   $('view').innerHTML = r==='juara' ? vJuara(parts) : r==='kursus' && sub ? vLesson(sub) : ({utama:vUtama,kursus:vKursus,ziarah:vZiarah,bayaran:vBayaran,visa:vVisa,sesat:vSesat,solat:vSolat}[r] || vUtama)();
   $('nav').innerHTML = NAV.map(([k,i,l])=>`<a href="#${k}" class="${r===k?'on':''}">${ic(i)}${l}</a>`).join('');
   window.scrollTo(0,0); loadTitles();
