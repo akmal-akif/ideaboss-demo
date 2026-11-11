@@ -230,6 +230,7 @@ nav a.on svg.i{stroke-width:2.2}
 <script src="juara-data.js"></script>
 <script src="kursus-data.js"></script>
 <script src="juara.js"></script>
+<script src="tentatif.js"></script>
 <script>
 const J = {
   nama:'Puan Aminah', penuh:'Aminah binti Yusof', pakej:'Umrah Ziarah 12 Hari', kumpulan:'Kumpulan JT1212',
@@ -391,6 +392,7 @@ function vUtama(){
       <div class="meta"><div>${esc(J.pakej)}</div><div>Berlepas ${tarikh(J.berlepas)}</div></div>
     </div>
     <div class="stack" style="margin-top:14px">
+      ${tentatifKad()}
       ${solatCard()}
       ${baki>0?`<a class="alert" href="#bayaran"><div class="ic">${ic('bell')}</div><div><b>Baki ${RM(baki)}</b><span>Jelaskan sebelum ${tarikh(J.akhir)}${dl>0?' ('+dl+' hari lagi)':''}</span></div>${ic('chev','go')}</a>`:''}
       ${jTngKad()}
@@ -670,7 +672,7 @@ const NAV = [['utama','home','Utama'],['solat','moon','Solat'],['kursus','book',
 function render(){
   const parts = (location.hash.slice(1) || 'utama').split('/'), [r, sub] = parts;
   if(r==='agent' || r==='rujuk'){ jPakaiAgent(sub); location.replace('#juara/pakej'); return; }
-  $('view').innerHTML = r==='juara' ? vJuara(parts) : r==='jualan' ? vJualan(parts) : r==='kursus' && sub ? vLesson(sub) : ({utama:vUtama,kursus:vKursus,ziarah:vZiarah,bayaran:vBayaran,visa:vVisa,sesat:vSesat,solat:vSolat}[r] || vUtama)();
+  $('view').innerHTML = r==='juara' ? vJuara(parts) : r==='jualan' ? vJualan(parts) : r==='jadual' ? vJadual() : r==='kursus' && sub ? vLesson(sub) : ({utama:vUtama,kursus:vKursus,ziarah:vZiarah,bayaran:vBayaran,visa:vVisa,sesat:vSesat,solat:vSolat}[r] || vUtama)();
   $('nav').innerHTML = NAV.map(([k,i,l])=>`<a href="#${k}" class="${r===k?'on':''}">${ic(i)}${l}</a>`).join('');
   window.scrollTo(0,0); loadTitles();
 }

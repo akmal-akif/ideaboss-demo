@@ -267,3 +267,31 @@ nav a{min-width:0}
 .nopic{width:56px;height:56px;border-radius:12px;background:#efe8df;display:grid;place-items:center;color:#857b70;flex:none}
 .nsel{width:100%}
 .chips.wrap{flex-wrap:wrap;overflow:visible;margin:0 0 12px;padding:0}
+
+/* jadual perjalanan */
+.tkad{display:block;background:#fff;border-radius:18px;padding:14px 16px;box-shadow:0 1px 2px rgba(60,40,20,.05),0 4px 14px rgba(60,40,20,.05)}
+.tkad-hd{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.tkad-hd > span:first-child{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--red)}
+.tkad-hd svg.i{width:16px;height:16px}
+.tkad > b{display:block;font-size:16px;font-weight:600}
+.tkad-list{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.tkad-list div,.tact{display:flex;gap:10px;font-size:13.5px;line-height:1.45}
+.tkad-list em,.tact em{font-style:normal;font-weight:600;color:var(--ink2);flex:none;width:92px}
+.tleg{display:flex;gap:14px;font-size:12.5px;color:var(--muted)}
+.tleg span{display:inline-flex;align-items:center;gap:6px}
+.tleg i{width:10px;height:10px;border-radius:50%}
+.tday{background:#fff;border-radius:18px;box-shadow:0 1px 2px rgba(60,40,20,.05),0 4px 14px rgba(60,40,20,.05);overflow:hidden}
+.tday summary{list-style:none;display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer}
+.tday summary::-webkit-details-marker{display:none}
+.tday summary > svg.i{color:var(--muted);transform:rotate(90deg);transition:transform .2s}
+.tday[open] summary > svg.i{transform:rotate(-90deg)}
+.tday summary b{display:block;font-size:15px;font-weight:600}
+.tday summary span{display:block;font-size:12.5px;color:var(--muted)}
+.tday summary span em{font-style:normal;color:var(--red);font-weight:600}
+.tday-no{width:48px;height:48px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:18px;line-height:1;flex:none}
+.tday-no small{font-size:10px;font-weight:500;margin-bottom:2px}
+.tday.kini{box-shadow:0 0 0 2px var(--red)}
+.tday.lepas summary b{color:var(--muted)}
+.tday-bd{padding:2px 16px 14px;border-top:1px solid var(--line)}
+.tact{padding:9px 0;border-bottom:1px dashed var(--line)}
+.tact:last-of-type{border-bottom:0}
