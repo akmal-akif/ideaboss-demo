@@ -10,7 +10,6 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="juara.css">
 <style>
 :root{
   --red:#c8151b; --red-d:#9d0f14; --red-soft:#fdecec; --gold:#b8862b; --gold-soft:#f8efdc;
@@ -217,6 +216,7 @@ nav a.on svg.i{stroke-width:2.2}
 .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);background:#1d1d1f;color:#fff;font-size:13.5px;padding:11px 16px;border-radius:14px;opacity:0;transition:.25s;z-index:80;max-width:360px;width:max-content;text-align:center}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
+<link rel="stylesheet" href="juara.css">
 </head>
 <body>
 <div class="splash" id="splash"><div><img src="logo-juara.png" alt="Juara Travel"><p>Jemaah Juara</p></div></div>
@@ -344,6 +344,7 @@ const P = {
   scissors:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.5 7.5L20 18M8.5 16.5L20 6"/>',
   bank:'<path d="M3 10l9-6 9 6"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3 20h18"/>',
   wifi:'<path d="M2 8.5a15 15 0 0 1 20 0"/><path d="M5 12a10 10 0 0 1 14 0"/><path d="M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 19h.01"/>',
+  tag:'<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>',
   bag:'<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
   play:'<path d="M7 4l13 8-13 8z"/>', moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>', ext:'<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'
 };
@@ -665,11 +666,11 @@ function vSolat(){
 }
 
 /* ===== Router ===== */
-const NAV = [['utama','home','Utama'],['solat','moon','Solat'],['kursus','book','Kursus'],['ziarah','map','Ziarah'],['bayaran','wallet','Bayaran'],['juara','bag','Juara']];
+const NAV = [['utama','home','Utama'],['solat','moon','Solat'],['kursus','book','Kursus'],['ziarah','map','Ziarah'],['bayaran','wallet','Bayaran'],['jualan','tag','Jualan'],['juara','bag','Juara']];
 function render(){
   const parts = (location.hash.slice(1) || 'utama').split('/'), [r, sub] = parts;
   if(r==='agent' || r==='rujuk'){ jPakaiAgent(sub); location.replace('#juara/pakej'); return; }
-  $('view').innerHTML = r==='juara' ? vJuara(parts) : r==='kursus' && sub ? vLesson(sub) : ({utama:vUtama,kursus:vKursus,ziarah:vZiarah,bayaran:vBayaran,visa:vVisa,sesat:vSesat,solat:vSolat}[r] || vUtama)();
+  $('view').innerHTML = r==='juara' ? vJuara(parts) : r==='jualan' ? vJualan(parts) : r==='kursus' && sub ? vLesson(sub) : ({utama:vUtama,kursus:vKursus,ziarah:vZiarah,bayaran:vBayaran,visa:vVisa,sesat:vSesat,solat:vSolat}[r] || vUtama)();
   $('nav').innerHTML = NAV.map(([k,i,l])=>`<a href="#${k}" class="${r===k?'on':''}">${ic(i)}${l}</a>`).join('');
   window.scrollTo(0,0); loadTitles();
 }

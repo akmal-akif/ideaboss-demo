@@ -10,7 +10,7 @@ const jst = {
 };
 const DRAFT0 = () => ({step:1, pakej:null, tarikh:null, bil:1, nama:'', tel:'', emel:'', negeri:'', adaAgent:false, agent:'', kaedah:'deposit'});
 const JS = {
-  negeri:'Semua', cari:'', jenis:'semua', err:{}, kn:'Semua', kcari:'', prev:'',
+  negeri:'Semua', cari:'', jenis:'semua', jkat:'Semua', jsusun:'tarikh', err:{}, kn:'Semua', kcari:'', prev:'',
   geo: jst.get('geo', null),
   draft: Object.assign(DRAFT0(), jst.get('draft', {})),
   tempahan: jst.get('tempahan', []),
@@ -255,6 +255,12 @@ function jNegeriSheet(kind){
     <div class="nlist">${opt('Semua','Semua negeri',src.length)}${ada.map(x=>opt(x.n,x.n,x.c)).join('')}${tiada.map(x=>opt(x.n,x.n,0)).join('')}</div>`);
 }
 
+function jPakejSheet(){
+  const d = JS.draft, row = x => `<button class="nopt ${d.pakej===x.id?'on':''}" data-j="pilihPakej" data-id="${x.id}"><span>${esc(x.nama)}<br><small>${x.hari}</small></span><small>${RM(x.harga)}</small>${d.pakej===x.id?ic('check'):''}</button>`;
+  jSheet(`<div class="hd">${jic('ticket')}<div style="flex:1"><b>Pilih pakej</b><span>Harga bermula seorang</span></div><button class="nclr" data-j="tutup" aria-label="Tutup" style="width:44px;height:44px">${ic('x')}</button></div>
+    <div class="nlist"><div class="nhd">Umrah</div>${PAKEJ.filter(x=>x.jenis==='umrah').map(row).join('')}<div class="nhd">Tours</div>${PAKEJ.filter(x=>x.jenis==='lancong').map(row).join('')}</div>`);
+}
+
 /* ===== 2. Pakej ===== */
 const JENIS = [['semua','Semua'],['umrah','Umrah'],['lancong','Pelancongan'],['cuti','Cuti Sekolah']];
 const jKerusi = (p, t) => Math.max(0, t.k - JS.tempahan.filter(b=>b.pakej===p.id && b.tarikh===t.d).reduce((s,b)=>s+b.bil, 0));
@@ -268,19 +274,43 @@ function jSeat(k){
   if(k<=0) return `<span class="pill p-grey">Penuh</span>`;
   return `<span class="pill ${k<=10?'p-warn':'p-ok'}">Baki ${k} kerusi</span>`;
 }
+function jPkCard(p){
+  const t = jTarikhAwal(p);
+  return `<div class="card jpk">
+    <a class="jpk-img" href="#juara/pakej/${p.id}">${jGambar(p)}<span class="jpk-tag">${p.kat || jJenisNama(p)}</span></a>
+    <div class="jpk-bd">
+      <div class="jtags"><b class="jpk-nm">${esc(p.nama)}</b>${p.cuti?'<span class="pill p-blue">Cuti sekolah</span>':''}${CT}</div>
+      <div class="jmeta"><span>${ic('clock')}${p.hari}</span><span>${jic('plane')}Berlepas ${tarikh(t.d)}</span></div>
+      <div class="jpk-pr"><div><span>Harga bermula</span><b>${RM(p.harga)}</b><small> seorang</small></div>${jSeat(jKerusi(p,t))}</div>
+      <div class="jbtn2"><a class="btn sec" href="#juara/pakej/${p.id}">Lihat butiran</a><button class="btn" data-j="tempah" data-id="${p.id}">Tempah</button></div>
+    </div></div>`;
+}
+/* ===== Tab Jualan: Umrah dan Tours ===== */
+const KAT = {umrah:['Semua','Ekonomi','Selesa','Premium'], tours:['Semua','Dalam negara','Asia','Timur Tengah','Eropah']};
+function vJualan(parts){
+  const tab = parts[1]==='tours' ? 'tours' : 'umrah', jenis = tab==='umrah' ? 'umrah' : 'lancong';
+  const semua = PAKEJ.filter(p=>p.jenis===jenis);
+  if(!KAT[tab].includes(JS.jkat)) JS.jkat = 'Semua';
+  let list = semua.filter(p => JS.jkat==='Semua' || p.kat===JS.jkat);
+  list = list.slice().sort(JS.jsusun==='harga' ? (a,b)=>a.harga-b.harga : (a,b)=>jTarikhAwal(a).d.localeCompare(jTarikhAwal(b).d));
+  const nU = PAKEJ.filter(p=>p.jenis==='umrah').length, nT = PAKEJ.filter(p=>p.jenis==='lancong').length;
+  const {baki} = jMataData();
+  return bar() + `<main>
+    <div class="h1">Jualan pakej</div>
+    <div class="muted small" style="margin:4px 0 14px">Pilih pakej dan tempah terus dalam apps</div>
+    <a class="tngkad jmini" href="#juara/ganjaran"><img src="img/tng.svg" alt="" width="46" height="30"><div><b>Setiap tempahan dapat mata ganjaran</b><span>Baki anda ${fmt(baki)} mata. Tebus baucar Touch 'n Go eWallet.</span></div>${ic('chev')}</a>
+    <div class="seg" style="margin-top:14px"><a href="#jualan/umrah" class="${tab==='umrah'?'on':''}">Umrah (${nU})</a><a href="#jualan/tours" class="${tab==='tours'?'on':''}">Tours (${nT})</a></div>
+    <div class="chips wrap">${KAT[tab].map(k=>`<button class="chip ${JS.jkat===k?'on':''}" data-j="jkat" data-v="${k}">${k}</button>`).join('')}</div>
+    <div class="jsort"><span>${list.length} pakej</span><div><button class="${JS.jsusun==='tarikh'?'on':''}" data-j="jsusun" data-v="tarikh">Berlepas terdekat</button><button class="${JS.jsusun==='harga'?'on':''}" data-j="jsusun" data-v="harga">Harga terendah</button></div></div>
+    <div class="stack">${list.map(jPkCard).join('') || `<div class="card empty">${jic('search')}<b>Tiada pakej buat masa ini</b><span>Cuba pilihan lain.</span></div>`}</div>
+    <div class="note" style="margin-top:14px">${ic('alert')}<div>Semua pakej, harga, tarikh dan baki kerusi ialah contoh. Juara akan sahkan maklumat sebenar.</div></div>
+  </main>`;
+}
 function jPakej(){
   const list = PAKEJ.filter(p => JS.jenis==='semua' || (JS.jenis==='cuti' ? p.cuti : p.jenis===JS.jenis));
   return jHead('pakej') + `
     <div class="chips">${JENIS.map(([k,l])=>`<button class="chip ${JS.jenis===k?'on':''}" data-j="jenis" data-v="${k}">${l}</button>`).join('')}</div>
-    <div class="stack">${list.map(p=>{ const t = jTarikhAwal(p);
-      return `<div class="card jpk">
-        <a class="jpk-img" href="#juara/pakej/${p.id}">${jGambar(p)}<span class="jpk-tag">${jJenisNama(p)}</span></a>
-        <div class="jpk-bd">
-          <div class="jtags"><b class="jpk-nm">${esc(p.nama)}</b>${CT}</div>
-          <div class="jmeta"><span>${ic('clock')}${p.hari}</span><span>${jic('plane')}Berlepas ${tarikh(t.d)}</span></div>
-          <div class="jpk-pr"><div><span>Harga bermula</span><b>${RM(p.harga)}</b><small> seorang</small></div>${jSeat(jKerusi(p,t))}</div>
-          <div class="jbtn2"><a class="btn sec" href="#juara/pakej/${p.id}">Lihat butiran</a><button class="btn" data-j="tempah" data-id="${p.id}">Tempah</button></div>
-        </div></div>`; }).join('') || `<div class="card empty">${jic('search')}<b>Tiada pakej buat masa ini</b><span>Cuba penapis lain.</span></div>`}</div>
+    <div class="stack">${list.map(jPkCard).join('') || `<div class="card empty">${jic('search')}<b>Tiada pakej buat masa ini</b><span>Cuba penapis lain.</span></div>`}</div>
     <div class="note" style="margin-top:14px">${ic('alert')}<div>Harga, tarikh dan baki kerusi ialah contoh. Juara akan sahkan maklumat sebenar.</div></div>
   </main>`;
 }
@@ -295,7 +325,8 @@ function jSyaratBayar(){
 function jPakejDetail(id){
   const p = PAKEJ.find(x=>x.id===id); if(!p) return jPakej();
   const t = jTarikhAwal(p);
-  return bar('juara/pakej', 'Pakej') + `
+  const dari = JS.prev.startsWith('jualan') ? [JS.prev, 'Jualan'] : ['juara/pakej', 'Pakej'];
+  return bar(dari[0], dari[1]) + `
   <div class="jdet-img">${jGambar(p)}</div>
   <main class="stack jpad">
     <div><div class="jtags"><span class="pill p-red">${jJenisNama(p)}</span>${p.cuti?'<span class="pill p-blue">Cuti sekolah</span>':''}${CT}</div>
@@ -359,7 +390,8 @@ function jBeli1(){
   const d = JS.draft, p = jPakejDraf(), maks = jMaksBil();
   if(d.bil > maks){ d.bil = maks; saveDraft(); }
   return jHead('beli') + jStep(1, 'Pilih pakej, tarikh dan bilangan jemaah') + `
-    <div class="stack">${PAKEJ.map(x=>`<button class="opt ${d.pakej===x.id?'on':''}" data-j="pilihPakej" data-id="${x.id}"><span class="radio"></span><div style="flex:1;min-width:0"><b>${esc(x.nama)}</b><span>${x.hari} · bermula ${RM(x.harga)}</span></div>${CT}</button>`).join('')}</div>
+    ${p ? `<button class="opt on" data-j="pakejSheet">${p.img?`<img src="${p.img}" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover;flex:none">`:`<span class="nopic">${jic('plane')}</span>`}<div style="flex:1;min-width:0"><b>${esc(p.nama)}</b><span>${p.hari} · bermula ${RM(p.harga)}</span><span style="color:var(--red);font-weight:600;margin-top:2px">Tukar pakej</span></div>${CT}</button>`
+        : `<button class="nsel" data-j="pakejSheet">${jic('ticket')}<div><span>Pakej</span><b>Pilih pakej</b></div><em>${PAKEJ.length} pakej</em>${jic('down')}</button>`}
     ${p ? `
     <div class="h2">Tarikh berlepas</div>
     <div class="jdates">${p.tarikh.map(t=>{ const k = t.d < hariIni() ? 0 : jKerusi(p,t);
@@ -632,6 +664,8 @@ document.addEventListener('click', e=>{
   const a = e.target.closest('[data-j]'); if(!a || a.disabled) return;
   const j = a.dataset.j, v = a.dataset.v, d = JS.draft;
   if(j==='nPick'){ jNegeriSheet(v); }
+  else if(j==='jkat'){ JS.jkat = v; jRerender(); }
+  else if(j==='jsusun'){ JS.jsusun = v; jRerender(); }
   else if(j==='nSet'){ if(a.dataset.k==='k') JS.kn = v; else JS.negeri = v; jTutup(); jRerender(); const L = $(a.dataset.k==='k'?'klist':'jlist'); if(L && v!=='Semua') L.scrollIntoView({block:'start', behavior:'smooth'}); }
   else if(j==='jenis'){ JS.jenis = v; jRerender(); }
   else if(j==='geo'){
@@ -647,7 +681,8 @@ document.addEventListener('click', e=>{
     d.pakej = p.id; const t = jTarikhAda(p).find(x=>jKerusi(p,x)>0); d.tarikh = t ? t.d : null; d.bil = 1; d.step = 1; saveDraft();
     location.hash = 'juara/beli/1';
   }
-  else if(j==='pilihPakej'){
+  else if(j==='pakejSheet'){ jPakejSheet(); }
+  else if(j==='pilihPakej'){ jTutup();
     if(d.pakej !== a.dataset.id){ d.pakej = a.dataset.id; const p = jPakejDraf(), t = jTarikhAda(p).find(x=>jKerusi(p,x)>0); d.tarikh = t ? t.d : null; d.bil = 1; }
     saveDraft(); jRerender();
   }
