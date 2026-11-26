@@ -1,0 +1,18 @@
+{
+  "method": "POST",
+  "encoding": "multipart",
+  "auth": { "in": "header", "name": "AUTHKEY" },
+  "body": { "selectedYear": "2026", "selectedMonth": "11" },
+  "fields": {
+    "rows": "data.items",
+    "id": "id",
+    "packageName": "package.name",
+    "departureDate": "departureDate",
+    "dateFormat": "YYYY-MM-DD",
+    "price": "price",
+    "priceUnit": "MYR",
+    "hotels": "hotels",
+    "hotelName": "name"
+  },
+  "publishedIds": []
+}
