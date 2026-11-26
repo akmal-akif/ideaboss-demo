@@ -1,7 +1,8 @@
 {
   "method": "POST",
+  "encoding": "multipart",
   "auth": { "in": "header", "name": "AUTHKEY" },
-  "body": { "operation": "departureList" },
+  "body": { "selectedYear": "2026", "selectedMonth": "11" },
   "fields": {
     "rows": "data.items",
     "id": "id",

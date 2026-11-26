@@ -59,3 +59,20 @@ test('requires explicit publication rules and limits the feed to the approved ID
     request: async () => Response.json({ data: { items: [item, { ...item, ref: 'j2' }] } }) });
   assert.deepEqual((await load()).map((row) => row.id), ['j1']);
 });
+
+test('sends the TravelDesk month filter in multipart form with server-side authentication', async () => {
+  const multipart = { ...config, encoding: 'multipart', auth: { in: 'header', name: 'AUTHKEY' },
+    body: { selectedYear: '2026', selectedMonth: '11' } };
+  const base = { url: 'https://traveldesk.example/partner-api', key: 'test-authkey', config: multipart };
+  const load = travelDeskLoader({ ...base, session: 'test-session', request: async (url, options) => {
+    const request = new Request(url, options);
+    assert.equal(request.method, 'POST');
+    assert.match(request.headers.get('content-type'), /^multipart\/form-data; boundary=.+$/);
+    assert.equal(request.headers.get('AUTHKEY'), 'test-authkey');
+    assert.equal(request.headers.get('Cookie'), 'laravel_session=test-session');
+    assert.deepEqual(Object.fromEntries(await request.formData()), { selectedYear: '2026', selectedMonth: '11' });
+    return Response.json({ data: { items: [item] } });
+  } });
+  assert.equal((await load())[0].id, item.ref);
+  assert.throws(() => travelDeskLoader({ ...base, session: 'bad; another=1' }), /authentication/);
+});

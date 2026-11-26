@@ -51,9 +51,9 @@ export function departuresServer({ load, origin, clock = () => new Date() }) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const { JUARA_DEPARTURES_FILE: preview, JUARA_TRAVELDESK_CONFIG: path, TRAVELDESK_URL: url,
-    TRAVELDESK_AUTHKEY: key, JUARA_APP_ORIGIN: origin, HOST = '127.0.0.1', PORT = '3000' } = process.env;
+    TRAVELDESK_AUTHKEY: key, TRAVELDESK_SESSION: session, JUARA_APP_ORIGIN: origin, HOST = '127.0.0.1', PORT = '3000' } = process.env;
   if (!preview && !(path && url && key)) throw new Error('Set JUARA_DEPARTURES_FILE for preview or configure TravelDesk.');
   const load = preview ? async () => JSON.parse(await readFile(preview, 'utf8'))
-    : travelDeskLoader({ url, key, config: JSON.parse(await readFile(path, 'utf8')) });
+    : travelDeskLoader({ url, key, session, config: JSON.parse(await readFile(path, 'utf8')) });
   departuresServer({ load, origin }).listen(Number(PORT), HOST, () => console.log('Juara departures API is listening.'));
 }

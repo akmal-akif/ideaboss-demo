@@ -20,13 +20,16 @@ function localDate(value, format) {
   return value;
 }
 
-export function travelDeskLoader({ url, key, config, request = fetch }) {
+export function travelDeskLoader({ url, key, session, config, request = fetch }) {
   const upstream = new URL(url);
-  const { method = 'GET', auth, fields, query = {}, body = {}, publishedIds, publication } = config;
+  const { method = 'GET', auth, fields, query = {}, body = {}, encoding = 'json', publishedIds, publication } = config;
   const { rows, id, packageName, departureDate, price, hotels, hotelName, priceUnit = 'MYR', dateFormat = 'YYYY-MM-DD' } = fields || {};
   if (upstream.protocol !== 'https:' || upstream.username || upstream.password || upstream.hash || !key || !['GET', 'POST'].includes(method)
     || !['header', 'query', 'body'].includes(auth?.in) || !/^[\w-]+$/.test(auth.name || '') || (auth.prefix != null && typeof auth.prefix !== 'string')
     || (auth.in === 'body' && method !== 'POST') || !object(query) || !object(body)
+    || !['json', 'multipart'].includes(encoding) || (encoding === 'multipart' && (method !== 'POST'
+      || !Object.values(body).every((value) => ['string', 'number', 'boolean'].includes(typeof value))))
+    || (session != null && (typeof session !== 'string' || !/^[\x21\x23-\x2b\x2d-\x3a\x3c-\x5b\x5d-\x7e]+$/.test(session)))
     || ![id, packageName, departureDate].every(validPath) || ![rows, price, hotels, hotelName].every((path) => path == null || validPath(path))
     || !['MYR', 'sen'].includes(priceUnit) || !['YYYY-MM-DD', 'DD/MM/YYYY'].includes(dateFormat)
     || ((publishedIds == null) === (publication == null))
@@ -41,12 +44,20 @@ export function travelDeskLoader({ url, key, config, request = fetch }) {
     const target = new URL(upstream);
     for (const [name, value] of Object.entries(query)) target.searchParams.set(name, String(value));
     const headers = new Headers({ Accept: 'application/json' });
+    if (session) headers.set('Cookie', `laravel_session=${session}`);
     let payload = body;
     if (auth.in === 'header') headers.set(auth.name, secret);
     if (auth.in === 'query') target.searchParams.set(auth.name, secret);
     if (auth.in === 'body') payload = { ...payload, [auth.name]: secret };
-    if (method === 'POST') headers.set('Content-Type', 'application/json');
-    const response = await request(target, { method, headers, body: method === 'POST' ? JSON.stringify(payload) : undefined,
+    let encodedBody;
+    if (method === 'POST' && encoding === 'multipart') {
+      encodedBody = new FormData();
+      for (const [name, value] of Object.entries(payload)) encodedBody.append(name, String(value));
+    } else if (method === 'POST') {
+      headers.set('Content-Type', 'application/json');
+      encodedBody = JSON.stringify(payload);
+    }
+    const response = await request(target, { method, headers, body: encodedBody,
       redirect: 'error', signal: AbortSignal.timeout(8000) });
     if (!response.ok) throw new Error('TravelDesk request failed');
     const items = field(await response.json(), rows);
