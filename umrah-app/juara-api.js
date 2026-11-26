@@ -34,7 +34,7 @@ function pecahHotel(s){
   if(/citarasa malaysia/i.test(t)) b.push('menu Malaysia');
   return { nama, b };
 }
-const AJ = { ic:'', semak:null, sibuk:false, ralat:'', bulan:null, seat:{}, seatRalat:'', adaSahaja:false, buka:{} };
+const AJ = { ic:'', semak:null, sibuk:false, ralat:'', bulan:null, adaSahaja:false, buka:{} };
 const apiAda = () => typeof JT !== 'undefined' && !!JT.apiJuara;
 async function apiGet(path){
   const r = await fetch(JT.apiJuara.replace(/\/$/, '') + path, { headers:{ Accept:'application/json' } });
@@ -58,14 +58,14 @@ function vSemak(){
   return bar('utama', 'Utama') + `
   <main class="stack">
     <div><div class="h1">Status jemaah</div><div class="muted small" style="margin-top:4px">Semak pakej dan baki bayaran anda</div></div>
-    ${apiAda() ? (r ? '' : `<form class="card" id="fSemak" autocomplete="off" novalidate>
+    ${(r ? '' : `<form class="card" id="fSemak" autocomplete="off" novalidate>
       <label class="aj-lbl" for="inIC">No kad pengenalan</label>
       <div class="field ${AJ.ralat?'err':''}"><input id="inIC" inputmode="numeric" enterkeyhint="search" placeholder="000000-00-0000" value="${esc(fmtIC(AJ.ic))}" maxlength="14"></div>
       ${AJ.ralat?`<div class="aj-err">${esc(AJ.ralat)}</div>`:''}
       <button class="btn" type="submit" style="margin-top:12px" ${AJ.sibuk?'disabled':''}>${AJ.sibuk?'<span class="aj-spin"></span>Sedang semak':'Semak'}</button>
       <div class="aj-hint">${ic('eye')}<span>IC anda tidak disimpan dalam phone ini.</span></div>
     </form>
-    <button class="aj-try" data-api="contoh">Belum ada IC? <b>Lihat contoh paparan</b></button>`) : tiadaApi()}
+    <button class="aj-try" data-api="contoh">Belum ada IC? <b>Lihat contoh paparan</b></button>`)}
     ${r ? (r.length ? r.map(kadJemaah).join('') : `<div class="card empty">${ic('alert')}<b>Tiada rekod untuk IC ini</b><span>Semak semula nombor IC, atau hubungi Juara.</span></div>`)
        + `<button class="btn sec" data-api="semula">Semak IC lain</button>` : ''}
   </main>`;
@@ -102,78 +102,104 @@ async function semakIC(){
   const ic12 = AJ.ic.replace(/\D/g,'');
   if(ic12.length!==12){ AJ.ralat = 'Masukkan 12 digit nombor IC.'; return render(); }
   if(ic12===IC_CONTOH){ AJ.semak = REKOD_CONTOH; AJ.ralat=''; return render(); }
+  if(!apiAda()){ AJ.ralat = 'Semakan IC sebenar aktif selepas server Juara dihidupkan. Buat masa ini, tekan Lihat contoh paparan.'; return render(); }
   AJ.sibuk=true; AJ.ralat=''; render();
   try{ AJ.semak = await apiGet('/jemaah?ic='+ic12); }
   catch(e){ AJ.semak=null; AJ.ralat = navigator.onLine ? e.message : 'Tiada internet. Sambung dan cuba lagi.'; }
   AJ.sibuk=false; render();
 }
 
+/* ===== Pakej umrah sebenar (dari server Juara, atau salinan pakej-sebenar.js) ===== */
+const DATA_PAKEJ = { dikemas:null, pakej:[], sumber:'' };
+const IMG_KAT = { Ekonomi:'img/makkah-kumpulan.jpg', 'Menara Jam':'img/kaabah.jpg', Ramadhan:'img/doa.jpg', Syawal:'img/nabawi-kumpulan.jpg', Syaaban:'img/nabawi.jpg', 'Plus Turki':'img/madinah-bas.jpg', Umrah:'img/petugas.jpg' };
+const BLN = d => { const x = new Date(d+'T00:00:00'); return `${BULAN[x.getMonth()]} ${x.getFullYear()}`; };
+function jDikemas(){
+  if(!DATA_PAKEJ.dikemas) return '';
+  // ikut waktu Malaysia (UTC+8) walau phone di Saudi
+  const d = new Date(new Date(DATA_PAKEJ.dikemas).getTime() + 8*3600e3), h = d.getUTCHours(), m = String(d.getUTCMinutes()).padStart(2,'0');
+  return `${d.getUTCDate()} ${BULAN[d.getUTCMonth()]} ${d.getUTCFullYear()}, ${h%12||12}:${m} ${h<12?'pagi':h<14?'tengah hari':h<19?'petang':'malam'}`;
+}
+function pasangPakej(data){
+  if(!data || !data.pakej || !data.pakej.length) return;
+  DATA_PAKEJ.dikemas = data.dikemas; DATA_PAKEJ.pakej = data.pakej;
+  const ubah = data.pakej.map(p => {
+    // satu tarikh satu baris (pilih yang paling banyak seat jika tarikh sama)
+    const T = []; p.tarikh.forEach(t => { const a = T.find(x=>x.d===t.d); if(!a) T.push(t); else if(t.k > a.k) T[T.indexOf(a)] = t; });
+    const t0 = T[0], syk = [...new Set(T.map(t=>t.syarikat).filter(Boolean))];
+    const hotel = [['Makkah', t0.makkah], ['Madinah', t0.madinah]].filter(h=>h[1]).map(([k,h]) => [k, esc(h.nama), h.b.join(', ')]);
+    const bln = [BLN(T[0].d), BLN(T[T.length-1].d)];
+    return { id:'r-'+p.id, nama:p.nama, jenis:'umrah', kat:p.kat, cuti:p.cuti, hari:p.hari, harga:p.harga, img:IMG_KAT[p.kat]||IMG_KAT.Umrah,
+      ringkas:`${T.length} tarikh berlepas${bln[0]===bln[1] ? ' pada '+bln[0] : ', '+bln[0]+' hingga '+bln[1]}.${syk.length?' Penerbangan '+syk.join(' atau ')+'.':''}`,
+      tarikh:T, jalan:[], hotel, termasuk:null, tak:null, faq:null, sebenar:true };
+  });
+  for(let i = PAKEJ.length-1; i >= 0; i--) if(PAKEJ[i].jenis==='umrah') PAKEJ.splice(i, 1);
+  PAKEJ.unshift(...ubah);
+  const kira = {}; ubah.forEach(p => kira[p.kat] = (kira[p.kat]||0) + 1);
+  KAT.umrah.splice(0, KAT.umrah.length, 'Semua', ...Object.keys(kira).sort((a,b)=>kira[b]-kira[a]));
+}
+function jTarikhSebenar(p){
+  return p.tarikh.map(t => {
+    const lepas = t.d < hariIni(), k = lepas ? 0 : jKerusi(p,t);
+    return `<div class="aj-tr"><div><b>${tarikh(t.d)}</b><span>${[t.laluan, t.cuti?'Cuti sekolah':'', t.kod].filter(Boolean).join(' · ')}</span></div><div><b>${RM(t.harga)}</b>${jSeat(k)}</div></div>`;
+  }).join('');
+}
+async function muatPakej(){
+  if(!apiAda()) return;
+  try{ const d = await apiGet('/pakej'); pasangPakej(d); DATA_PAKEJ.sumber = 'langsung'; jRerender(); }catch(e){}
+}
+
 /* ===== Kekosongan seat umrah ===== */
-function senaraiBulan(){
-  const d = new Date(), L = [];
-  for(let i=0;i<6;i++){ const x = new Date(d.getFullYear(), d.getMonth()+i, 1); L.push(`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}`); }
-  return L;
+function senaraiTarikh(){
+  const L = [];
+  DATA_PAKEJ.pakej.forEach(p => p.tarikh.forEach(t => { if(t.d >= hariIni()) L.push({ ...t, nama:p.nama, hari:p.hari }); }));
+  return L.sort((a,b) => a.d.localeCompare(b.d) || b.k - a.k);
 }
 const rangka = () => `<div class="card aj-sk"><i style="width:30%"></i><i style="width:85%"></i><i style="width:60%"></i><i style="width:100%;height:8px"></i></div>`;
 function vSeat(){
-  const L = senaraiBulan(); if(!AJ.bulan) AJ.bulan = L[0];
-  const data = AJ.seat[AJ.bulan], hari = new Date(); hari.setHours(0,0,0,0);
-  if(apiAda() && data===undefined && !AJ.seatSibuk && !AJ.seatRalat) muatSeat(AJ.bulan);
-  const akan = (data||[]).filter(x => new Date(x.berlepas+'T00:00:00') >= hari);
-  const adaSeat = akan.filter(x => x.baki>0), tunjuk = AJ.adaSahaja ? adaSeat : akan;
+  const semua = senaraiTarikh(), L = [...new Set(semua.map(t=>t.d.slice(0,7)))];
+  if(!L.includes(AJ.bulan)) AJ.bulan = L[0];
+  const akan = semua.filter(t => t.d.slice(0,7)===AJ.bulan), adaSeat = akan.filter(x => x.k>0), tunjuk = AJ.adaSahaja ? adaSeat : akan;
   return bar('utama', 'Utama') + `
   <main class="stack">
-    <div><div class="h1">Kekosongan seat umrah</div><div class="muted small" style="margin-top:4px">Terus dari sistem Juara</div></div>
-    ${apiAda() ? `<div class="chips" style="margin-bottom:0">${L.map(b=>{ const [y,m]=b.split('-'); return `<button class="chip ${b===AJ.bulan?'on':''}" data-api="bulan" data-b="${b}">${BULAN[+m-1]} ${y}</button>`; }).join('')}</div>
-    ${AJ.seatRalat ? `<div class="card empty">${ic('wifi')}<b>Tidak dapat dimuat</b><span>${esc(AJ.seatRalat)}</span><button class="btn sec" style="margin-top:14px" data-api="cuba">Cuba lagi</button></div>`
-      : data===undefined ? rangka()+rangka()
-      : !akan.length ? `<div class="card empty">${ic('clock')}<b>Tiada tarikh berlepas</b><span>Cuba pilih bulan lain.</span></div>`
-      : `<div class="aj-bar"><span><b>${adaSeat.length}</b> daripada ${akan.length} tarikh ada seat</span>
-           <button class="aj-tg ${AJ.adaSahaja?'on':''}" data-api="ada" role="switch" aria-checked="${AJ.adaSahaja}"><i></i>Ada seat sahaja</button></div>`
-        + (tunjuk.map(kadSeat).join('') || `<div class="card empty">${ic('alert')}<b>Semua tarikh bulan ini sudah penuh</b><span>Cuba bulan lain.</span></div>`)}` : tiadaApi()}
+    <div><div class="h1">Kekosongan seat umrah</div><div class="muted small" style="margin-top:4px">Dari sistem Juara${DATA_PAKEJ.dikemas?', dikemas kini '+jDikemas():''}</div></div>
+    ${!semua.length ? (apiAda() ? rangka()+rangka() : tiadaApi()) : `<div class="chips" style="margin-bottom:0">${L.map(b=>{ const [y,m]=b.split('-'); const n = semua.filter(t=>t.d.slice(0,7)===b).length; return `<button class="chip ${b===AJ.bulan?'on':''}" data-api="bulan" data-b="${b}">${BULAN[+m-1]} ${y} <small style="opacity:.7">${n}</small></button>`; }).join('')}</div>
+      <div class="aj-bar"><span><b>${adaSeat.length}</b> daripada ${akan.length} tarikh ada seat</span>
+        <button class="aj-tg ${AJ.adaSahaja?'on':''}" data-api="ada" role="switch" aria-checked="${AJ.adaSahaja}"><i></i>Ada seat sahaja</button></div>
+      ${tunjuk.map(kadSeat).join('') || `<div class="card empty">${ic('alert')}<b>Semua tarikh bulan ini sudah penuh</b><span>Cuba bulan lain.</span></div>`}`}
   </main>`;
 }
 function kadSeat(x, i){
-  const h = x.harga, pk = pecahPakej(x.pakej), dt = new Date(x.berlepas+'T00:00:00');
+  const h = x.bilik || {}, dt = new Date(x.d+'T00:00:00');
   const bil = [['Bilik 5 orang',h.quint],['Bilik 4 orang',h.quad],['Bilik 3 orang',h.triple],['Bilik 2 orang',h.double]].filter(r=>r[1]);
-  const mula = bil.length ? Math.min(...bil.map(r=>r[1])) : null;
-  const penuh = x.baki<=0, sikit = !penuh && x.baki<=10, id = x.kod+'|'+i, buka = AJ.buka[id];
-  const hotel = [['Makkah', pecahHotel(x.hotelMakkah)], ['Madinah', pecahHotel(x.hotelMadinah)]].filter(r=>r[1]);
+  const penuh = x.k<=0, sikit = !penuh && x.k<=10, id = x.kod+'|'+x.d+'|'+i, buka = AJ.buka[id];
+  const hotel = [['Makkah', x.makkah], ['Madinah', x.madinah]].filter(r=>r[1]);
   return `<div class="card aj-s ${penuh?'penuh':''}">
     <div class="aj-sh">
       <div class="aj-dt"><small>${HARI_P[dt.getDay()]}</small><b>${dt.getDate()}</b><small>${BULAN[dt.getMonth()]}</small></div>
       <div style="min-width:0">
-        <b class="aj-pk">${esc(pk.nama)}</b>
-        <div class="aj-tags">${pk.tempoh?`<span>${pk.tempoh}</span>`:''}${pk.laluan?`<span>${pk.laluan}</span>`:''}${pk.cuti?'<span class="b">Cuti sekolah</span>':''}</div>
+        <b class="aj-pk">${esc(x.nama)}</b>
+        <div class="aj-tags">${x.hari?`<span>${x.hari}</span>`:''}${x.laluan?`<span>${x.laluan}</span>`:''}${x.cuti?'<span class="b">Cuti sekolah</span>':''}</div>
       </div>
     </div>
     <div class="aj-seat ${penuh?'x':sikit?'w':''}">
-      <div><b>${penuh?'Penuh':`Baki ${x.baki} seat`}</b><span>${x.isi}/${x.seat} diisi</span></div>
-      <div class="aj-meter"><i style="width:${x.seat?Math.round(x.isi/x.seat*100):0}%"></i></div>
+      <div><b>${penuh?'Penuh':`Baki ${x.k} seat`}</b><span>${x.isi}/${x.seat} diisi</span></div>
+      <div class="aj-meter"><i style="width:${x.seat?Math.min(100,Math.round(x.isi/x.seat*100)):0}%"></i></div>
     </div>
     ${hotel.length?`<div class="aj-ht">${hotel.map(([k,v])=>`<div>${ic('pin')}<div><b>${k}: ${esc(v.nama)}</b>${v.b.length?`<span>${v.b.join(' · ')}</span>`:''}</div></div>`).join('')}</div>`:''}
     <div class="aj-ft">
-      <div>${mula?`<small>Harga dari</small><b>${RM(mula)}</b>`:''}</div>
+      <div><small>Harga dari</small><b>${RM(x.harga)}</b></div>
       ${bil.length>1?`<button class="aj-more" data-api="buka" data-id="${esc(id)}" aria-expanded="${!!buka}">Harga ikut bilik ${ic('chev', buka?'up':'')}</button>`:''}
     </div>
     ${buka?`<div class="aj-pr">${bil.map(([k,v])=>`<div class="kv"><span class="muted">${k}</span><b>${RM(v)}</b></div>`).join('')}<div class="small muted" style="margin-top:6px">Harga seorang · ${esc(x.kod)}</div></div>`:''}
     ${penuh
-      ? `<a class="btn sec" target="_blank" rel="noopener" href="${waJ('Assalamualaikum Juara Travel. Tarikh '+tarikh(x.berlepas)+' ('+x.kod+') sudah penuh. Ada tarikh lain yang hampir?')}">Tanya tarikh lain</a>`
-      : `<a class="btn" target="_blank" rel="noopener" href="${waJ('Assalamualaikum Juara Travel. Saya berminat dengan '+pk.nama+', berlepas '+tarikh(x.berlepas)+' ('+x.kod+'). Masih ada seat?')}">${ic('chat')}Tempah melalui WhatsApp</a>`}
+      ? `<a class="btn sec" target="_blank" rel="noopener" href="${waJ('Assalamualaikum Juara Travel. Tarikh '+tarikh(x.d)+' ('+x.kod+') sudah penuh. Ada tarikh lain yang hampir?')}">Tanya tarikh lain</a>`
+      : `<a class="btn" target="_blank" rel="noopener" href="${waJ('Assalamualaikum Juara Travel. Saya berminat dengan '+x.nama+', berlepas '+tarikh(x.d)+' ('+x.kod+'). Masih ada seat?')}">${ic('chat')}Tempah melalui WhatsApp</a>`}
   </div>`;
-}
-async function muatSeat(b){
-  AJ.seatSibuk = true; AJ.seatRalat = '';
-  const [y,m] = b.split('-');
-  try{ AJ.seat[b] = await apiGet(`/seat?tahun=${y}&bulan=${+m}`); }
-  catch(e){ AJ.seatRalat = navigator.onLine ? e.message : 'Tiada internet. Sambung dan cuba lagi.'; }
-  AJ.seatSibuk = false; if((location.hash.slice(1)||'')==='seat') jRerender();
 }
 document.addEventListener('click', e => {
   const a = e.target.closest('[data-api]'); if(!a) return;
   const k = a.dataset.api;
-  if(k==='bulan'){ AJ.bulan = a.dataset.b; AJ.seatRalat=''; render(); }
-  else if(k==='cuba'){ delete AJ.seat[AJ.bulan]; AJ.seatRalat=''; render(); }
+  if(k==='bulan'){ AJ.bulan = a.dataset.b; render(); }
   else if(k==='ada'){ AJ.adaSahaja = !AJ.adaSahaja; jRerender(); }
   else if(k==='buka'){ AJ.buka[a.dataset.id] = !AJ.buka[a.dataset.id]; jRerender(); }
   else if(k==='semula'){ AJ.semak=null; AJ.ic=''; AJ.ralat=''; render(); setTimeout(()=>$('inIC')?.focus(), 50); }
@@ -181,3 +207,8 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('submit', e => { if(e.target.id==='fSemak'){ e.preventDefault(); AJ.ic = $('inIC').value; $('inIC').blur(); semakIC(); } });
 document.addEventListener('input', e => { if(e.target.id==='inIC'){ const v = fmtIC(e.target.value); if(v!==e.target.value) e.target.value = v; AJ.ic = v; if(AJ.ralat){ AJ.ralat=''; e.target.parentNode.classList.remove('err'); const er=document.querySelector('.aj-err'); if(er) er.remove(); } } });
+// Pasang selepas semua skrip apps siap dimuat, kemudian lukis semula
+document.addEventListener('DOMContentLoaded', () => {
+  if(typeof PAKEJ_SEBENAR !== 'undefined'){ pasangPakej(PAKEJ_SEBENAR); DATA_PAKEJ.sumber = 'salinan'; render(); }
+  muatPakej();
+});
