@@ -3,6 +3,8 @@
    Tukar nilai di sini sahaja. Semua nilai di bawah ialah CONTOH.
    ========================================================= */
 const JT = {
+  // URL API awam App Juara. Isi selepas hos API siap dan data TravelDesk disahkan.
+  departuresApiUrl: '',
   // Nombor WhatsApp Juara untuk terima tempahan (contoh, ganti dengan nombor sebenar)
   waJuara: '60120000000',
 

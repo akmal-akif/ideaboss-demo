@@ -230,6 +230,7 @@ nav a.on svg.i{stroke-width:2.2}
 <script src="juara-data.js"></script>
 <script src="kursus-data.js"></script>
 <script src="juara.js"></script>
+<script src="departures.js"></script>
 <script src="tentatif.js"></script>
 <script>
 const J = {
@@ -672,9 +673,11 @@ const NAV = [['utama','home','Utama'],['solat','moon','Solat'],['kursus','book',
 function render(){
   const parts = (location.hash.slice(1) || 'utama').split('/'), [r, sub] = parts;
   if(r==='agent' || r==='rujuk'){ jPakaiAgent(sub); location.replace('#juara/pakej'); return; }
-  $('view').innerHTML = r==='juara' ? vJuara(parts) : r==='jualan' ? vJualan(parts) : r==='jadual' ? vJadual() : r==='kursus' && sub ? vLesson(sub) : ({utama:vUtama,kursus:vKursus,ziarah:vZiarah,bayaran:vBayaran,visa:vVisa,sesat:vSesat,solat:vSolat}[r] || vUtama)();
+  const departures = r === 'berlepas' || (JT.departuresApiUrl && (r === 'jualan' || (r === 'juara' && ['pakej', 'beli'].includes(sub))));
+  $('view').innerHTML = departures ? vDepartures() : r==='juara' ? vJuara(parts) : r==='jualan' ? vJualan(parts) : r==='jadual' ? vJadual() : r==='kursus' && sub ? vLesson(sub) : ({utama:vUtama,kursus:vKursus,ziarah:vZiarah,bayaran:vBayaran,visa:vVisa,sesat:vSesat,solat:vSolat}[r] || vUtama)();
   $('nav').innerHTML = NAV.map(([k,i,l])=>`<a href="#${k}" class="${r===k?'on':''}">${ic(i)}${l}</a>`).join('');
   window.scrollTo(0,0); loadTitles();
+  if (departures) mountDepartures();
 }
 document.addEventListener('click', e=>{
   const v = e.target.closest('[data-vid]'); if(v){ openVideo(v.dataset.vid); return; }

@@ -1,0 +1,17 @@
+{
+  "method": "POST",
+  "auth": { "in": "header", "name": "AUTHKEY" },
+  "body": { "operation": "departureList" },
+  "fields": {
+    "rows": "data.items",
+    "id": "id",
+    "packageName": "package.name",
+    "departureDate": "departureDate",
+    "dateFormat": "YYYY-MM-DD",
+    "price": "price",
+    "priceUnit": "MYR",
+    "hotels": "hotels",
+    "hotelName": "name"
+  },
+  "publishedIds": []
+}
