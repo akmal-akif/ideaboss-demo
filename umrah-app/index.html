@@ -220,7 +220,7 @@ nav a.on svg.i{stroke-width:2.2}
 </head>
 <body>
 <div class="splash" id="splash"><div><img src="logo-juara.png" alt="Juara Travel"><p>Jemaah Juara</p></div></div>
-<div class="demo-strip">Demo untuk semakan. Data jemaah, hotel dan nombor ialah rekaan.</div>
+<div class="demo-strip">Demo untuk semakan. Data contoh, kecuali skrin Status jemaah dan Kekosongan seat yang guna data sebenar Juara.</div>
 <div class="app"><div id="view"></div></div>
 <nav id="nav"></nav>
 <div class="show" id="show"></div>
@@ -231,6 +231,7 @@ nav a.on svg.i{stroke-width:2.2}
 <script src="kursus-data.js"></script>
 <script src="juara.js"></script>
 <script src="tentatif.js"></script>
+<script src="juara-api.js"></script>
 <script>
 const J = {
   nama:'Puan Aminah', penuh:'Aminah binti Yusof', pakej:'Umrah Ziarah 12 Hari', kumpulan:'Kumpulan JT1212',
@@ -401,6 +402,11 @@ function vUtama(){
     <div class="vrow">${VIDEOS.map(vcard).join('')}</div>
     <div class="h2">Bersama Juara</div>
     <div class="gal">${GALERI.map(g=>`<figure class="${g.w?'w':''}"><img loading="lazy" src="img/${g.f}.jpg" alt="${esc(g.c)}"><figcaption>${esc(g.c)}</figcaption></figure>`).join('')}</div>
+    <div class="h2">Semak terus dari sistem Juara</div>
+    <div class="grid">
+      <a class="tile" href="#semak"><div class="ic" style="background:var(--red-soft);color:var(--red)">${ic('eye')}</div><div><b>Status jemaah</b><span>Semak pakej dan baki bayaran guna no IC</span></div></a>
+      <a class="tile" href="#seat"><div class="ic" style="background:var(--green-soft);color:var(--green)">${ic('tag')}</div><div><b>Kekosongan seat</b><span>Tarikh berlepas dan baki seat umrah</span></div></a>
+    </div>
     <div class="h2">Persediaan anda</div>
     <div class="grid">
       <a class="tile" href="#kursus"><div class="ic" style="background:var(--green-soft);color:var(--green)">${ic('book')}</div><div><b>Kursus umrah</b><span>${S.done.length} daripada ${KURSUS.length} topik siap</span></div><div class="bar2"><i style="width:${kp}%"></i></div></a>
@@ -672,7 +678,7 @@ const NAV = [['utama','home','Utama'],['solat','moon','Solat'],['kursus','book',
 function render(){
   const parts = (location.hash.slice(1) || 'utama').split('/'), [r, sub] = parts;
   if(r==='agent' || r==='rujuk'){ jPakaiAgent(sub); location.replace('#juara/pakej'); return; }
-  $('view').innerHTML = r==='juara' ? vJuara(parts) : r==='jualan' ? vJualan(parts) : r==='jadual' ? vJadual() : r==='kursus' && sub ? vLesson(sub) : ({utama:vUtama,kursus:vKursus,ziarah:vZiarah,bayaran:vBayaran,visa:vVisa,sesat:vSesat,solat:vSolat}[r] || vUtama)();
+  $('view').innerHTML = r==='juara' ? vJuara(parts) : r==='jualan' ? vJualan(parts) : r==='jadual' ? vJadual() : r==='kursus' && sub ? vLesson(sub) : ({utama:vUtama,semak:vSemak,seat:vSeat,kursus:vKursus,ziarah:vZiarah,bayaran:vBayaran,visa:vVisa,sesat:vSesat,solat:vSolat}[r] || vUtama)();
   $('nav').innerHTML = NAV.map(([k,i,l])=>`<a href="#${k}" class="${r===k?'on':''}">${ic(i)}${l}</a>`).join('');
   window.scrollTo(0,0); loadTitles();
 }

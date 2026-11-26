@@ -3,6 +3,10 @@
    Tukar nilai di sini sahaja. Semua nilai di bawah ialah CONTOH.
    ========================================================= */
 const JT = {
+  // Alamat server Juara untuk semak jemaah dan seat (data sebenar).
+  // Kosong = skrin semak dan seat papar 'belum ditetapkan'. Isi selepas server dideploy.
+  apiJuara: '',
+
   // Nombor WhatsApp Juara untuk terima tempahan (contoh, ganti dengan nombor sebenar)
   waJuara: '60120000000',
 
