@@ -4,6 +4,10 @@ Guna Node.js 22 atau lebih baharu. Dari akar repo, jalankan `node --test api/*.t
 
 ## Cuba dengan data ujian
 
+Jalankan `node api/demo.mjs` dan buka alamat yang keluar dalam terminal. Demo membuka Jadual berlepas App Juara dengan data contoh. Hentikan dengan Ctrl+C.
+
+### Guna fail data ujian sendiri
+
 Jalankan `JUARA_DEPARTURES_FILE=/path/to/departures.json node api/departures.mjs`. Fail mengandungi senarai objek dengan `id`, `packageName`, `departureDate` (`YYYY-MM-DD`), `priceMyrSen` (integer sen MYR atau `null`), `hotels` (senarai nama atau `[]`) dan `published` (boolean). API mendengar pada `127.0.0.1:3000` dan menyediakan `GET /api/departures`.
 
 ## Sambung TravelDesk

@@ -31,14 +31,17 @@ function malaysiaDate(clock) {
   return `${values.year}-${values.month}-${values.day}`;
 }
 
-export function departuresServer({ load, origin, clock = () => new Date() }) {
+export function departuresServer({ load, origin, clock = () => new Date(), servePage }) {
   return createServer(async (req, res) => {
     const cors = origin && req.headers.origin === origin ? { 'Access-Control-Allow-Origin': origin } : {};
     const send = (status, data, extra = {}) => {
       res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', Vary: 'Origin', ...cors, ...extra });
       res.end(JSON.stringify(data));
     };
-    if (req.url?.split('?')[0] !== '/api/departures') return send(404, { error: 'Laluan tidak dijumpai.' });
+    if (req.url?.split('?')[0] !== '/api/departures') {
+      if (servePage) return servePage(req, res);
+      return send(404, { error: 'Laluan tidak dijumpai.' });
+    }
     if (req.method !== 'GET') return send(405, { error: 'Gunakan GET.' }, { Allow: 'GET' });
     try {
       const rows = await load();
