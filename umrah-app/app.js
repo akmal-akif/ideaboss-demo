@@ -258,41 +258,150 @@ const AKSES_AKAUN = () => `<div class="senarai-pautan">${[['dokumen', 'Dokumen u
 const corak = '<div class="corak" aria-hidden="true"></div>';
 
 /* ===== Skrin tetamu ===== */
+/* ===== Pelancongan (data TravelCRM melalui /api/lawatan) ===== */
+async function muatLawatan() {
+  if (muatLawatan.sedang) return; muatLawatan.sedang = true;
+  try {
+    const api = (JT.apiJuara || '').replace(/\/$/, '');
+    if (!api) throw new Error('Senarai pelancongan belum tersedia dalam paparan ini.');
+    const r = await fetch(api + '/lawatan'), j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.data) throw new Error(j.ralat || 'Senarai pelancongan tidak dapat dimuat.');
+    S.lawatan = j.data.lawatan; S.lawatanRalat = '';
+  } catch (e) { S.lawatanRalat = e.message; }
+  muatLawatan.sedang = false; render(false);
+}
+// Gambar dari URL luar (TravelCRM). Jika tiada, kotak bercorak dengan nama negara.
+const gbUrl = (src, alt, kelas = 'r169', label = '') => src
+  ? `<div class="gb ${kelas}"><img src="${esc(src)}" alt="${esc(alt)}" loading="lazy" referrerpolicy="no-referrer"></div>`
+  : `<div class="gb ${kelas} gb-kosong" aria-hidden="true"><span>${esc(label || alt)}</span></div>`;
+const cariLawatan = id => (S.lawatan || []).find(x => x.id === id);
+const tarikhPendek = d => { const [y, m, h] = d.split('-').map(Number); return `${h} ${BLN[m - 1]}`; };
+
+function kadLawatan(t) {
+  return `<article class="kad pk lawatan-kad">
+    <a class="pk-gambar" href="#/lawatan/${esc(t.id)}" tabindex="-1" aria-hidden="true">${gbUrl(t.gambar[0], t.tajuk, 'r169', t.negara)}<span class="pk-lihat">Lihat butiran ${ic('kanan')}</span>${t.promo ? '<span class="lencana amber pk-lencana">Promosi</span>' : ''}</a>
+    <div class="isi">
+      <span class="kat">${esc(t.negara)}</span>
+      <a class="nama" href="#/lawatan/${esc(t.id)}">${esc(t.tajuk)}</a>
+      <ul class="ciri">
+        ${t.tempoh ? `<li>${ic('kalendar')}<span>${esc(t.tempoh)} <span class="redup">· ${t.tarikhAda} tarikh ada tempat</span></span></li>` : `<li>${ic('kalendar')}<span>${t.tarikhAda} tarikh ada tempat</span></li>`}
+        <li>${ic('kapal')}<span>Terdekat ${tarikhPendek((t.tarikh.find(x => x.baki > 0) || t.tarikh[0]).d)}</span></li>
+      </ul>
+      <div class="harga"><span><span class="kecil redup">Dari, seorang dewasa</span><br><b class="num">${rm(t.hargaMin)}</b></span></div>
+    </div>
+  </article>`;
+}
+
+function vLawatan() {
+  if (!S.lawatan && !S.lawatanRalat) muatLawatan();
+  if (S.lawatanRalat) return kosong('IL-09', 'Ralat', 'Senarai pelancongan tidak dapat dimuat', esc(S.lawatanRalat), `<button class="btn" type="button" data-aksi="lawatan-semula">Cuba lagi</button>`);
+  if (!S.lawatan) return `<div class="stack" style="gap:6px"><h1>Pelancongan</h1></div>` + rangka(3, 300);
+  const negara = [...new Set(S.lawatan.map(t => t.negara))];
+  const n = S.lawatanNegara && negara.includes(S.lawatanNegara) ? S.lawatanNegara : '';
+  const senarai = S.lawatan.filter(t => !n || t.negara === n);
+  return `
+  <div class="stack" style="gap:6px"><h1>Pelancongan</h1><p class="redup">Percutian dalam dan luar negara bersama Juara. Tarikh, harga dan tempat kosong terus dari sistem tempahan.</p></div>
+  <div class="cips skrol" role="group" aria-label="Destinasi">${['', ...negara].map(v => `<button type="button" class="cip" aria-pressed="${n === v}" data-aksi="lawatan-negara" data-nilai="${esc(v)}">${v ? esc(v) : 'Semua'}</button>`).join('')}</div>
+  <p class="kecil redup">${senarai.length} destinasi</p>
+  <div class="grid-pakej">${senarai.map(kadLawatan).join('')}</div>`;
+}
+
+function vLawatanButiran(id) {
+  if (!S.lawatan && !S.lawatanRalat) muatLawatan();
+  if (!S.lawatan) return S.lawatanRalat ? vLawatan() : rangka(1, 260) + rangka(3, 120);
+  const t = cariLawatan(id);
+  if (!t) return kosong('IL-07', 'Tiada', 'Pakej ini tiada lagi', 'Mungkin tarikh sudah penuh atau tamat. Lihat destinasi lain.', `<a class="btn" href="#/lawatan">Semua pelancongan</a>`);
+  const sel = t.tarikh.find(x => x.id === S.lawatanPilih) || t.tarikh.find(x => x.baki > 0) || t.tarikh[0];
+  S.lawatanPilih = sel.id;
+  const h = sel.harga, tunjuk = S.lawatanSemua === id || t.tarikh.length <= 12 ? t.tarikh : t.tarikh.slice(0, 12).concat(t.tarikh.slice(12).filter(x => x.id === sel.id));
+  const g = t.gambar.slice(0, 5);
+  const tanya = wa(`Assalamualaikum Juara Travel. Saya nak tanya pakej pelancongan ${t.negara}: ${t.tajuk}, ${sel.label}.`);
+  const harga = [['Dewasa (12 tahun ke atas)', h.dewasa], ['Kanak-kanak, dengan katil', h.kanak], ['Kanak-kanak, tanpa katil', h.kanakTanpaKatil], ['Bilik seorang (single)', h.bujang], ['Bayi (bawah 2 tahun)', h.bayi]].filter(([, v]) => v);
+  const butangTempah = sel.baki > 0 && sel.tempah ? `<a class="btn penuh" href="${esc(sel.tempah)}" target="_blank" rel="noopener">Tempah ${tarikhPendek(sel.d)}</a>` : `<button class="btn penuh" type="button" disabled>${sel.baki > 0 ? 'Tempah melalui WhatsApp' : 'Tarikh ini penuh'}</button>`;
+  return `
+  <a href="#/lawatan" class="kecil" style="font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-bottom:-12px">${ic('kembali')}Semua pelancongan</a>
+  ${g.length ? `<div class="galeri n${g.length}">${g.map((src, i) => `<figure class="gal">${gbUrl(src, `${t.tajuk} ${i + 1}`, 'r169')}</figure>`).join('')}</div>` : `<div class="galeri n1"><figure class="gal">${gbUrl('', t.tajuk, 'r169', t.negara)}</figure></div>`}
+  <div class="dua-lajur">
+    <div class="kiri">
+      <div class="stack" style="gap:6px">
+        <span class="kecil redup" style="font-weight:600">${esc(t.negara)}${t.domestik ? ' · Dalam negara' : ''}</span>
+        <h1 style="font-size:clamp(1.5rem,3vw,2.2rem)">${esc(t.tajuk)}</h1>
+        <span class="redup">${esc([t.tempoh, sel.syarikat && 'Penerbangan ' + sel.syarikat].filter(Boolean).join(' · '))}</span>
+      </div>
+      <section class="stack">
+        <h2>Pilih tarikh</h2>
+        <div class="tarikh-pilih">${tunjuk.map(x => `<button type="button" data-aksi="lawatan-tarikh" data-nilai="${esc(x.id)}" aria-pressed="${x.id === sel.id}"${x.baki <= 0 ? ' disabled' : ''}><span class="kecil redup">${fHari(x.d)}</span><b>${tarikhPendek(x.d)}</b><span class="kecil ${x.baki <= 0 ? 'seat-penuh' : x.baki <= 5 ? 'seat-sikit' : 'seat-ok'}">${x.baki > 0 ? 'Baki ' + x.baki : 'Penuh'}</span></button>`).join('')}</div>
+        ${tunjuk.length < t.tarikh.length ? `<button type="button" class="btn garis kecil" data-aksi="lawatan-semua" data-nilai="${esc(id)}">Lihat semua ${t.tarikh.length} tarikh</button>` : ''}
+        <span class="kecil redup">${esc(sel.label)} · ${esc(sel.kod)}</span>
+      </section>
+      <section class="stack">
+        <h2>Harga seorang</h2>
+        <div class="kad jadual-harga">${harga.map(([n, v]) => `<div><span>${n}</span><b class="num">${rm(v)}</b></div>`).join('')}</div>
+        ${t.deposit ? `<span class="kecil redup">Deposit ${rm(t.deposit)} seorang untuk simpan tempat.</span>` : ''}
+      </section>
+      ${sel.itinerari ? `<a class="kad pad tindakan" href="${esc(sel.itinerari)}" target="_blank" rel="noopener" style="color:var(--dakwat)"><span><b>Itinerari penuh (PDF)</b><br><span class="kecil redup">Aktiviti harian, hotel dan makanan</span></span><span class="btn garis kecil">Buka</span></a>` : ''}
+    </div>
+    <aside class="kanan" aria-label="Ringkasan tempahan">
+      <div class="kad ringkasan">
+        <div><span class="kecil redup">Seorang dewasa, ${tarikhPendek(sel.d)}</span><br><b class="num" style="font-size:30px;line-height:1.1">${rm(h.dewasa)}</b></div>
+        <span class="kecil ${sel.baki <= 5 ? 'seat-sikit' : 'seat-ok'}">${sel.baki > 0 ? `Baki ${sel.baki} tempat` : 'Penuh'}</span>
+        ${butangTempah}
+        <a class="btn garis penuh" href="${tanya}" target="_blank" rel="noopener">Tanya melalui WhatsApp</a>
+        <span class="kecil redup">Tempahan dibuat di laman tempahan rasmi Juara.</span>
+      </div>
+    </aside>
+  </div>
+  <div class="bar-tempah">
+    <span style="display:flex;flex-direction:column;flex:1"><span class="kecil redup">Dewasa, ${tarikhPendek(sel.d)}</span><b class="num" style="font-size:20px">${rm(h.dewasa)}</b></span>
+    <a class="btn garis kecil" href="${tanya}" target="_blank" rel="noopener" aria-label="Tanya melalui WhatsApp">${ic('telefon')}</a>
+    ${sel.baki > 0 && sel.tempah ? `<a class="btn kecil" href="${esc(sel.tempah)}" target="_blank" rel="noopener">Tempah</a>` : `<button class="btn kecil" type="button" disabled>Penuh</button>`}
+  </div>`;
+}
+
+/* ===== Utama: ringan dan bergambar ===== */
 function vUtama() {
-  if (!S.data) return S.ralat ? kosong('IL-09', 'Ralat sistem', 'Tidak dapat memuat pakej', esc(S.ralat), `<button class="btn" type="button" data-aksi="muat-semula">Cuba lagi</button>`) : rangka(1, 220) + rangka(4, 110);
-  const f = S.f, bil = bilTarikh(tapis({ ...f, kat: 'Semua' }));
-  const n = orangCari(), lihatD = new Map();
-  for (const x of semuaTarikh()) { if (x.t.k <= 0) continue; const k = x.p.id + x.t.d; if (!lihatD.has(k)) lihatD.set(k, { ...x, bil: 0 }); const o = lihatD.get(k); o.bil++; if (x.t.k >= n && o.t.k < n) o.t = x.t; }
-  const dekat = [...lihatD.values()].filter(x => x.t.k >= n).slice(0, 4);
-  const kat = senaraiKat().filter(k => k !== 'Semua' && k !== 'Cuti sekolah').slice(0, 4).map(k => {
-    const ps = pakejAktif().filter(p => p.kat === k), min = Math.min(...ps.flatMap(p => p.tarikh.map(t => t.harga)));
-    const [kod, lbl] = kodPakej(ps[0]);
-    return `<a href="#/pakej" data-aksi="kat" data-nilai="${esc(k)}" style="display:flex;flex-direction:column;gap:8px;color:var(--dakwat)">${gb(kod, lbl, 'r43')}<span><b>${esc(k)}</b><br><span class="kecil redup">Dari ${rm(min)}</span></span></a>`;
-  }).join('');
+  if (!S.data) return S.ralat ? kosong('IL-09', 'Ralat sistem', 'Tidak dapat memuat pakej', esc(S.ralat), `<button class="btn" type="button" data-aksi="muat-semula">Cuba lagi</button>`) : rangka(1, 220) + rangka(2, 180);
+  if (!S.lawatan && !S.lawatanRalat) muatLawatan();
+  const bulan = senaraiBulan().slice(0, 6);
+  const kat = senaraiKat().filter(k => k !== 'Semua' && k !== 'Cuti sekolah').map(k => {
+    const ps = pakejAktif().filter(p => p.kat === k);
+    return { k, min: Math.min(...ps.flatMap(p => p.tarikh.map(t => t.harga))), kod: kodPakej(ps[0])[0], bil: ps.length };
+  });
+  const tours = (S.lawatan || []).filter(t => t.tarikhAda && t.gambar.length);
+  const pilihTour = [...tours.filter(t => t.domestik).slice(0, 1), ...tours.filter(t => !t.domestik)].slice(0, 8);
   return `
   <section class="banner">
     <div class="banner-teks"><h1>Juara<br>Pilihan Kami</h1><p>25 tahun membawa tetamu Allah ke Tanah Suci</p><a class="btn putih" href="#/pakej">Lihat pakej ${ic('kanan')}</a></div>
     <figure class="banner-gambar">${gb('JR-kaabah-malam', '', '', 'Kaabah pada waktu malam')}</figure>
     ${corak}
   </section>
-  ${aksesPantas([['pakej', 'Pakej', 'cari'], ['kursus', 'Kursus', 'buku'], ['cawangan', 'Cawangan', 'pin'], ['mata', 'Mata Juara', 'bintang']])}
+  ${aksesPantas([['pakej', 'Umrah', 'cari'], ['lawatan', 'Percutian', 'kapal'], ['kursus', 'Kursus', 'buku'], ['cawangan', 'Cawangan', 'pin']])}
 
-  <section class="hero">
-    <div class="stack" style="gap:16px">
-      <h2 style="font-size:1.5rem">Cari tarikh umrah yang sesuai dengan anda</h2>
-      <p class="redup kecil">${esc(sumberTeks())}</p>
-      <form class="kad pad carian" data-borang="cari">
-        <label class="medan">Bulan berlepas<select class="input" data-f="bulan"><option value="">Semua bulan</option>${senaraiBulan().map(b => `<option value="${b}"${f.bulan === b ? ' selected' : ''}>${fBulan(b)}</option>`).join('')}</select></label>
-        <label class="medan">Berapa orang?${pilihOrang('data-f="orang"', n)}</label>
-        <label class="medan">Bajet seorang<select class="input" data-f="bajet">${BAJET.map(([v, n]) => `<option value="${v}"${f.bajet === v ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
-        <button class="btn" type="submit">${bil ? `Lihat ${bil} tarikh yang sesuai` : 'Lihat pilihan lain'}</button>
-        ${bil ? '' : `<p class="kecil" style="margin:0;color:var(--amber)">${esc((cadanganCarian({ ...f, kat: 'Semua' })[0] || { teks: 'Tiada tarikh yang padan. Cuba ubah bulan atau bajet.' }).teks)}</p>`}
-      </form>
-      <div class="cips" role="group" aria-label="Jenis pakej">${senaraiKat().slice(1).map(k => `<button type="button" class="cip" data-aksi="kat" data-nilai="${esc(k)}">${esc(k)}</button>`).join('')}</div>
-    </div>
-    <div>
-      <div class="tajuk-seksyen"><h2>Berlepas tidak lama lagi</h2><a href="#/pakej">Semua</a></div>
-      <div class="stack">${dekat.map(barisRingkas).join('') || `<p class="redup">Tiada tarikh terdekat yang muat untuk ${n} orang.</p>`}</div>
+  <section class="seksyen">
+    <div class="tajuk-seksyen"><h2>Bila nak ke Tanah Suci?</h2><a href="#/pakej">Semua</a></div>
+    <div class="cips skrol">${bulan.map(b => `<button type="button" class="cip cip-bulan" data-aksi="pilih-bulan" data-nilai="${b}">${fBulan(b)}</button>`).join('')}</div>
+  </section>
+
+  <section class="seksyen">
+    <div class="tajuk-seksyen"><h2>Pakej umrah</h2><a href="#/pakej">Semua</a></div>
+    <div class="rel">${kat.map(x => `<a class="kad-foto" href="#/pakej" data-aksi="kat" data-nilai="${esc(x.k)}">${gb(x.kod, '', '', x.k)}<span class="kf-teks"><b>${esc(x.k)}</b><span>Dari ${rm(x.min)}</span></span></a>`).join('')}</div>
+  </section>
+
+  <section class="seksyen">
+    <div class="tajuk-seksyen"><h2>Percutian bersama Juara</h2><a href="#/lawatan">Semua</a></div>
+    ${pilihTour.length ? `<div class="rel">${pilihTour.map(t => `<a class="kad-foto" href="#/lawatan/${esc(t.id)}">${gbUrl(t.gambar[0], t.tajuk, '')}<span class="kf-teks"><span class="kf-kecil">${esc(t.negara)}</span><b>${esc(t.tajuk)}</b><span>Dari ${rm(t.hargaMin)}</span></span></a>`).join('')}</div>`
+      : S.lawatanRalat ? `<a class="kad pad" href="#/lawatan">Lihat pakej pelancongan</a>` : `<div class="rel">${rangka(3, 260)}</div>`}
+  </section>
+
+  <a class="promo-kursus" href="#/kursus">
+    ${gb('JR-ziarah-makkah', '', '', 'Kursus umrah bersama Juara')}
+    <span class="pk-teks"><span class="kf-kecil">Terbuka kepada semua</span><b>Kursus umrah percuma</b><span>Belajar cara buat umrah sebelum berangkat. Ada sesi di negeri anda.</span><span class="btn putih kecil">Lihat jadual ${ic('kanan')}</span></span>
+  </a>
+
+  <section class="seksyen">
+    <div class="tajuk-seksyen"><h2>Cerita jemaah Juara</h2></div>
+    <div class="video-jemaah">
+      ${VIDEO_JEMAAH.map((v, i) => `<button type="button" class="kad-video" data-aksi="main-video" data-nilai="${i}" aria-label="Main video: ${esc(v.tajuk)}">${gb(v.poster, '', '', v.tajuk)}<span class="main">${ic('main')}</span><span class="durasi">${v.masa}</span><span class="tajuk-video">${esc(v.tajuk)}</span></button>`).join('')}
     </div>
   </section>
 
@@ -302,36 +411,8 @@ function vUtama() {
       <img src="gambar/BR/25-tahun.webp" alt="25 tahun berpengalaman" class="lencana-25" width="200">
       <h2>Bersama jemaah Juara</h2>
       <p class="redup">Petugas Juara ada bersama anda dari kaunter KLIA sampai pulang. Setiap kumpulan ada mutawwif sendiri sepanjang di Tanah Suci.</p>
-      <div class="jj-kecil">${gb('JR-kumpulan-quba', '', '', 'Kumpulan jemaah Juara di Masjid Quba')}${gb('JR-ziarah-makkah', '', '', 'Ziarah Makkah bersama Juara')}${gb('JR-04', '', '', 'Petugas lapangan Juara')}</div>
+      <a class="btn garis" href="#/cawangan" style="align-self:flex-start">${ic('pin')}Cari cawangan terdekat</a>
     </div>
-  </section>
-
-  <section>
-    <div class="tajuk-seksyen"><h2>Ikut jenis pakej</h2></div>
-    <div class="grid-2 lebar">${kat}</div>
-  </section>
-
-  <section class="stack">
-    <div class="tajuk-seksyen"><h2>Cerita jemaah Juara</h2></div>
-    <div class="video-jemaah">
-      ${VIDEO_JEMAAH.map((v, i) => `<button type="button" class="kad-video" data-aksi="main-video" data-nilai="${i}" aria-label="Main video: ${esc(v.tajuk)}">${gb(v.poster, '', '', v.tajuk)}<span class="main">${ic('main')}</span><span class="durasi">${v.masa}</span><span class="tajuk-video">${esc(v.tajuk)}</span></button>`).join('')}
-    </div>
-  </section>
-
-  <section class="grid-pakej">
-    <div class="kad pad stack">
-      <h2>Kursus umrah percuma</h2>
-      <p class="redup">Terbuka kepada semua, walaupun anda belum tempah pakej.</p>
-      <a class="btn garis" href="#/kursus">Lihat jadual kursus</a>
-    </div>
-    <div class="kad pad stack">
-      <h2>Sebelum anda tempah</h2>
-      <div class="baris"><span class="redup">Deposit</span><b>${rm(JT.depositSeorang)} seorang</b></div>
-      ${JT.lesenKPK ? `<div class="baris"><span class="redup">Lesen KPK</span><b>${esc(JT.lesenKPK)}</b></div>` : ''}
-      <div class="baris"><span class="redup">Harga & seat</span><b>Terus dari sistem Juara</b></div>
-      <a class="btn garis" href="${wa('Assalamualaikum Juara Travel. Saya ingin bertanya tentang pakej umrah.')}" target="_blank" rel="noopener">${ic('telefon')}Tanya melalui WhatsApp</a>
-    </div>
-    <div class="stack"><a class="kad pad kad-mata" href="#/mata" style="display:flex;flex-direction:column;gap:2px"><b>Mata Juara</b><span class="kecil" style="opacity:.85">Dapat mata setiap kali umrah dan bila kawan tempah guna kod anda. Guna untuk potongan pakej.</span></a><a class="kad pad" href="#/cawangan" style="color:var(--dakwat);display:flex;gap:12px;align-items:center">${ic('pin')}<span><b>Cawangan Juara</b><br><span class="kecil redup">Alamat, waktu buka dan arah</span></span></a></div>
   </section>`;
 }
 
@@ -387,7 +468,7 @@ function vButiran(id) {
   const ringkasan = `
     <div class="kad ringkasan">
       <div><span class="kecil redup">Seorang, bilik ${bk ? bk[1].toLowerCase() : ''}</span><br><b class="num" style="font-size:30px;line-height:1.1">${rm(hargaBilik)}</b></div>
-      <label class="medan">Bilik<select class="input" data-pilih="bilik" data-id="${esc(id)}">${bilikAda.map(([k, n, o]) => `<option value="${k}"${bk && bk[0] === k ? ' selected' : ''}>${n} (${o} orang sebilik) · ${rm(sel.bilik[k])}</option>`).join('')}</select></label>
+      <label class="medan">Bilik<select class="input" data-pilih="bilik" data-id="${esc(id)}">${bilikAda.map(([k, n, o]) => `<option value="${k}"${bk && bk[0] === k ? ' selected' : ''}>${n} · ${o} sebilik · ${rm(sel.bilik[k])}</option>`).join('')}</select></label>
       <label class="medan">Bilangan jemaah${pilihOrang('data-pilih="bil"', bil, sel.k, ` data-id="${esc(id)}"`)}</label>
       ${nCari > sel.k && sel.k > 0 ? `<p class="kecil seat-sikit" style="margin:-6px 0 0">Kumpulan ini berbaki ${sel.k} tempat sahaja. Pilih tarikh lain untuk ${nCari} orang.</p>` : ''}
       <div class="baris" style="border-top:1px solid var(--garis);padding-top:12px"><span>Jumlah anggaran</span><b class="num">${rm(hargaBilik * bil)}</b></div>
@@ -1343,12 +1424,12 @@ async function muatNaikDok(input) {
   } catch (e) { toast(e.message); render(false); }
 }
 
-const NAV_TETAMU = [['', 'Utama', 'rumah'], ['pakej', 'Pakej', 'cari'], ['kursus', 'Kursus', 'buku'], ['cawangan', 'Cawangan', 'pin'], ['masuk', 'Log masuk', 'orang']];
-const NAV_JEMAAH = [['saya', 'Utama', 'rumah'], ['pakej', 'Pakej', 'cari'], ['kursus', 'Kursus', 'buku'], ['perjalanan', 'Perjalanan', 'kalendar'], ['akaun', 'Akaun', 'orang']];
+const NAV_TETAMU = [['', 'Utama', 'rumah'], ['pakej', 'Umrah', 'cari'], ['lawatan', 'Percutian', 'kapal'], ['kursus', 'Kursus', 'buku'], ['masuk', 'Log masuk', 'orang']];
+const NAV_JEMAAH = [['saya', 'Utama', 'rumah'], ['pakej', 'Umrah', 'cari'], ['lawatan', 'Percutian', 'kapal'], ['perjalanan', 'Perjalanan', 'kalendar'], ['akaun', 'Akaun', 'orang']];
 // Pautan tambahan di menu atas (desktop) untuk jemaah
-const NAV_JEMAAH_ATAS = [['dokumen', 'Dokumen'], ['cawangan', 'Cawangan'], ['bayaran', 'Bayaran'], ['mata', 'Mata Juara']];
+const NAV_JEMAAH_ATAS = [['kursus', 'Kursus'], ['dokumen', 'Dokumen'], ['cawangan', 'Cawangan'], ['bayaran', 'Bayaran'], ['mata', 'Mata Juara']];
 const JEMAAH = new Set(['saya', 'perjalanan', 'bayaran', 'persediaan', 'akaun', 'dokumen']);
-const TAJUK = { '': 'Juara Travel', pakej: 'Pakej umrah', kursus: 'Kursus umrah', cawangan: 'Cawangan', masuk: 'Log masuk', solat: 'Waktu solat', kredit: 'Kredit gambar', admin: 'Pendaftaran', tempah: 'Tempah', bayar: 'Bayaran deposit', mata: 'Mata Juara', dokumen: 'Dokumen umrah', saya: 'Utama jemaah', perjalanan: 'Perjalanan', bayaran: 'Bayaran', persediaan: 'Persediaan', akaun: 'Akaun' };
+const TAJUK = { '': 'Juara Travel', pakej: 'Pakej umrah', kursus: 'Kursus umrah', cawangan: 'Cawangan', masuk: 'Log masuk', solat: 'Waktu solat', kredit: 'Kredit gambar', admin: 'Pendaftaran', tempah: 'Tempah', bayar: 'Bayaran deposit', mata: 'Mata Juara', lawatan: 'Pelancongan', dokumen: 'Dokumen umrah', saya: 'Utama jemaah', perjalanan: 'Perjalanan', bayaran: 'Bayaran', persediaan: 'Persediaan', akaun: 'Akaun' };
 
 function laluan() {
   const [nama = '', ...args] = location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent);
@@ -1368,7 +1449,7 @@ function render(alih = true) {
 
   $('atas').innerHTML = `<div class="dalam">
     <a class="logo" href="#/${jemaah ? 'saya' : ''}" aria-label="Juara Travel, utama"><img src="logo-juara.png" alt="Juara Travel"></a>
-    <nav aria-label="Menu utama">${nav.filter(([k]) => k !== 'masuk' && k !== 'akaun').map(([k, n]) => `<a href="#/${k}"${kini(k)}>${n}</a>`).join('')}${jemaah ? NAV_JEMAAH_ATAS.map(([k, n]) => `<a href="#/${k}"${kini(k)}>${n}</a>`).join('') : '<a href="#/mata"' + kini('mata') + '>Mata Juara</a>'}</nav>
+    <nav aria-label="Menu utama">${nav.filter(([k]) => k !== 'masuk' && k !== 'akaun').map(([k, n]) => `<a href="#/${k}"${kini(k)}>${n}</a>`).join('')}${jemaah ? NAV_JEMAAH_ATAS.map(([k, n]) => `<a href="#/${k}"${kini(k)}>${n}</a>`).join('') : '<a href="#/cawangan"' + kini('cawangan') + '>Cawangan</a><a href="#/mata"' + kini('mata') + '>Mata Juara</a>'}</nav>
     <span class="kanan">${jemaah ? `<a class="pil" href="#/akaun">${ic('orang')}Akaun</a>` : `<a class="pil" href="#/masuk">Log masuk</a>`}</span>
   </div>`;
   $('bawah').innerHTML = nav.map(([k, n, i]) => `<a href="#/${k}"${kini(k)}>${ic(i)}${n}</a>`).join('');
@@ -1376,10 +1457,10 @@ function render(alih = true) {
   jalur.hidden = !S.demo;
   if (S.demo) jalur.innerHTML = `<span>Paparan contoh: data di bawah bukan data sebenar</span><button type="button" data-aksi="keluar-contoh">Keluar</button>`;
 
-  const V = { dokumen: vDokumen, mata: vMata, bayar: vBayar, '': vUtama, pakej: () => args[0] ? vButiran(args[0]) : vPakej(), tempah: () => vTempah(args[0], args[1]), kursus: vKursus, cawangan: vCawangan, solat: vSolat, masuk: vMasuk, kredit: vKredit, admin: vAdmin, saya: vSaya, perjalanan: vPerjalanan, bayaran: vBayaran, persediaan: vPersediaan, akaun: vAkaun };
+  const V = { lawatan: () => args[0] ? vLawatanButiran(args[0]) : vLawatan(), dokumen: vDokumen, mata: vMata, bayar: vBayar, '': vUtama, pakej: () => args[0] ? vButiran(args[0]) : vPakej(), tempah: () => vTempah(args[0], args[1]), kursus: vKursus, cawangan: vCawangan, solat: vSolat, masuk: vMasuk, kredit: vKredit, admin: vAdmin, saya: vSaya, perjalanan: vPerjalanan, bayaran: vBayaran, persediaan: vPersediaan, akaun: vAkaun };
   $('isi').innerHTML = (V[nama] || vUtama)();
-  document.body.classList.toggle('ada-bar', nama === 'pakej' && !!args[0]);
-  const p = nama === 'pakej' && args[0] && cariPakej(args[0]);
+  document.body.classList.toggle('ada-bar', (nama === 'pakej' || nama === 'lawatan') && !!args[0]);
+  const p = nama === 'pakej' && args[0] ? cariPakej(args[0]) : nama === 'lawatan' && args[0] ? (t => t && { nama: t.tajuk })(cariLawatan(args[0])) : null;
   document.title = (p ? p.nama : TAJUK[nama] || 'Juara Travel') + (nama ? ' · Juara Travel' : '');
   const key = location.hash;
   if (alih && key !== laluanLepas) { window.scrollTo(0, 0); $('isi').focus({ preventScroll: true }); }
@@ -1407,6 +1488,11 @@ document.addEventListener('click', e => {
   else if (a === 'bayar-ujian') bayarUjian();
   else if (a === 'cetak') window.print();
   else if (a === 'main-video') mainVideo(+v);
+  else if (a === 'pilih-bulan') { S.f.bulan = v; S.f.kat = 'Semua'; location.hash = '#/pakej'; }
+  else if (a === 'lawatan-negara') { S.lawatanNegara = v; render(false); }
+  else if (a === 'lawatan-tarikh') { S.lawatanPilih = v; render(false); }
+  else if (a === 'lawatan-semua') { S.lawatanSemua = v; render(false); }
+  else if (a === 'lawatan-semula') { S.lawatanRalat = ''; render(false); }
   else if (a === 'dok-buka') { S.dokBuka = S.dokBuka === v ? null : v; if (!(S.dokMrz && S.dokMrz.id === v)) S.dokMrz = null; render(false); }
   else if (a === 'dok-padam') { if (S.dokPadam !== v) { S.dokPadam = v; toast('Tekan sekali lagi untuk buang ahli dan dokumennya'); } else { apiDok('/dokumen/padam', { method: 'POST', body: JSON.stringify({ id: v }) }).then(() => { S.dok = null; S.dokBuka = null; toast('Ahli dibuang'); muatDok(); }).catch(e => toast(e.message)); } }
   else if (a === 'admin-tab') { S.adminTab = v; render(false); }
@@ -1505,7 +1591,7 @@ document.addEventListener('submit', e => {
     render();
   }
 });
-window.addEventListener('hashchange', () => { const n = laluan().nama; if (n !== 'tempah') S.tempahSiap = null; if (n !== 'bayar' && n !== 'tempah') S.bayar = null; if (n !== 'kursus') S.kursusSiap = null; if (n !== 'admin') S.admin = null; render(); });
+window.addEventListener('hashchange', () => { const n = laluan().nama; if (n !== 'lawatan') { S.lawatanPilih = null; S.lawatanSemua = null; } if (n !== 'tempah') S.tempahSiap = null; if (n !== 'bayar' && n !== 'tempah') S.bayar = null; if (n !== 'kursus') S.kursusSiap = null; if (n !== 'admin') S.admin = null; render(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - S.dimuat > 15 * 60 * 1000) muat(); });
 setInterval(() => { const n = laluan().nama; if (n === '' || n === 'solat' || n === 'saya') render(false); }, 60000);
 

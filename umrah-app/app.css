@@ -365,3 +365,40 @@ body{background:var(--latar) url(gambar/BR/corak-latar.svg) repeat 0 0/72px 72px
 .langkah li::before{content:counter(l);width:26px;height:26px;border-radius:99px;border:2px solid var(--garis2);display:grid;place-items:center;font-size:13px;font-weight:700;flex:none;background:var(--kad)}
 .langkah li.siap{color:var(--dakwat)}.langkah li.siap::before{content:"✓";background:var(--hijau);border-color:var(--hijau);color:#fff}
 .langkah li.kini{color:var(--dakwat);font-weight:600}.langkah li.kini::before{border-color:var(--amber);color:var(--amber)}
+/* ===== Utama baru: ringan dan bergambar ===== */
+.seksyen{display:flex;flex-direction:column;gap:4px}
+.cips.skrol{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin:0 -16px;padding-left:16px;padding-right:16px;scroll-padding-left:16px}
+.cips.skrol::-webkit-scrollbar{display:none}
+.cips.skrol .cip{flex:none}
+.cip-bulan{padding:12px 18px;font-weight:600}
+.rel{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(200px,240px);gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin:0 -16px;padding:2px 16px 6px}
+.rel::-webkit-scrollbar{display:none}
+.kad-foto{position:relative;display:block;border-radius:16px;overflow:hidden;scroll-snap-align:start;color:#fff;background:#1C1917;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.kad-foto .gb{aspect-ratio:3/4;border-radius:0}
+.kad-foto .gb img{transition:transform .5s}
+.kad-foto:hover .gb img,.kad-foto:active .gb img{transform:scale(1.05)}
+.kad-foto::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.78))}
+.kf-teks{position:absolute;left:14px;right:14px;bottom:14px;z-index:1;display:flex;flex-direction:column;gap:2px;line-height:1.3}
+.kf-teks b{font-size:17px;color:#fff}
+.kf-teks>span:last-child{font-size:14px;opacity:.92}
+.kf-kecil{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;opacity:.85}
+.promo-kursus{position:relative;display:block;border-radius:16px;overflow:hidden;color:#fff;min-height:220px;background:#5E0A0E}
+.promo-kursus .gb{position:absolute;inset:0;aspect-ratio:auto;height:100%;border-radius:0}
+.promo-kursus::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(94,10,14,.95) 0%,rgba(94,10,14,.75) 55%,rgba(94,10,14,.2))}
+.pk-teks{position:relative;z-index:1;display:flex;flex-direction:column;gap:6px;padding:24px 20px;max-width:440px}
+.pk-teks b{font-size:22px;color:#fff;line-height:1.2}
+.pk-teks .btn{align-self:flex-start;margin-top:8px}
+.gb-kosong{background:#7A0E13 url(gambar/BR/corak-latar.svg);display:grid;place-items:center;color:#fff;font:600 18px Poppins,sans-serif}
+.gb-kosong span{background:rgba(0,0,0,.25);padding:6px 12px;border-radius:8px}
+select.input{padding-right:36px;text-overflow:ellipsis}
+#isi{gap:36px}
+@media (min-width:1024px){.rel{grid-auto-columns:minmax(220px,1fr);grid-auto-flow:row;grid-template-columns:repeat(4,1fr);overflow:visible;margin:0;padding:0}}
+.tajuk-seksyen{align-items:center}
+.tajuk-seksyen h2{font-size:1.15rem;min-width:0}
+.tajuk-seksyen>a{white-space:nowrap;font-weight:600;font-size:15px;flex:none}
+.akses-pantas a{font-size:13.5px}
+.akses-pantas a span:last-child{white-space:nowrap}
+.video-jemaah{display:grid;grid-auto-flow:column;grid-auto-columns:150px;grid-template-columns:none;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px 6px;gap:12px}
+.video-jemaah::-webkit-scrollbar{display:none}
+@media (min-width:768px){.video-jemaah{grid-auto-columns:200px}}
+.jadual-harga>div>:first-child{max-width:68%}
