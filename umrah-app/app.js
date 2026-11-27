@@ -47,7 +47,8 @@ const S = {
   pilih: {}, bilik: {}, bil: {}, semua: {},
   demo: store.get('demo', false),
   lokasi: store.get('lokasi', 'kl'),
-  tempahSiap: null
+  tempahSiap: null,
+  user: null, authSedia: false, saya: null, sayaRalat: '', sayaMuat: false
 };
 
 async function muat() {
@@ -360,11 +361,19 @@ function vMasuk() {
   <div class="stack" style="gap:20px;max-width:520px">
     <img src="logo-juara.png" alt="Juara Travel" style="width:104px">
     <div class="stack" style="gap:6px"><h1 style="font-size:1.8rem">Log masuk jemaah</h1><p class="redup">Untuk lihat tempahan, bayaran, dokumen dan jadual perjalanan anda.</p></div>
-    <div class="nota">${ic('info')}<span>Log masuk dengan nombor telefon sedang disediakan dan akan dibuka tidak lama lagi. Anda boleh lihat contoh paparan jemaah dahulu.</span></div>
-    <a class="btn penuh" href="#/contoh">Lihat contoh paparan jemaah</a>
-    <a class="btn garis penuh" href="#/pakej">Lihat pakej tanpa log masuk</a>
+    <button class="btn penuh" type="button" data-aksi="masuk-google"${AUTH ? '' : ' disabled'}><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5.1a4.4 4.4 0 0 1-1.9 2.9v2.4h3.1c1.8-1.7 2.7-4.1 2.7-7z" fill="#fff" stroke="none"/><path d="M12 21c2.6 0 4.7-.9 6.3-2.3l-3.1-2.4c-.9.6-2 .9-3.2.9-2.5 0-4.6-1.7-5.3-3.9H3.5v2.5A9.5 9.5 0 0 0 12 21z" fill="#fff" stroke="none" opacity=".85"/><path d="M6.7 13.3a5.7 5.7 0 0 1 0-3.6V7.2H3.5a9.5 9.5 0 0 0 0 8.6z" fill="#fff" stroke="none" opacity=".7"/><path d="M12 6.8c1.4 0 2.6.5 3.6 1.4l2.7-2.7A9.5 9.5 0 0 0 3.5 7.2l3.2 2.5C7.4 8.5 9.5 6.8 12 6.8z" fill="#fff" stroke="none" opacity=".55"/></svg>Log masuk dengan Google</button>
+    <button class="btn garis penuh" type="button" disabled>Log masuk dengan WhatsApp (akan datang)</button>
+    <p class="kecil redup">Gunakan akaun Google dengan emel yang sama seperti yang didaftarkan semasa tempahan dengan Juara.</p>
+    <a class="btn garis penuh" href="#/contoh">Lihat contoh paparan jemaah</a>
     <p class="kecil redup">Perlu bantuan tentang tempahan sedia ada? <a href="${wa('Assalamualaikum Juara Travel. Saya ingin semak status tempahan saya.')}" target="_blank" rel="noopener">WhatsApp kami</a></p>
   </div>`;
+}
+
+function vKredit() {
+  const k = typeof KREDIT !== 'undefined' ? KREDIT : [];
+  return `
+  <div class="stack" style="gap:6px"><h1>Kredit gambar</h1><p class="redup">Gambar lokasi di bawah daripada Wikimedia Commons dan digunakan mengikut lesen masing-masing. Ikon daripada Lucide (lesen ISC).</p></div>
+  <div class="kad kredit-senarai">${k.map(x => `<div><div class="gb r169"><img src="${esc(x.fail)}" alt="" loading="lazy"></div><span><b>${esc(x.pencipta)}</b> · ${esc(x.lesen)}<br><a href="${esc(x.sumber)}" target="_blank" rel="noopener">Halaman sumber</a> · <span class="redup">${esc(x.nota)}</span></span></div>`).join('')}</div>`;
 }
 
 /* ===== Paparan contoh jemaah (data contoh, bertanda) ===== */
@@ -380,7 +389,7 @@ const CONTOH = {
 };
 const hariLagi = d => Math.max(0, Math.round((tkh(d) - tkh(hariIni())) / 86400000));
 
-function vSaya() {
+function vSayaContoh() {
   const c = CONTOH, baki = c.harga - c.dibayar;
   return `
   <div class="baris"><span><span class="redup kecil">Assalamualaikum,</span><br><b style="font-size:20px">${c.nama}</b></span></div>
@@ -408,7 +417,7 @@ function vSaya() {
   </div>`;
 }
 
-function vPerjalanan() {
+function vPerjalananContoh() {
   return `
   <div class="stack" style="gap:6px"><h1>Perjalanan</h1><p class="redup">${CONTOH.pakej} · ${fTkh(CONTOH.berlepas, 1)} hingga ${fTkh(CONTOH.pulang, 1)}</p></div>
   <div class="grid-pakej" style="align-items:start">${CONTOH.hari.map(d => `
@@ -422,7 +431,7 @@ function vPerjalanan() {
     </article>`).join('')}</div>`;
 }
 
-function vBayaran() {
+function vBayaranContoh() {
   const c = CONTOH, baki = c.harga - c.dibayar, pct = Math.round(c.dibayar / c.harga * 100);
   return `
   <h1>Bayaran</h1>
@@ -443,7 +452,7 @@ function vBayaran() {
   </div>`;
 }
 
-function vPersediaan() {
+function vPersediaanContoh() {
   return `
   <h1>Persediaan</h1>
   <div class="grid-pakej" style="align-items:start">
@@ -459,18 +468,173 @@ function vPersediaan() {
   </div>`;
 }
 
-function vAkaun() {
+function vAkaunContoh() {
   return `
   <h1>Akaun</h1>
   <div class="kad jadual-harga" style="max-width:560px"><div><span class="redup">Nama</span><b>Aminah binti Yusof</b></div><div><span class="redup">Telefon</span><b>+60 12-345 6789</b></div><div><span class="redup">Ahli keluarga</span><b>Tiada</b></div><div><span class="redup">Bahasa</span><b>Bahasa Melayu</b></div></div>
   <button class="btn garis" type="button" data-aksi="keluar-contoh" style="max-width:560px">Keluar dari paparan contoh</button>`;
 }
 
+/* ===== Log masuk (Google melalui Firebase Auth) dan data jemaah sebenar ===== */
+let AUTH = null;
+function mulaAuth() {
+  if (!window.firebase || !JT.firebase) { S.authSedia = true; return; }
+  const cfg = { ...JT.firebase };
+  // Guna domain sendiri sebagai authDomain supaya log masuk redirect berfungsi di pelayar yang sekat kuki pihak ketiga
+  if (/\.(web\.app|firebaseapp\.com)$/.test(location.hostname)) cfg.authDomain = location.hostname;
+  firebase.initializeApp(cfg);
+  AUTH = firebase.auth();
+  AUTH.useDeviceLanguage();
+  AUTH.getRedirectResult().catch(e => toast(mesejAuth(e)));
+  AUTH.onAuthStateChanged(u => {
+    S.user = u; S.authSedia = true;
+    if (u) { if (S.demo) { S.demo = false; store.set('demo', false); } muatSaya(); }
+    else { S.saya = null; S.sayaRalat = ''; }
+    const n = laluan().nama;
+    if (u && (n === 'masuk' || n === '')) location.replace('#/saya'); else render(false);
+  });
+}
+function mesejAuth(e) {
+  const c = e && e.code;
+  if (c === 'auth/popup-closed-by-user' || c === 'auth/cancelled-popup-request') return 'Log masuk dibatalkan.';
+  if (c === 'auth/network-request-failed') return 'Tiada internet. Cuba lagi.';
+  if (c === 'auth/unauthorized-domain') return 'Alamat ini belum dibenarkan untuk log masuk.';
+  return 'Log masuk gagal. Cuba lagi.';
+}
+async function masukGoogle() {
+  if (!AUTH) return toast('Log masuk belum tersedia.');
+  const p = new firebase.auth.GoogleAuthProvider();
+  p.setCustomParameters({ prompt: 'select_account' });
+  try { await AUTH.signInWithPopup(p); }
+  catch (e) {
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') return AUTH.signInWithRedirect(p);
+    toast(mesejAuth(e));
+  }
+}
+const icKunci = () => 'ic.' + (S.user ? S.user.uid : '');
+async function muatSaya(icBaru) {
+  const ic = icBaru || store.get(icKunci(), '');
+  if (!S.user || !ic) { S.saya = null; render(false); return; }
+  S.sayaMuat = true; S.sayaRalat = ''; render(false);
+  try {
+    const t = await S.user.getIdToken();
+    const r = await fetch((JT.apiJuara || '').replace(/\/$/, '') + '/saya?ic=' + encodeURIComponent(ic), { headers: { Authorization: 'Bearer ' + t, Accept: 'application/json' } });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.ralat || 'Sistem Juara tidak dapat dihubungi. Cuba lagi.');
+    S.saya = j.data; store.set(icKunci(), ic);
+  } catch (e) { S.sayaRalat = e.message; if (icBaru) S.saya = null; }
+  S.sayaMuat = false; render(false);
+}
+// Tempahan utama: yang akan datang paling dekat, jika tiada, yang terkini
+function tempahanUtama() {
+  if (!S.saya || !S.saya.length) return null;
+  const h = hariIni(), akan = S.saya.filter(r => r.berlepas && r.berlepas >= h).sort((a, b) => a.berlepas.localeCompare(b.berlepas));
+  return akan[0] || S.saya[0];
+}
+const icSamar = ic => ic ? String(ic).slice(0, 6) + '-**-' + String(ic).slice(-4) : '';
+const namaPendek = n => { const w = String(n || '').trim().split(/\s+/); return w[0] ? w[0].charAt(0) + w[0].slice(1).toLowerCase() : ''; };
+const tajukKes = s => String(s || '').toLowerCase().replace(/\b\p{L}/gu, c => c.toUpperCase());
+
+function vHubung() {
+  const emel = S.user && S.user.email;
+  return `
+  <div class="stack" style="gap:18px;max-width:560px">
+    <div class="stack" style="gap:6px"><h1 style="font-size:1.8rem">Hubungkan tempahan anda</h1><p class="redup">Log masuk sebagai <b>${esc(emel)}</b>. Masukkan nombor IC jemaah. Kami hanya papar tempahan yang didaftarkan dengan emel ini dalam sistem Juara.</p></div>
+    <form class="stack" data-borang="hubung" novalidate>
+      <label class="medan">No kad pengenalan<input class="input num" name="ic" inputmode="numeric" autocomplete="off" placeholder="000000-00-0000" required></label>
+      <p class="kecil" id="ralat-hubung" role="alert" style="color:var(--merah)">${esc(S.sayaRalat)}</p>
+      <button class="btn penuh" type="submit"${S.sayaMuat ? ' disabled' : ''}>${S.sayaMuat ? 'Sedang semak…' : 'Cari tempahan saya'}</button>
+    </form>
+    <div class="nota">${ic('info')}<span>Emel dalam rekod Juara berbeza? Hubungi kami untuk kemas kini, atau log masuk dengan WhatsApp bila dibuka nanti.</span></div>
+    <a class="btn garis penuh" href="${wa('Assalamualaikum Juara Travel. Saya ingin kemas kini emel dalam rekod tempahan saya untuk apps Juara.')}" target="_blank" rel="noopener">${ic('telefon')}Hubungi Juara</a>
+    <a href="#/pakej" style="text-align:center;font-weight:600">Belum tempah? Lihat pakej</a>
+  </div>`;
+}
+function perluData(fn) {
+  if (S.demo) return null;
+  if (!S.authSedia || (S.sayaMuat && !S.saya)) return rangka(1, 200) + rangka(2, 100);
+  if (!S.saya) return vHubung();
+  return fn(tempahanUtama());
+}
+function vSaya() {
+  if (S.demo) return vSayaContoh();
+  return perluData(r => {
+    const b = r.bayaran, lagi = r.berlepas ? hariLagi(r.berlepas) : null, dahLepas = r.berlepas && r.berlepas < hariIni();
+    const [kod, lbl] = kodPakej({ nama: r.pakej || '', kat: '' });
+    return `
+    <div><span class="redup kecil">Assalamualaikum,</span><br><b style="font-size:20px">${esc(namaPendek(r.nama))}</b></div>
+    <div class="grid-pakej" style="align-items:start">
+      <a class="kad perjalanan" href="#/perjalanan" style="overflow:hidden;color:var(--dakwat);display:block">
+        ${gb(kod, lbl, '')}
+        <span class="pad" style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
+          <span style="display:flex;flex-direction:column;min-width:0"><span class="kecil redup">${dahLepas ? 'Perjalanan terakhir' : 'Perjalanan anda'}</span><b style="font-size:17px">${esc(tajukKes(r.pakej))}</b><span class="kecil redup">${r.berlepas ? `${fHari(r.berlepas)}, ${fTkh(r.berlepas, 1)}` : 'Tarikh belum ditetapkan'}</span></span>
+          ${r.berlepas && !dahLepas ? `<span style="display:flex;flex-direction:column;align-items:flex-end;flex:none"><b class="num" style="font-size:36px;line-height:1">${lagi}</b><span class="kecil redup">hari lagi</span></span>` : `<span class="lencana kelabu">${dahLepas ? 'Sudah pulang' : 'Akan datang'}</span>`}
+        </span>
+      </a>
+      <section class="stack">
+        <div class="tajuk-seksyen" style="margin:0"><h2>Perlu tindakan</h2></div>
+        ${b.baki > 0 && !dahLepas ? `<div class="kad pad tindakan"><span><b>Bayar baki ${rm(b.baki)}</b><br><span class="kecil redup">Dibayar ${rm(b.dibayar)} daripada ${rm(b.jumlah)}</span></span><a class="btn kecil" href="#/bayaran">Lihat</a></div>`
+          : `<span class="semak">${ic('betul')}${b.baki > 0 ? `Baki ${rm(b.baki)}` : 'Bayaran lunas'}</span>`}
+        <span class="semak">${ic('info')}Status dokumen dan visa akan dipaparkan di sini.</span>
+      </section>
+      <section class="stack">${kadSolat()}${S.saya.length > 1 ? `<a class="kad pad" href="#/perjalanan" style="color:var(--dakwat)"><b>${S.saya.length} tempahan</b><br><span class="kecil redup">Lihat semua tempahan anda</span></a>` : ''}</section>
+    </div>`;
+  });
+}
+function vPerjalanan() {
+  if (S.demo) return vPerjalananContoh();
+  return perluData(() => `
+    <h1>Perjalanan</h1>
+    <div class="nota">${ic('info')}<span>Itinerari harian bergambar akan dipaparkan di sini selepas Juara mengemas kininya untuk kumpulan anda.</span></div>
+    <div class="grid-pakej">${S.saya.map(r => { const [kod, lbl] = kodPakej({ nama: r.pakej || '', kat: '' }); return `<div class="kad" style="overflow:hidden">${gb(kod, lbl)}<div class="pad stack" style="gap:4px"><b>${esc(tajukKes(r.pakej))}</b><span class="redup">${r.berlepas ? `${fTkh(r.berlepas, 1)} hingga ${r.pulang ? fTkh(r.pulang, 1) : '–'}` : 'Tarikh belum ditetapkan'}</span>${r.bilik ? `<span class="kecil redup">Bilik ${esc(r.bilik)}</span>` : ''}</div></div>`; }).join('')}</div>`);
+}
+function vBayaran() {
+  if (S.demo) return vBayaranContoh();
+  return perluData(r => {
+    const b = r.bayaran, pct = b.jumlah ? Math.min(100, Math.round(b.dibayar / b.jumlah * 100)) : 0;
+    return `
+    <div class="stack" style="gap:6px"><h1>Bayaran</h1><p class="redup">${esc(tajukKes(r.pakej))}${r.berlepas ? ' · ' + fTkh(r.berlepas, 1) : ''}</p></div>
+    <div class="grid-pakej" style="align-items:start">
+      <div class="kad pad stack">
+        <div class="baris" style="align-items:flex-start"><span><span class="kecil redup">Baki perlu dibayar</span><br><b class="num" style="font-size:34px;line-height:1.1">${rm(b.baki)}</b></span><span class="lencana ${b.baki > 0 ? 'amber' : 'hijau'}">${b.baki > 0 ? 'Belum lunas' : 'Lunas'}</span></div>
+        <div style="height:8px;border-radius:999px;background:var(--garis);overflow:hidden"><div style="width:${pct}%;height:100%;background:var(--hijau)"></div></div>
+        <div class="baris kecil redup"><span>Dibayar ${rm(b.dibayar)}</span><span>daripada ${rm(b.jumlah)}</span></div>
+        ${b.baki > 0 ? `<a class="btn penuh" href="${wa(`Assalamualaikum Juara Travel. Saya ingin bayar baki ${rm(b.baki)} untuk ${tajukKes(r.pakej)}${r.berlepas ? ', berlepas ' + fTkh(r.berlepas, 1) : ''}.`)}" target="_blank" rel="noopener">Hubungi Juara untuk bayar</a>` : ''}
+        <p class="kecil redup">Bayaran terus dalam apps akan dibuka kemudian.</p>
+      </div>
+      <div class="stack">
+        <h2>Pecahan harga</h2>
+        <div class="kad jadual-harga"><div><span class="redup">Harga pakej</span><span class="num">${rm(b.harga)}</span></div>${b.upgrade ? `<div><span class="redup">Naik taraf</span><span class="num">${rm(b.upgrade)}</span></div>` : ''}${b.tambahan ? `<div><span class="redup">Tambahan</span><span class="num">${rm(b.tambahan)}</span></div>` : ''}${b.diskaun ? `<div><span class="redup">Diskaun</span><span class="num">-${rm(b.diskaun)}</span></div>` : ''}<div><b>Jumlah</b><b class="num">${rm(b.jumlah)}</b></div></div>
+      </div>
+    </div>`;
+  });
+}
+function vPersediaan() {
+  if (S.demo) return vPersediaanContoh();
+  return perluData(() => `
+    <h1>Persediaan</h1>
+    <div class="nota">${ic('info')}<span>Muat naik dokumen dan status visa akan dibuka dalam kemas kini seterusnya. Buat masa ini, serahkan dokumen di cawangan Juara.</span></div>
+    <a class="kad pad" href="#/kursus" style="color:var(--dakwat);max-width:560px"><b>Kursus umrah</b><br><span class="kecil redup">Lihat jadual kursus dan daftar hadir</span></a>
+    <a class="kad pad" href="#/solat" style="color:var(--dakwat);max-width:560px"><b>Waktu solat</b><br><span class="kecil redup">Kuala Lumpur, Madinah dan Makkah</span></a>`);
+}
+function vAkaun() {
+  if (S.demo) return vAkaunContoh();
+  if (!S.user) return rangka(1, 200);
+  const ic = store.get(icKunci(), '');
+  return `
+  <h1>Akaun</h1>
+  <div class="kad jadual-harga" style="max-width:560px"><div><span class="redup">Nama</span><b>${esc(S.user.displayName || '')}</b></div><div><span class="redup">Emel</span><b style="word-break:break-all">${esc(S.user.email || '')}</b></div><div><span class="redup">IC dihubungkan</span><b class="num">${ic ? esc(icSamar(ic)) : 'Belum'}</b></div></div>
+  <div class="stack" style="max-width:560px">
+    ${ic ? `<button class="btn garis" type="button" data-aksi="tukar-ic">Tukar IC</button>` : ''}
+    <button class="btn garis" type="button" data-aksi="log-keluar">Log keluar</button>
+  </div>`;
+}
+
 /* ===== Penghala ===== */
 const NAV_TETAMU = [['', 'Utama', 'rumah'], ['pakej', 'Pakej', 'cari'], ['kursus', 'Kursus', 'buku'], ['cawangan', 'Cawangan', 'pin'], ['masuk', 'Log masuk', 'orang']];
 const NAV_JEMAAH = [['saya', 'Utama', 'rumah'], ['perjalanan', 'Perjalanan', 'kalendar'], ['bayaran', 'Bayaran', 'dompet'], ['persediaan', 'Persediaan', 'buku'], ['akaun', 'Akaun', 'orang']];
 const JEMAAH = new Set(['saya', 'perjalanan', 'bayaran', 'persediaan', 'akaun']);
-const TAJUK = { '': 'Juara Travel', pakej: 'Pakej umrah', kursus: 'Kursus umrah', cawangan: 'Cawangan', masuk: 'Log masuk', solat: 'Waktu solat', tempah: 'Tempah', saya: 'Utama jemaah', perjalanan: 'Perjalanan', bayaran: 'Bayaran', persediaan: 'Persediaan', akaun: 'Akaun' };
+const TAJUK = { '': 'Juara Travel', pakej: 'Pakej umrah', kursus: 'Kursus umrah', cawangan: 'Cawangan', masuk: 'Log masuk', solat: 'Waktu solat', kredit: 'Kredit gambar', tempah: 'Tempah', saya: 'Utama jemaah', perjalanan: 'Perjalanan', bayaran: 'Bayaran', persediaan: 'Persediaan', akaun: 'Akaun' };
 
 function laluan() {
   const [nama = '', ...args] = location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent);
@@ -481,22 +645,24 @@ let laluanLepas = null;
 function render(alih = true) {
   let { nama, args } = laluan();
   if (nama === 'contoh') { S.demo = true; store.set('demo', true); location.replace('#/saya'); return; }
-  if (JEMAAH.has(nama) && !S.demo) { location.replace('#/masuk'); return; }
-  const nav = S.demo ? NAV_JEMAAH : NAV_TETAMU;
+  if (JEMAAH.has(nama) && !S.demo && !S.user && S.authSedia) { location.replace('#/masuk'); return; }
+  if (S.user && (nama === '' || nama === 'masuk')) { location.replace('#/saya'); return; }
+  const jemaah = S.demo || !!S.user;
+  const nav = jemaah ? NAV_JEMAAH : NAV_TETAMU;
   const akar = nama === 'tempah' ? 'pakej' : nama;
   const kini = k => (k === akar || (k === 'pakej' && nama === 'pakej')) ? ' aria-current="page"' : '';
 
   $('atas').innerHTML = `<div class="dalam">
-    <a class="logo" href="#/${S.demo ? 'saya' : ''}" aria-label="Juara Travel, utama"><img src="logo-juara.png" alt="Juara Travel"></a>
-    <nav aria-label="Menu utama">${nav.filter(([k]) => k !== 'masuk' && k !== 'akaun').map(([k, n]) => `<a href="#/${k}"${kini(k)}>${n}</a>`).join('')}<a href="#/solat"${kini('solat')}>Waktu solat</a></nav>
-    <span class="kanan">${S.demo ? `<a class="pil" href="#/akaun">${ic('orang')}Akaun</a>` : `<a class="pil" href="#/masuk">Log masuk</a>`}</span>
+    <a class="logo" href="#/${jemaah ? 'saya' : ''}" aria-label="Juara Travel, utama"><img src="logo-juara.png" alt="Juara Travel"></a>
+    <nav aria-label="Menu utama">${nav.filter(([k]) => k !== 'masuk' && k !== 'akaun').map(([k, n]) => `<a href="#/${k}"${kini(k)}>${n}</a>`).join('')}${jemaah ? `<a href="#/pakej"${kini('pakej')}>Pakej</a>` : ''}<a href="#/solat"${kini('solat')}>Waktu solat</a></nav>
+    <span class="kanan">${jemaah ? `<a class="pil" href="#/akaun">${ic('orang')}Akaun</a>` : `<a class="pil" href="#/masuk">Log masuk</a>`}</span>
   </div>`;
   $('bawah').innerHTML = nav.map(([k, n, i]) => `<a href="#/${k}"${kini(k)}>${ic(i)}${n}</a>`).join('');
   const jalur = $('contoh');
   jalur.hidden = !S.demo;
   if (S.demo) jalur.innerHTML = `<span>Paparan contoh: data di bawah bukan data sebenar</span><button type="button" data-aksi="keluar-contoh">Keluar</button>`;
 
-  const V = { '': vUtama, pakej: () => args[0] ? vButiran(args[0]) : vPakej(), tempah: () => vTempah(args[0], args[1]), kursus: vKursus, cawangan: vCawangan, solat: vSolat, masuk: vMasuk, saya: vSaya, perjalanan: vPerjalanan, bayaran: vBayaran, persediaan: vPersediaan, akaun: vAkaun };
+  const V = { '': vUtama, pakej: () => args[0] ? vButiran(args[0]) : vPakej(), tempah: () => vTempah(args[0], args[1]), kursus: vKursus, cawangan: vCawangan, solat: vSolat, masuk: vMasuk, kredit: vKredit, saya: vSaya, perjalanan: vPerjalanan, bayaran: vBayaran, persediaan: vPersediaan, akaun: vAkaun };
   $('isi').innerHTML = (V[nama] || vUtama)();
   document.body.classList.toggle('ada-bar', nama === 'pakej' && !!args[0]);
   const p = nama === 'pakej' && args[0] && cariPakej(args[0]);
@@ -526,6 +692,9 @@ document.addEventListener('click', e => {
   else if (a === 'keluar-contoh') { S.demo = false; store.set('demo', false); location.hash = '#/'; }
   else if (a === 'muat-semula') { S.ralat = ''; render(false); muat(); }
   else if (a === 'toast') toast(v);
+  else if (a === 'masuk-google') masukGoogle();
+  else if (a === 'log-keluar') { if (AUTH) AUTH.signOut(); S.saya = null; location.hash = '#/'; toast('Anda telah log keluar'); }
+  else if (a === 'tukar-ic') { store.set(icKunci(), ''); S.saya = null; S.sayaRalat = ''; location.hash = '#/saya'; render(false); }
 });
 document.addEventListener('change', e => {
   const el = e.target;
@@ -536,6 +705,12 @@ document.addEventListener('change', e => {
 document.addEventListener('submit', e => {
   const f = e.target;
   if (f.dataset.borang === 'cari') { e.preventDefault(); S.f.kat = 'Semua'; location.hash = '#/pakej'; }
+  else if (f.dataset.borang === 'hubung') {
+    e.preventDefault();
+    const icNo = String(new FormData(f).get('ic') || '').replace(/\D/g, '');
+    if (icNo.length !== 12) { $('ralat-hubung').textContent = 'No IC mesti 12 digit.'; return; }
+    muatSaya(icNo);
+  }
   else if (f.dataset.borang === 'tempah') {
     e.preventDefault();
     const d = Object.fromEntries(new FormData(f)), id = f.dataset.id, kod = f.dataset.kod;
@@ -554,6 +729,7 @@ window.addEventListener('hashchange', () => { if (laluan().nama !== 'tempah') S.
 document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - S.dimuat > 15 * 60 * 1000) muat(); });
 setInterval(() => { const n = laluan().nama; if (n === '' || n === 'solat' || n === 'saya') render(false); }, 60000);
 
+mulaAuth();
 render(false);
 muat();
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
