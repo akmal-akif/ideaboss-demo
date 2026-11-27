@@ -522,7 +522,7 @@ function bayarUjian() {
     const d = new Date(Date.now() + 8 * 3600e3);
     b.resit = 'JT' + d.toISOString().slice(2, 10).replace(/-/g, '') + '-' + Math.random().toString(36).slice(2, 7).toUpperCase();
     b.masa = new Date().toISOString(); b.proses = false;
-    hantarDaftar({ jenis: 'tempah', nama: b.nama, tel: b.tel, bil: b.bil, pakej: b.pakej, tarikh: b.d, kod: b.kod, bilik: b.bilik, nota: [b.nota, `Deposit UJIAN ${rm(b.jumlah)} · ${b.kaedah} · resit ${b.resit}`].filter(Boolean).join(' | '), setuju: true }, true).catch(() => {});
+    hantarDaftar({ jenis: 'tempah', nama: b.nama, tel: b.tel, bil: b.bil, pakej: b.pakej, tarikh: b.d, kod: b.kod, bilik: b.bilik, nota: [b.nota, `Deposit UJIAN ${rm(b.jumlah)} · ${b.kaedah} · resit ${b.resit}`].filter(Boolean).join(' | '), resit: b.resit, kaedah: b.kaedah, setuju: true }, true).then(simpanTuntut).then(() => muatTempahanApps()).catch(() => {});
     render();
   }, 1400);
 }
@@ -544,7 +544,8 @@ function vResit(b) {
         <div><span>Deposit dibayar</span><b class="num">${rm(b.jumlah)}</b></div>
         <div><span class="redup">Baki anggaran</span><span class="num redup">${rm(b.jumlahPenuh - b.jumlah)}</span></div>
       </div>
-      <p class="redup kecil">Staf Juara akan menghubungi anda dalam 1 hari bekerja untuk sahkan tempat dan senarai dokumen.</p>
+      <p class="redup kecil">Staf Juara akan hubungi anda dalam 1 hari bekerja untuk sahkan tempat dan senarai dokumen. ${S.user ? 'Status tempahan boleh disemak di Utama.' : 'Log masuk dengan Google untuk semak status tempahan ini kemudian.'}</p>
+      ${S.user ? '' : '<a class="btn garis" href="#/masuk">Log masuk untuk semak status</a>'}
     </div>
     <div class="grid-2"><button class="btn garis" type="button" data-aksi="cetak">Simpan resit (PDF)</button><a class="btn" href="${esc(wa(msg))}" target="_blank" rel="noopener">${ic('telefon')}Hantar resit ke Juara</a></div>
     <a href="#/pakej" style="text-align:center">Lihat pakej lain</a>
@@ -558,6 +559,39 @@ function bulanDepan(n, mula = 0) {
   return out;
 }
 const NOTIS_PDPA = 'Saya bersetuju maklumat ini digunakan oleh Juara Travel untuk menghubungi saya tentang kursus dan pakej umrah, mengikut Akta Perlindungan Data Peribadi 2010.';
+function simpanTuntut(x) {
+  if (x && x.id && x.tuntut) { const L = store.get('tuntut', []).filter(t => t.id !== x.id); L.push({ id: x.id, token: x.tuntut }); store.set('tuntut', L.slice(-10)); }
+  return x;
+}
+async function muatTempahanApps() {
+  if (!S.user || muatTempahanApps.sedang) return; muatTempahanApps.sedang = true;
+  try {
+    const api = (JT.apiJuara || '').replace(/\/$/, ''), h = { Authorization: 'Bearer ' + await S.user.getIdToken(), 'Content-Type': 'application/json', Accept: 'application/json' };
+    const L = store.get('tuntut', []);
+    if (L.length) { const r = await fetch(api + '/tempahan/tuntut', { method: 'POST', headers: h, body: JSON.stringify({ senarai: L }) }); if (r.ok) store.set('tuntut', []); }
+    const r = await fetch(api + '/tempahan-saya', { headers: h }), j = await r.json().catch(() => ({}));
+    S.tempahanApps = r.ok ? (j.data || []) : [];
+  } catch (e) { S.tempahanApps = S.tempahanApps || []; }
+  muatTempahanApps.sedang = false; render(false);
+}
+// Tempahan dari apps yang belum masuk sistem Juara (TravelDesk)
+const LANGKAH = [['baru', 'Tempahan diterima'], ['diproses', 'Staf sedang semak tempat'], ['disahkan', 'Disahkan dalam sistem Juara']];
+function kadTempahanProses() {
+  const L = (S.tempahanApps || []).filter(t => t.status !== 'disahkan' || !(S.saya && S.saya.length));
+  if (!L.length) return '';
+  return `<section class="stack"><div class="tajuk-seksyen" style="margin:0"><h2>Tempahan anda</h2></div>${L.map(t => {
+    const i = Math.max(0, LANGKAH.findIndex(([k]) => k === t.status)), bk = BILIK.find(([k]) => k === t.bilik);
+    return `<article class="kad pad stack proses" style="gap:12px">
+      <div class="baris" style="align-items:flex-start"><span><b style="font-size:17px">${esc(t.pakej || 'Pakej umrah')}</b><br><span class="kecil redup">${t.tarikh ? `${fHari(t.tarikh)}, ${fTkh(t.tarikh, 1)}` : ''}${t.kod ? ' · ' + esc(t.kod) : ''}</span></span><span class="lencana ${i === 2 ? 'hijau' : 'amber'}">${i === 2 ? 'Disahkan' : 'Dalam proses'}</span></div>
+      <ol class="langkah">${LANGKAH.map(([k, n], j) => `<li class="${j < i ? 'siap' : j === i ? 'kini' : ''}">${n}</li>`).join('')}</ol>
+      <div class="jadual-harga" style="border:1px solid var(--garis);border-radius:10px">
+        <div><span>Bilik</span><b>${esc(bk ? bk[1] : t.bilik || '-')} · ${t.bil} orang</b></div>
+        ${t.jumlah ? `<div><span>Jumlah anggaran</span><b class="num">${rm(t.jumlah)}</b></div>` : ''}
+        <div><span>Deposit</span><b>${t.deposit ? `${rm(t.deposit)} (ujian) · ${esc(t.resit)}` : 'Belum dibayar'}</b></div>
+      </div>
+      <p class="kecil redup" style="margin:0">${i === 2 ? 'Tempahan ini dah ada dalam sistem Juara. Masukkan IC anda di bawah untuk lihat baki bayaran dan jadual.' : 'Staf Juara akan hubungi anda untuk sahkan tempat. Selepas disahkan, baki bayaran dan jadual perjalanan akan muncul di sini.'}</p>
+    </article>`; }).join('')}</section>`;
+}
 async function hantarDaftar(d, keepalive) {
   const api = (JT.apiJuara || '').replace(/\/$/, '');
   if (!api) throw new Error('Pendaftaran belum tersedia dalam paparan ini.');
@@ -697,8 +731,8 @@ function vAdmin() {
   <div class="cips" role="group" aria-label="Jenis">${[['', 'Semua'], ['kursus', 'Kursus'], ['tempah', 'Tempahan']].map(([k, n]) => `<button type="button" class="cip" aria-pressed="${(S.adminJenis || '') === k}" data-aksi="admin-jenis" data-nilai="${k}">${n}</button>`).join('')}</div>
   <p class="kecil redup">${rows.length} rekod</p>
   <div class="kad" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:14px;min-width:760px">
-    <thead><tr style="text-align:left;color:var(--kelabu)">${['Masa', 'Jenis', 'Nama', 'Telefon', 'Kursus / Pakej', 'Anggaran umrah', 'Bil.'].map(h => `<th style="padding:10px 12px;border-bottom:1px solid var(--garis)">${h}</th>`).join('')}</tr></thead>
-    <tbody>${rows.map(r => `<tr>${[tTkh(r.masa), r.jenis, r.nama, `<a href="https://wa.me/${esc(String(r.tel).replace(/\D/g, '').replace(/^0/, '60'))}" target="_blank" rel="noopener">${esc(r.tel)}</a>`, esc(r.jenis === 'kursus' ? r.sesi : [r.pakej, r.tarikh, r.bilik].filter(Boolean).join(' · ')), esc(r.anggaran ? (/^\d{4}-\d{2}$/.test(r.anggaran) ? fBulan(r.anggaran) : r.anggaran) : ''), r.bil].map((c, i) => `<td style="padding:10px 12px;border-bottom:1px solid #F0EEEC">${i === 3 || i === 4 || i === 5 ? c : esc(c)}</td>`).join('')}</tr>`).join('')}</tbody>
+    <thead><tr style="text-align:left;color:var(--kelabu)">${['Masa', 'Jenis', 'Nama', 'Telefon', 'Kursus / Pakej', 'Anggaran umrah', 'Bil.', 'Status tempahan'].map(h => `<th style="padding:10px 12px;border-bottom:1px solid var(--garis)">${h}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r => `<tr>${[tTkh(r.masa), r.jenis, r.nama, `<a href="https://wa.me/${esc(String(r.tel).replace(/\D/g, '').replace(/^0/, '60'))}" target="_blank" rel="noopener">${esc(r.tel)}</a>`, esc(r.jenis === 'kursus' ? r.sesi : [r.pakej, r.tarikh, r.bilik].filter(Boolean).join(' · ')), esc(r.anggaran ? (/^\d{4}-\d{2}$/.test(r.anggaran) ? fBulan(r.anggaran) : r.anggaran) : ''), r.bil].map((c, i) => `<td style="padding:10px 12px;border-bottom:1px solid #F0EEEC">${i === 3 || i === 4 || i === 5 ? c : esc(c)}</td>`).join('')}<td style="padding:10px 12px;border-bottom:1px solid #F0EEEC">${r.jenis === 'tempah' ? `<select class="input kecil-input" data-tempah-status="${esc(r.id)}">${[['baru', 'Baru'], ['diproses', 'Sedang diproses'], ['disahkan', 'Disahkan (dalam TravelDesk)'], ['batal', 'Batal']].map(([k, n]) => `<option value="${k}"${(r.status || 'baru') === k ? ' selected' : ''}>${n}</option>`).join('')}</select>` : ''}</td></tr>`).join('')}</tbody>
   </table></div>`;
 }
 async function muatAdmin() {
@@ -900,7 +934,7 @@ function mulaAuth() {
   AUTH.getRedirectResult().catch(e => toast(mesejAuth(e)));
   AUTH.onAuthStateChanged(u => {
     S.user = u; S.authSedia = true;
-    if (u) { if (S.demo) { S.demo = false; store.set('demo', false); } muatSaya(); }
+    if (u) { if (S.demo) { S.demo = false; store.set('demo', false); } muatSaya(); muatTempahanApps(); }
     else { S.saya = null; S.sayaRalat = ''; }
     const n = laluan().nama;
     if (u && (n === 'masuk' || n === '')) location.replace('#/saya'); else render(false);
@@ -965,7 +999,7 @@ function vHubung() {
 function perluData(fn) {
   if (S.demo) return null;
   if (!S.authSedia || (S.sayaMuat && !S.saya)) return rangka(1, 200) + rangka(2, 100);
-  if (!S.saya) return vHubung();
+  if (!S.saya) return kadTempahanProses() + vHubung();
   return fn(tempahanUtama());
 }
 function vSaya() {
@@ -976,6 +1010,7 @@ function vSaya() {
     return `
     <div><span class="redup kecil">Assalamualaikum,</span><br><b style="font-size:20px">${esc(namaPendek(r.nama))}</b></div>
     ${aksesPantas([['pakej', 'Pakej', 'cari'], ['bayaran', 'Bayaran', 'dompet'], ['kursus', 'Kursus', 'buku'], ['cawangan', 'Cawangan', 'pin']])}
+    ${kadTempahanProses()}
     <div class="grid-pakej" style="align-items:start">
       <a class="kad perjalanan" href="#/perjalanan" style="overflow:hidden;color:var(--dakwat);display:block">
         ${gb(kod, lbl, '')}
@@ -1390,7 +1425,7 @@ document.addEventListener('click', e => {
   else if (a === 'admin-jenis') { S.adminJenis = v; render(false); }
   else if (a === 'kalendar-kursus') { if (S.kursusSiap && S.kursusSiap.kursus) kalendarKursus(S.kursusSiap.kursus); }
   else if (a === 'muat-csv') muatCsv();
-  else if (a === 'log-keluar') { if (AUTH) AUTH.signOut(); S.saya = null; S.dok = null; S.adminDok = null; location.hash = '#/'; toast('Anda telah log keluar'); }
+  else if (a === 'log-keluar') { if (AUTH) AUTH.signOut(); S.saya = null; S.tempahanApps = null; S.dok = null; S.adminDok = null; location.hash = '#/'; toast('Anda telah log keluar'); }
   else if (a === 'tukar-ic') { store.set(icKunci(), ''); S.saya = null; S.sayaRalat = ''; location.hash = '#/saya'; render(false); }
 });
 document.addEventListener('change', e => {
@@ -1399,6 +1434,7 @@ document.addEventListener('change', e => {
   else if (el.dataset.aksiUbah === 'negeri-kursus') { S.kursusNegeri = el.value; S.kursusPilih = null; render(false); }
   else if (el.name === 'kursusId') { S.kursusPilih = el.value; }
   else if (el.dataset.muatnaik) muatNaikDok(el);
+  else if (el.dataset.tempahStatus) { apiDok('/admin/tempahan/status', { method: 'POST', body: JSON.stringify({ id: el.dataset.tempahStatus, status: el.value }) }).then(() => toast('Status dikemas kini')).catch(e => toast(e.message)); }
   else if (el.dataset.pilih === 'bilik' || el.dataset.pilih === 'bil') {
     if (el.form && el.form.dataset.borang === 'tempah') { const fd = new FormData(el.form); S.draf = { nama: fd.get('nama'), tel: fd.get('tel'), nota: fd.get('nota'), ruj: fd.get('ruj') }; }
     if (el.dataset.pilih === 'bilik') S.bilik[el.dataset.id] = el.value; else S.bil[el.dataset.id] = +el.value;
@@ -1465,7 +1501,7 @@ document.addEventListener('submit', e => {
     S.tempahWa = wa(msg); S.tempahSiap = kod;
     window.open(S.tempahWa, '_blank', 'noopener');
     // Simpan juga sebagai rekod bakal pelanggan untuk susulan staf
-    hantarDaftar({ jenis: 'tempah', nama: d.nama, tel, bil: d.bil, pakej: p.nama, tarikh: t.d, kod: t.kod, bilik: d.bilik, nota: d.nota, setuju: true }, true).catch(() => {});
+    hantarDaftar({ jenis: 'tempah', nama: d.nama, tel, bil: d.bil, pakej: p.nama, tarikh: t.d, kod: t.kod, bilik: d.bilik, nota: d.nota, setuju: true }, true).then(simpanTuntut).then(() => muatTempahanApps()).catch(() => {});
     render();
   }
 });

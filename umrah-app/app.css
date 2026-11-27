@@ -358,3 +358,10 @@ body{background:var(--latar) url(gambar/BR/corak-latar.svg) repeat 0 0/72px 72px
 .hotel .gambar3{overflow:hidden}
 .hotel .gambar3>div:last-child{height:100%;min-height:0;overflow:hidden;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
 .hotel .gambar3>div:last-child .gb,.hotel .gambar3>.gb{height:100%;min-height:0;aspect-ratio:auto;border-radius:0}
+/* Tempahan dalam proses */
+.proses{border-left:4px solid var(--amber)}
+.langkah{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;counter-reset:l}
+.langkah li{display:flex;gap:10px;align-items:center;color:var(--kelabu);font-size:15px;counter-increment:l}
+.langkah li::before{content:counter(l);width:26px;height:26px;border-radius:99px;border:2px solid var(--garis2);display:grid;place-items:center;font-size:13px;font-weight:700;flex:none;background:var(--kad)}
+.langkah li.siap{color:var(--dakwat)}.langkah li.siap::before{content:"✓";background:var(--hijau);border-color:var(--hijau);color:#fff}
+.langkah li.kini{color:var(--dakwat);font-weight:600}.langkah li.kini::before{border-color:var(--amber);color:var(--amber)}
