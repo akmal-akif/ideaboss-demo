@@ -233,3 +233,9 @@ textarea.input{height:auto;min-height:96px;padding:12px 14px}
 /* Cawangan */
 .butang-caw{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.butang-caw .btn{flex:1 1 90px}
 @media print{#atas,#bawah,.kaki,.jalur-ujian+.kad~.grid-2,.resit>a,.resit>.grid-2{display:none!important}}
+/* Mata Juara */
+.kad-mata{background:linear-gradient(135deg,#8E0F14,#C8151B);color:#fff;border:0}
+.kad-mata b{color:#fff}
+.maju{height:8px;border-radius:99px;background:rgba(255,255,255,.25);overflow:hidden}.maju span{display:block;height:100%;background:#fff;border-radius:99px}
+.senarai-faedah{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.senarai-faedah li{display:flex;gap:8px;align-items:flex-start}

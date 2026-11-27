@@ -15,6 +15,9 @@ const JT = {
   // Gerbang pembayaran. 'ujian' = paparan dummy (tiada caj sebenar). Tukar selepas akaun gateway (contoh ToyyibPay/Billplz/SenangPay) siap.
   bayaran: { mod: 'ujian', penyedia: '' },
 
+  // Mata Juara (loyalty). Cadangan awal, tukar ikut keputusan Juara.
+  mata: { rmSeMata: 10, rmSe100: 10, bonusRujukan: 1000, bonusKursus: 100, bonusTestimoni: 200 },
+
   // Nombor lesen KPK. Kosong = tidak dipaparkan sehingga disahkan.
   lesenKPK: '',
 

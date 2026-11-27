@@ -262,7 +262,7 @@ function vUtama() {
       <div class="baris"><span class="redup">Harga & seat</span><b>Terus dari sistem Juara</b></div>
       <a class="btn garis" href="${wa('Assalamualaikum Juara Travel. Saya ingin bertanya tentang pakej umrah.')}" target="_blank" rel="noopener">${ic('telefon')}Tanya melalui WhatsApp</a>
     </div>
-    <div class="stack">${kadSolat()}<a class="kad pad" href="#/cawangan" style="color:var(--dakwat);display:flex;gap:12px;align-items:center">${ic('pin')}<span><b>Cawangan Juara</b><br><span class="kecil redup">Alamat, waktu buka dan arah</span></span></a></div>
+    <div class="stack">${kadSolat()}<a class="kad pad kad-mata" href="#/mata" style="display:flex;flex-direction:column;gap:2px"><b>Mata Juara</b><span class="kecil" style="opacity:.85">Kumpul mata setiap trip dan rujukan. Tebus untuk pakej seterusnya.</span></a><a class="kad pad" href="#/cawangan" style="color:var(--dakwat);display:flex;gap:12px;align-items:center">${ic('pin')}<span><b>Cawangan Juara</b><br><span class="kecil redup">Alamat, waktu buka dan arah</span></span></a></div>
   </section>`;
 }
 
@@ -416,6 +416,7 @@ function vTempah(id, kod) {
       <h2 style="margin-top:8px">Maklumat anda</h2>
       <label class="medan">Nama penuh<input class="input" name="nama" autocomplete="name" required value="${esc(draf.nama || '')}"></label>
       <label class="medan">Nombor telefon (WhatsApp)<input class="input" name="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="012-345 6789" required value="${esc(draf.tel || '')}"></label>
+      <label class="medan">Kod rujukan (pilihan)<input class="input" name="ruj" autocapitalize="characters" placeholder="Contoh: JT4K9Q2A" value="${esc(draf.ruj || store.get('ruj', ''))}"></label>
       <label class="medan">Nota (pilihan)<textarea class="input" name="nota" placeholder="Contoh: warga emas, perlu kerusi roda">${esc(draf.nota || '')}</textarea></label>
       <p class="kecil redup" id="ralat-tempah" role="alert"></p>
       <p class="nota" style="margin:0">${ic('info')}<span>Staf Juara akan semak tempat dan sahkan tempahan selepas deposit diterima.</span></p>
@@ -743,6 +744,7 @@ function vSayaContoh() {
     </section>
     <section class="stack">
       <div class="tajuk-seksyen" style="margin:0"><h2>Hari pertama</h2><a href="#/perjalanan">Itinerari penuh</a></div>
+      ${kadMataRingkas({ mata: 1840, menunggu: 400, nilai: 180, tahap: TAHAP[1] })}
       <a class="kad ringkas" href="#/perjalanan">${gb('IT-01', '', '')}<span class="t"><b>Kuala Lumpur ke Madinah</b><span class="kecil"><b class="num">6:00</b> <span class="redup">Berkumpul, kaunter Juara KLIA T1</span></span><span class="kecil"><b class="num">9:40</b> <span class="redup">Penerbangan ke Madinah</span></span></span></a>
       <div class="kad pad" style="display:flex;gap:14px;align-items:center">${gb('OR-01', '', 'r11').replace('class="gb r11"', 'class="gb r11" style="width:56px;border-radius:999px;flex:none"')}<span style="flex:1"><span class="kecil redup">Mutawwif kumpulan anda</span><br><b>[Nama mutawwif]</b></span><a class="btn garis kecil" href="#" aria-label="WhatsApp mutawwif">${ic('telefon')}</a></div>
       ${kadSolat()}
@@ -805,6 +807,7 @@ function vAkaunContoh() {
   return `
   <h1>Akaun</h1>
   <div class="kad jadual-harga" style="max-width:560px"><div><span class="redup">Nama</span><b>Aminah binti Yusof</b></div><div><span class="redup">Telefon</span><b>+60 12-345 6789</b></div><div><span class="redup">Ahli keluarga</span><b>Tiada</b></div><div><span class="redup">Bahasa</span><b>Bahasa Melayu</b></div></div>
+  <a class="btn garis" href="#/mata" style="max-width:560px">Mata Juara dan kod rujukan</a>
   <button class="btn garis" type="button" data-aksi="keluar-contoh" style="max-width:560px">Keluar dari paparan contoh</button>`;
 }
 
@@ -911,7 +914,7 @@ function vSaya() {
           : `<span class="semak">${ic('betul')}${b.baki > 0 ? `Baki ${rm(b.baki)}` : 'Bayaran lunas'}</span>`}
         <span class="semak">${ic('info')}Status dokumen dan visa akan dipaparkan di sini.</span>
       </section>
-      <section class="stack">${kadSolat()}${S.saya.length > 1 ? `<a class="kad pad" href="#/perjalanan" style="color:var(--dakwat)"><b>${S.saya.length} tempahan</b><br><span class="kecil redup">Lihat semua tempahan anda</span></a>` : ''}</section>
+      <section class="stack">${kadMataRingkas(kiraMata(S.saya))}${kadSolat()}${S.saya.length > 1 ? `<a class="kad pad" href="#/perjalanan" style="color:var(--dakwat)"><b>${S.saya.length} tempahan</b><br><span class="kecil redup">Lihat semua tempahan anda</span></a>` : ''}</section>
     </div>`;
   });
 }
@@ -959,6 +962,7 @@ function vAkaun() {
   <h1>Akaun</h1>
   <div class="kad jadual-harga" style="max-width:560px"><div><span class="redup">Nama</span><b>${esc(S.user.displayName || '')}</b></div><div><span class="redup">Emel</span><b style="word-break:break-all">${esc(S.user.email || '')}</b></div><div><span class="redup">IC dihubungkan</span><b class="num">${ic ? esc(icSamar(ic)) : 'Belum'}</b></div></div>
   <div class="stack" style="max-width:560px">
+    <a class="btn garis" href="#/mata">Mata Juara dan kod rujukan</a>
     ${ic ? `<button class="btn garis" type="button" data-aksi="tukar-ic">Tukar IC</button>` : ''}
     <button class="btn garis" type="button" data-aksi="log-keluar">Log keluar</button>
     <a class="kecil" href="#/admin" style="text-align:center">Panel staf: senarai pendaftaran</a>
@@ -966,10 +970,84 @@ function vAkaun() {
 }
 
 /* ===== Penghala ===== */
+/* ===== Mata Juara (loyalty) =====
+   Peraturan dalam JT.mata. Mata dikira daripada bayaran sebenar TravelDesk untuk trip yang sudah pulang.
+   Bonus rujukan, kursus dan testimoni direkod oleh staf (akan datang dalam Panel staf). */
+const TAHAP = [
+  { k: 'jemaah', n: 'Jemaah', trip: 1, ruj: 0, faedah: ['Kumpul mata setiap trip', 'Kod rujukan peribadi'] },
+  { k: 'setia', n: 'Jemaah Setia', trip: 2, ruj: 0, faedah: ['Simpan tempat 48 jam tanpa deposit', 'Keutamaan pilih bilik'] },
+  { k: 'duta', n: 'Duta Juara', trip: 3, ruj: 3, faedah: ['Keutamaan tarikh puncak (Ramadhan, cuti sekolah)', 'Kursus ulangan percuma untuk keluarga', 'Hadiah khas setiap rujukan berjaya'] }
+];
+const kodRujukan = uid => { let h = 7; for (const c of String(uid || 'tetamu')) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 'JT' + h.toString(36).toUpperCase().slice(0, 6).padStart(6, '0'); };
+function kiraMata(tempahan, rujukan = 0) {
+  const m = JT.mata, h = hariIni();
+  const selesai = tempahan.filter(t => t.pulang && t.pulang < h), akanDatang = tempahan.filter(t => !(t.pulang && t.pulang < h));
+  const sejarah = selesai.map(t => ({ tajuk: tajukKes(t.pakej || 'Umrah'), tarikh: t.pulang, mata: Math.floor((t.bayaran ? t.bayaran.dibayar : 0) / m.rmSeMata) }));
+  if (rujukan) sejarah.push({ tajuk: `${rujukan} rujukan berjaya`, tarikh: '', mata: rujukan * m.bonusRujukan });
+  const menunggu = akanDatang.reduce((a, t) => a + Math.floor((t.bayaran ? t.bayaran.dibayar : 0) / m.rmSeMata), 0);
+  const mata = sejarah.reduce((a, x) => a + x.mata, 0), trip = selesai.length;
+  const tahap = [...TAHAP].reverse().find(x => trip >= x.trip || (x.ruj && rujukan >= x.ruj)) || null;
+  const seterusnya = TAHAP.find(x => !tahap || TAHAP.indexOf(x) > TAHAP.indexOf(tahap)) || null;
+  return { mata, menunggu, trip, rujukan, tahap, seterusnya, sejarah, nilai: Math.floor(mata / 100) * m.rmSe100 };
+}
+function kadMataRingkas(r) {
+  return `<a class="kad pad kad-mata" href="#/mata"><span class="kecil" style="opacity:.8">Mata Juara · ${esc(r.tahap ? r.tahap.n : 'Ahli baru')}</span><b class="num" style="font-size:28px;line-height:1.1">${r.mata.toLocaleString('ms-MY')} mata</b><span class="kecil" style="opacity:.8">${r.menunggu ? `+${r.menunggu.toLocaleString('ms-MY')} mata selepas trip akan datang` : `Bernilai ${rm(r.nilai)} untuk pakej seterusnya`}</span></a>`;
+}
+function vMata() {
+  const m = JT.mata;
+  const kongsi = kod => wa(`Assalamualaikum. Saya pergi umrah dengan Juara Travel. Guna kod rujukan saya ${kod} semasa tempah: ${location.origin}/?ruj=${kod}`).replace(/^https:\/\/wa\.me\/\d+/, 'https://wa.me/');
+  const cara = `
+    <section class="stack"><h2>Cara kumpul mata</h2>
+      <div class="kad jadual-harga">
+        <div><span>Setiap ${rm(m.rmSeMata)} dibayar untuk pakej (dikira selepas pulang)</span><b class="num">1 mata</b></div>
+        <div><span>Rakan atau saudara guna kod rujukan anda dan berlepas</span><b class="num">${m.bonusRujukan.toLocaleString('ms-MY')}</b></div>
+        <div><span>Hadir kursus umrah Juara</span><b class="num">${m.bonusKursus}</b></div>
+        <div><span>Bayar penuh 90 hari sebelum berlepas</span><b class="num">+10%</b></div>
+        <div><span>Kongsi testimoni video yang diluluskan</span><b class="num">${m.bonusTestimoni}</b></div>
+      </div></section>
+    <section class="stack"><h2>Guna mata</h2>
+      <div class="grid-2 lebar">
+        <div class="kad pad stack" style="gap:4px"><b>Potongan pakej</b><span class="redup kecil">100 mata = ${rm(m.rmSe100)} untuk pakej seterusnya</span></div>
+        <div class="kad pad stack" style="gap:4px"><b>Naik taraf bilik</b><span class="redup kecil">Quad ke Triple atau Double, tertakluk kekosongan</span></div>
+        <div class="kad pad stack" style="gap:4px"><b>Tambahan perjalanan</b><span class="redup kecil">Ziarah Taif, tiket tren Haramain, naik taraf kelas perniagaan</span></div>
+        <div class="kad pad stack" style="gap:4px"><b>Tabung umrah asnaf</b><span class="redup kecil">Sumbang mata untuk membantu jemaah yang memerlukan</span></div>
+      </div></section>
+    <section class="stack"><h2>Tahap ahli</h2>
+      <div class="grid-pakej">${TAHAP.map(t => `<div class="kad pad stack" style="gap:6px"><b>${t.n}</b><span class="kecil redup">${t.trip} trip${t.ruj ? ` atau ${t.ruj} rujukan berjaya` : ''}</span><ul class="senarai-faedah">${t.faedah.map(f => `<li>${ic('betul')}${esc(f)}</li>`).join('')}</ul></div>`).join('')}</div>
+      <p class="kecil redup">Mata ialah rebat bernilai tetap tanpa cabutan bertuah. Mata keluarga boleh dikongsi. Mata luput 3 tahun selepas diperoleh. Terma penuh akan diumumkan oleh Juara.</p></section>`;
+  if (!S.demo && !S.user) return `
+    <div class="stack" style="gap:6px"><h1>Mata Juara</h1><p class="redup">Program ganjaran untuk jemaah dan keluarga yang kembali bersama Juara.</p></div>
+    <div class="kad pad stack kad-mata" style="gap:10px;max-width:560px"><b style="font-size:20px">Log masuk untuk lihat mata anda</b><span style="opacity:.85">Mata dikira daripada bayaran tempahan anda dalam sistem Juara.</span><a class="btn" href="#/masuk" style="background:#fff;color:var(--dakwat)">Log masuk</a></div>
+    ${cara}`;
+  const r = S.demo ? { mata: 1840, menunggu: 400, trip: 2, rujukan: 1, tahap: TAHAP[1], seterusnya: TAHAP[2], nilai: 180, sejarah: [{ tajuk: 'Umrah Syawal', tarikh: '2025-05-02', mata: 840 }, { tajuk: '1 rujukan berjaya', tarikh: '', mata: 1000 }] }
+    : S.saya ? kiraMata(S.saya, 0) : null;
+  if (!r) return perluData(() => vMata());
+  const kod = kodRujukan(S.demo ? 'contoh' : S.user.uid);
+  const maju = r.seterusnya ? Math.min(100, Math.round(r.trip / r.seterusnya.trip * 100)) : 100;
+  return `
+  <div class="stack" style="gap:6px"><h1>Mata Juara</h1><p class="redup">${S.demo ? 'Paparan contoh.' : 'Dikira daripada bayaran tempahan anda dalam sistem Juara.'}</p></div>
+  <div class="grid-pakej" style="align-items:start">
+    <div class="kad pad stack kad-mata" style="gap:10px">
+      <span class="kecil" style="opacity:.8">${esc(r.tahap ? r.tahap.n : 'Ahli baru')}</span>
+      <b class="num" style="font-size:40px;line-height:1">${r.mata.toLocaleString('ms-MY')}<span style="font-size:16px"> mata</span></b>
+      <span style="opacity:.85">Bernilai ${rm(r.nilai)} untuk pakej seterusnya${r.menunggu ? ` · +${r.menunggu.toLocaleString('ms-MY')} mata selepas trip akan datang` : ''}</span>
+      ${r.seterusnya ? `<div class="maju" aria-label="Kemajuan ke ${esc(r.seterusnya.n)}"><span style="width:${maju}%"></span></div><span class="kecil" style="opacity:.85">${r.trip} daripada ${r.seterusnya.trip} trip ke ${esc(r.seterusnya.n)}${r.seterusnya.ruj ? `, atau ${r.seterusnya.ruj} rujukan` : ''}</span>` : ''}
+    </div>
+    <div class="kad pad stack" style="gap:10px">
+      <span class="kecil redup">Kod rujukan anda</span>
+      <b class="num" style="font-size:26px;letter-spacing:.06em">${kod}</b>
+      <span class="redup kecil">Dapat ${JT.mata.bonusRujukan.toLocaleString('ms-MY')} mata bagi setiap rakan atau saudara yang tempah dengan kod ini dan berlepas.</span>
+      <a class="btn" href="${esc(kongsi(kod))}" target="_blank" rel="noopener">${ic('telefon')}Kongsi di WhatsApp</a>
+    </div>
+  </div>
+  ${r.sejarah.length ? `<section class="stack"><h2>Sejarah mata</h2><div class="kad jadual-harga">${r.sejarah.map(x => `<div><span>${esc(x.tajuk)}${x.tarikh ? `<br><span class="kecil redup">${fTkh(x.tarikh, 1)}</span>` : ''}</span><b class="num">+${x.mata.toLocaleString('ms-MY')}</b></div>`).join('')}</div></section>` : ''}
+  ${cara}`;
+}
+
 const NAV_TETAMU = [['', 'Utama', 'rumah'], ['pakej', 'Pakej', 'cari'], ['kursus', 'Kursus', 'buku'], ['cawangan', 'Cawangan', 'pin'], ['masuk', 'Log masuk', 'orang']];
 const NAV_JEMAAH = [['saya', 'Utama', 'rumah'], ['perjalanan', 'Perjalanan', 'kalendar'], ['bayaran', 'Bayaran', 'dompet'], ['persediaan', 'Persediaan', 'buku'], ['akaun', 'Akaun', 'orang']];
 const JEMAAH = new Set(['saya', 'perjalanan', 'bayaran', 'persediaan', 'akaun']);
-const TAJUK = { '': 'Juara Travel', pakej: 'Pakej umrah', kursus: 'Kursus umrah', cawangan: 'Cawangan', masuk: 'Log masuk', solat: 'Waktu solat', kredit: 'Kredit gambar', admin: 'Pendaftaran', tempah: 'Tempah', bayar: 'Bayaran deposit', saya: 'Utama jemaah', perjalanan: 'Perjalanan', bayaran: 'Bayaran', persediaan: 'Persediaan', akaun: 'Akaun' };
+const TAJUK = { '': 'Juara Travel', pakej: 'Pakej umrah', kursus: 'Kursus umrah', cawangan: 'Cawangan', masuk: 'Log masuk', solat: 'Waktu solat', kredit: 'Kredit gambar', admin: 'Pendaftaran', tempah: 'Tempah', bayar: 'Bayaran deposit', mata: 'Mata Juara', saya: 'Utama jemaah', perjalanan: 'Perjalanan', bayaran: 'Bayaran', persediaan: 'Persediaan', akaun: 'Akaun' };
 
 function laluan() {
   const [nama = '', ...args] = location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent);
@@ -997,7 +1075,7 @@ function render(alih = true) {
   jalur.hidden = !S.demo;
   if (S.demo) jalur.innerHTML = `<span>Paparan contoh: data di bawah bukan data sebenar</span><button type="button" data-aksi="keluar-contoh">Keluar</button>`;
 
-  const V = { bayar: vBayar, '': vUtama, pakej: () => args[0] ? vButiran(args[0]) : vPakej(), tempah: () => vTempah(args[0], args[1]), kursus: vKursus, cawangan: vCawangan, solat: vSolat, masuk: vMasuk, kredit: vKredit, admin: vAdmin, saya: vSaya, perjalanan: vPerjalanan, bayaran: vBayaran, persediaan: vPersediaan, akaun: vAkaun };
+  const V = { mata: vMata, bayar: vBayar, '': vUtama, pakej: () => args[0] ? vButiran(args[0]) : vPakej(), tempah: () => vTempah(args[0], args[1]), kursus: vKursus, cawangan: vCawangan, solat: vSolat, masuk: vMasuk, kredit: vKredit, admin: vAdmin, saya: vSaya, perjalanan: vPerjalanan, bayaran: vBayaran, persediaan: vPersediaan, akaun: vAkaun };
   $('isi').innerHTML = (V[nama] || vUtama)();
   document.body.classList.toggle('ada-bar', nama === 'pakej' && !!args[0]);
   const p = nama === 'pakej' && args[0] && cariPakej(args[0]);
@@ -1046,7 +1124,7 @@ document.addEventListener('change', e => {
   else if (el.dataset.aksiUbah === 'negeri-kursus') { S.kursusNegeri = el.value; S.kursusPilih = null; render(false); }
   else if (el.name === 'kursusId') { S.kursusPilih = el.value; }
   else if (el.dataset.pilih === 'bilik' || el.dataset.pilih === 'bil') {
-    if (el.form && el.form.dataset.borang === 'tempah') { const fd = new FormData(el.form); S.draf = { nama: fd.get('nama'), tel: fd.get('tel'), nota: fd.get('nota') }; }
+    if (el.form && el.form.dataset.borang === 'tempah') { const fd = new FormData(el.form); S.draf = { nama: fd.get('nama'), tel: fd.get('tel'), nota: fd.get('nota'), ruj: fd.get('ruj') }; }
     if (el.dataset.pilih === 'bilik') S.bilik[el.dataset.id] = el.value; else S.bil[el.dataset.id] = +el.value;
     render(false);
   }
@@ -1082,7 +1160,8 @@ document.addEventListener('submit', e => {
     const salah = !String(d.nama || '').trim() ? 'Sila isi nama penuh.' : tel.replace(/\D/g, '').length < 9 ? 'Sila isi nombor telefon yang sah.' : '';
     if (salah) { $('ralat-tempah').textContent = salah; $('ralat-tempah').style.color = 'var(--merah)'; return; }
     const p = cariPakej(id), t = p.tarikh.find(x => x.kod === kod), bk = BILIK.find(([k]) => k === d.bilik);
-    S.bilik[id] = d.bilik; S.bil[id] = +d.bil; S.draf = { nama: d.nama, tel: d.tel, nota: d.nota };
+    S.bilik[id] = d.bilik; S.bil[id] = +d.bil; S.draf = { nama: d.nama, tel: d.tel, nota: d.nota, ruj: d.ruj };
+    const ruj = String(d.ruj || '').trim().toUpperCase(); if (ruj) d.nota = [d.nota && d.nota.trim(), 'Kod rujukan: ' + ruj].filter(Boolean).join(' | ');
     if (e.submitter && e.submitter.value === 'bayar') {
       S.bayar = { id, kod, d: t.d, pakej: p.nama, nama: String(d.nama).trim(), tel, bil: +d.bil, bilik: d.bilik, bilikN: bk ? bk[1] : d.bilik, nota: (d.nota || '').trim(), jumlah: JT.depositSeorang * +d.bil, jumlahPenuh: (t.bilik[d.bilik] || t.harga) * +d.bil };
       location.hash = '#/bayar'; return;
@@ -1099,6 +1178,7 @@ window.addEventListener('hashchange', () => { const n = laluan().nama; if (n !==
 document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - S.dimuat > 15 * 60 * 1000) muat(); });
 setInterval(() => { const n = laluan().nama; if (n === '' || n === 'solat' || n === 'saya') render(false); }, 60000);
 
+try { const ruj = new URLSearchParams(location.search).get('ruj'); if (ruj && /^JT[0-9A-Z]{6}$/i.test(ruj)) store.set('ruj', ruj.toUpperCase()); } catch (e) { /* abaikan */ }
 mulaAuth();
 render(false);
 muat();
