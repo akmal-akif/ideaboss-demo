@@ -1,6 +1,6 @@
 // Service worker apps Juara Travel: rangkaian dahulu, simpanan bila tiada internet.
 // Data dari /api (pakej, seat, jemaah) tidak disimpan oleh service worker.
-const C = 'juara-travel-v7';
+const C = 'juara-travel-v8';
 const FILES = ['./', './index.html', './app.css', './app.js', './solat.js', './kredit.js', './juara-tetapan.js', './pakej-sebenar.js', './manifest.json', './logo-juara.png', './icon-192.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(C).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== C).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

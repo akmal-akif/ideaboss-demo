@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72">
+  <!-- Tekstur latar sangat halus: garis bintang lapan songket. Ketelusan rendah supaya teks kekal jelas. -->
+  <g fill="none" stroke="#C8151B" stroke-opacity=".07" stroke-width="1.2">
+    <g transform="translate(36 36)">
+      <rect x="-11" y="-11" width="22" height="22"/>
+      <rect x="-11" y="-11" width="22" height="22" transform="rotate(45)"/>
+      <rect x="-4.5" y="-4.5" width="9" height="9" transform="rotate(45)"/>
+    </g>
+    <path d="M0 -6 6 0 0 6 -6 0z M72 -6 78 0 72 6 66 0z M0 66 6 72 0 78 -6 72z M72 66 78 72 72 78 66 72z"/>
+  </g>
+</svg>

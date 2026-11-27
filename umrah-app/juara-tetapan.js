@@ -82,6 +82,7 @@ const JT = {
     // Hotel: HT-<nama-hotel-slug>-1 (fasad), -2 (bilik), -3 (laluan ke masjid). Tambah bila gambar hotel sebenar diterima.
     'HT-kompleks-menara-jam-1': 'gambar/HT/ht-menara-jam.jpg',
     'IL-07': 'gambar/IL/il-07-tiada-tempahan.svg',
+    'IL-14': 'gambar/IL/il-14-dokumen.svg',
     'IL-08': 'gambar/IL/il-08-tiada-internet.svg',
     'IL-09': 'gambar/IL/il-09-ralat-sistem.svg'
   }

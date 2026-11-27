@@ -231,7 +231,7 @@ function kosong(kod, label, tajuk, teks, butang) {
 
 /* Akses pantas (ikon besar, mesra warga emas) */
 const aksesPantas = (senarai) => `<nav class="akses-pantas" aria-label="Akses pantas">${senarai.map(([h, n, i]) => `<a href="#/${h}"><span class="ikon-akses">${ic(i)}</span><span>${n}</span></a>`).join('')}</nav>`;
-const AKSES_AKAUN = () => `<div class="senarai-pautan">${[['bayaran', 'Bayaran dan resit', 'dompet'], ['persediaan', 'Persediaan dan dokumen', 'buku'], ['mata', 'Mata Juara dan kod rujukan', 'bintang'], ['cawangan', 'Cawangan Juara', 'pin'], ['pakej', 'Pakej umrah', 'cari']].map(([h, n, i]) => `<a class="kad pad" href="#/${h}">${ic(i)}<span>${n}</span>${ic('kanan')}</a>`).join('')}</div>`;
+const AKSES_AKAUN = () => `<div class="senarai-pautan">${[['dokumen', 'Dokumen umrah (pasport, gambar, vaksin)', 'buku'], ['bayaran', 'Bayaran dan resit', 'dompet'], ['persediaan', 'Persediaan', 'buku'], ['mata', 'Mata Juara dan kod rujukan', 'bintang'], ['cawangan', 'Cawangan Juara', 'pin'], ['pakej', 'Pakej umrah', 'cari']].map(([h, n, i]) => `<a class="kad pad" href="#/${h}">${ic(i)}<span>${n}</span>${ic('kanan')}</a>`).join('')}</div>`;
 const corak = '<div class="corak" aria-hidden="true"></div>';
 
 /* ===== Skrin tetamu ===== */
@@ -669,10 +669,13 @@ function vAdmin() {
   if (!S.user) return kosong('IL-09', 'Log masuk', 'Log masuk staf diperlukan', 'Log masuk dengan akaun Google staf Juara.', `<a class="btn" href="#/masuk">Log masuk</a>`);
   if (!S.admin) { muatAdmin(); return rangka(1, 60) + rangka(5, 44); }
   if (S.admin.ralat) return kosong('IL-09', 'Tiada akses', 'Tiada akses', esc(S.admin.ralat), '');
+  const tabStaf = `<div class="cips tab-staf" role="tablist">${[['daftar', 'Pendaftaran'], ['dokumen', 'Dokumen jemaah']].map(([k, n]) => `<button type="button" role="tab" class="cip" aria-pressed="${(S.adminTab || 'daftar') === k}" data-aksi="admin-tab" data-nilai="${k}">${n}</button>`).join('')}</div>`;
+  if (S.adminTab === 'dokumen') return `<h1>Panel staf</h1>${tabStaf}${vAdminDok()}`;
   const rows = S.admin.data.filter(r => !S.adminJenis || r.jenis === S.adminJenis);
   const tTkh = s => s ? new Date(s).toLocaleString('ms-MY', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '';
   return `
-  <div class="baris" style="flex-wrap:wrap"><h1>Pendaftaran</h1><button class="btn garis kecil" type="button" data-aksi="muat-csv">Muat turun Excel (CSV)</button></div>
+  <h1>Panel staf</h1>${tabStaf}
+  <div class="baris" style="flex-wrap:wrap"><h2>Pendaftaran</h2><button class="btn garis kecil" type="button" data-aksi="muat-csv">Muat turun Excel (CSV)</button></div>
   <div class="cips" role="group" aria-label="Jenis">${[['', 'Semua'], ['kursus', 'Kursus'], ['tempah', 'Tempahan']].map(([k, n]) => `<button type="button" class="cip" aria-pressed="${(S.adminJenis || '') === k}" data-aksi="admin-jenis" data-nilai="${k}">${n}</button>`).join('')}</div>
   <p class="kecil redup">${rows.length} rekod</p>
   <div class="kad" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:14px;min-width:760px">
@@ -793,7 +796,7 @@ function vSayaContoh() {
     <section class="stack">
       <div class="tajuk-seksyen" style="margin:0"><h2>Perlu tindakan</h2><span class="kecil redup">2 belum selesai</span></div>
       <div class="kad pad tindakan"><span><b>Bayar baki ${rm(baki)}</b><br><span class="kecil seat-sikit">Sebelum ${fTkh(c.akhirBayar)} · ${hariLagi(c.akhirBayar)} hari lagi</span></span><a class="btn kecil" href="#/bayaran">Bayar</a></div>
-      <div class="kad pad tindakan"><span><b>Hantar gambar pasport</b><br><span class="kecil redup">Diperlukan untuk visa</span></span><a class="btn garis kecil" href="#/persediaan">Muat naik</a></div>
+      <div class="kad pad tindakan"><span><b>Hantar gambar pasport</b><br><span class="kecil redup">Diperlukan untuk visa</span></span><a class="btn garis kecil" href="#/dokumen">Muat naik</a></div>
       <span class="semak">${ic('betul')}Deposit ${rm(JT.depositSeorang)} diterima</span>
       <span class="semak">${ic('betul')}Kursus umrah sesi 1 dihadiri</span>
     </section>
@@ -847,7 +850,7 @@ function vPersediaanContoh() {
   <div class="grid-pakej" style="align-items:start">
     <section class="stack">
       <h2>Dokumen</h2>
-      <div class="kad jadual-harga">${CONTOH.dokumen.map(([n, s, w, b]) => `<div style="align-items:center"><span><b>${n}</b><br><span class="lencana ${w}" style="margin-top:4px">${s}</span></span>${b ? `<button class="btn kecil" type="button" data-aksi="toast" data-nilai="Muat naik dokumen akan dibuka dalam Fasa 2">Muat naik</button>` : ''}</div>`).join('')}</div>
+      <div class="kad jadual-harga">${CONTOH.dokumen.map(([n, s, w, b]) => `<div style="align-items:center"><span><b>${n}</b><br><span class="lencana ${w}" style="margin-top:4px">${s}</span></span>${b ? `<a class="btn kecil" href="#/dokumen">Muat naik</a>` : ''}</div>`).join('')}</div>
       <div class="kad pad" style="display:flex;gap:14px">${gb('IL-10', 'Contoh pasport', 'r11').replace('class="gb r11"', 'class="gb r11" style="width:96px;flex:none;border-radius:8px"')}<span class="kecil"><b style="font-size:15px">Gambar pasport yang diterima</b><br>Muka surat berfoto, rata, tiada silau, keempat-empat bucu kelihatan.</span></div>
     </section>
     <section class="stack">
@@ -967,7 +970,7 @@ function vSaya() {
         <div class="tajuk-seksyen" style="margin:0"><h2>Perlu tindakan</h2></div>
         ${b.baki > 0 && !dahLepas ? `<div class="kad pad tindakan"><span><b>Bayar baki ${rm(b.baki)}</b><br><span class="kecil redup">Dibayar ${rm(b.dibayar)} daripada ${rm(b.jumlah)}</span></span><a class="btn kecil" href="#/bayaran">Lihat</a></div>`
           : `<span class="semak">${ic('betul')}${b.baki > 0 ? `Baki ${rm(b.baki)}` : 'Bayaran lunas'}</span>`}
-        <span class="semak">${ic('info')}Status dokumen dan visa akan dipaparkan di sini.</span>
+        <a class="kad pad tindakan" href="#/dokumen" style="color:var(--dakwat)"><span><b>Dokumen umrah</b><br><span class="kecil redup">Imbas pasport, gambar dan sijil vaksin</span></span><span class="btn kecil">Buka</span></a>
       </section>
       <section class="stack">${kadMataRingkas(kiraMata(S.saya))}${S.saya.length > 1 ? `<a class="kad pad" href="#/perjalanan" style="color:var(--dakwat)"><b>${S.saya.length} tempahan</b><br><span class="kecil redup">Lihat semua tempahan anda</span></a>` : ''}</section>
     </div>`;
@@ -1005,9 +1008,9 @@ function vPersediaan() {
   if (S.demo) return vPersediaanContoh();
   return perluData(() => `
     <h1>Persediaan</h1>
-    <div class="nota">${ic('info')}<span>Muat naik dokumen dan status visa akan dibuka dalam kemas kini seterusnya. Buat masa ini, serahkan dokumen di cawangan Juara.</span></div>
+    <a class="kad pad tindakan" href="#/dokumen" style="color:var(--dakwat);max-width:560px"><span><b>Dokumen umrah</b><br><span class="kecil redup">Imbas pasport, gambar dan sijil vaksin dari telefon</span></span><span class="btn kecil">Buka</span></a>
     <a class="kad pad" href="#/kursus" style="color:var(--dakwat);max-width:560px"><b>Kursus umrah</b><br><span class="kecil redup">Lihat jadual kursus dan daftar hadir</span></a>
-    <a class="kad pad" href="#/solat" style="color:var(--dakwat);max-width:560px"><b>Waktu solat</b><br><span class="kecil redup">Kuala Lumpur, Madinah dan Makkah</span></a>`);
+  `);
 }
 function vAkaun() {
   if (S.demo) return vAkaunContoh();
@@ -1099,12 +1102,200 @@ function vMata() {
   ${cara}`;
 }
 
+/* ===== Dokumen jemaah: imbas pasport, gambar, vaksin, maklumat, urus keluarga ===== */
+const DOK = [
+  ['pasport', 'Pasport', 'Muka surat berfoto. Letak rata, tiada silau, keempat-empat bucu kelihatan.', 'Imbas pasport'],
+  ['gambar', 'Gambar berukuran pasport', 'Latar putih, muka penuh ke depan, tanpa cermin mata gelap.', 'Ambil gambar'],
+  ['vaksin', 'Sijil vaksin meningitis', 'Sijil ACYW, diambil sekurang-kurangnya 10 hari sebelum berlepas.', 'Muat naik sijil']
+];
+const STATUS_DOK = { menunggu: ['Belum hantar', 'kelabu'], disemak: ['Sedang disemak', 'amber'], diterima: ['Diterima', 'hijau'], semula: ['Perlu hantar semula', 'merah'] };
+const HUBUNGAN = ['Saya', 'Pasangan', 'Ibu', 'Bapa', 'Anak', 'Adik-beradik', 'Lain-lain'];
+const SAIZ = ['S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
+const CONTOH_DOK = [
+  { id: 'contoh1', nama: 'AMINAH BINTI YUSOF', hubungan: 'Saya', berlepas: '2026-12-12', pasport: { no: 'A12345678', luput: '2029-05-01' }, amaran: '', maklumat: { waris: 'Ahmad bin Ali', telWaris: '012-345 6789', saiz: 'M' }, dok: { pasport: { status: 'diterima' }, gambar: { status: 'semula', nota: 'Latar belakang tidak putih. Sila ambil semula di dinding putih.' }, vaksin: { status: 'disemak' } } },
+  { id: 'contoh2', nama: 'YUSOF BIN HAMID', hubungan: 'Bapa', berlepas: '2026-12-12', pasport: { no: 'A87654321', luput: '2027-02-10' }, amaran: 'Pasport tamat 2027-02-10, kurang 6 bulan dari tarikh berlepas. Sila perbaharui sebelum berlepas.', maklumat: {}, dok: { pasport: { status: 'disemak' }, gambar: { status: 'menunggu' }, vaksin: { status: 'menunggu' } } }
+];
+
+async function apiDok(path, opts = {}) {
+  const t = await S.user.getIdToken();
+  const r = await fetch((JT.apiJuara || '').replace(/\/$/, '') + path, { ...opts, headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json', Accept: 'application/json', ...(opts.headers || {}) } });
+  if (opts.blob) { if (!r.ok) throw new Error('Fail tidak dapat dibuka.'); return r.blob(); }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.ralat || 'Sistem Juara tidak dapat dihubungi.');
+  return j.data;
+}
+async function muatDok() {
+  if (S.dokMuat) return; S.dokMuat = true;
+  try { S.dok = await apiDok('/dokumen'); S.dokRalat = ''; if (!S.dok.length) S.dokBuka = 'baru'; }
+  catch (e) { S.dokRalat = e.message; }
+  S.dokMuat = false; render(false);
+}
+// Mampat gambar di telefon sebelum dihantar (maks 1600 px, JPEG)
+async function mampatGambar(fail) {
+  const url = URL.createObjectURL(fail);
+  try {
+    const img = await new Promise((ok, gagal) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => gagal(new Error('Gambar tidak dapat dibaca. Cuba JPG atau PNG.')); i.src = url; });
+    const k = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.85);
+  } finally { URL.revokeObjectURL(url); }
+}
+const tarikhBerlepasSaya = () => { const t = (S.saya || []).map(x => x.berlepas).filter(d => d && d >= hariIni()).sort()[0]; return t || ''; };
+
+function kadAhli(a, demo) {
+  const buka = S.dokBuka === a.id, lulus = DOK.filter(([k]) => a.dok[k].status === 'diterima').length;
+  const perlu = DOK.filter(([k]) => a.dok[k].status === 'semula' || a.dok[k].status === 'menunggu').length;
+  const baris = DOK.map(([k, n, panduan, butang]) => {
+    const d = a.dok[k], [st, w] = STATUS_DOK[d.status] || STATUS_DOK.menunggu, boleh = d.status !== 'diterima';
+    return `<div class="dok-baris">
+      <span class="dok-ikon ${w}">${ic(d.status === 'diterima' ? 'betul' : k === 'gambar' ? 'orang' : 'buku')}</span>
+      <span class="dok-isi"><b>${n}</b><span class="lencana ${w}">${st}</span>
+        ${d.status === 'semula' && d.nota ? `<span class="kecil" style="color:var(--merah)">${esc(d.nota)}</span>` : boleh ? `<span class="kecil redup">${panduan}</span>` : ''}
+        ${k === 'pasport' && a.pasport ? `<span class="kecil">No ${esc(a.pasport.no)} · luput ${fTkh(a.pasport.luput, 1)}</span>` : ''}
+        ${k === 'vaksin' && boleh ? `<label class="kecil" style="display:flex;gap:6px;align-items:center">Tarikh suntikan <input type="date" class="input kecil-input" data-vaksin-tarikh="${esc(a.id)}" value="${esc(a.vaksinTarikh || '')}"></label>` : ''}
+      </span>
+      ${boleh ? (demo ? `<button class="btn kecil" type="button" data-aksi="toast" data-nilai="Paparan contoh: muat naik tidak dihantar">${butang}</button>`
+        : `<label class="btn kecil${d.ada ? ' garis' : ''}">${d.ada ? 'Ganti' : butang}<input type="file" accept="image/*" ${k === 'gambar' ? 'capture="user"' : 'capture="environment"'} data-muatnaik="${k}" data-id="${esc(a.id)}" hidden></label>`) : ''}
+    </div>`;
+  }).join('');
+  const sah = S.dokMrz && S.dokMrz.id === a.id ? S.dokMrz : null;
+  return `<article class="kad ahli${buka ? ' buka' : ''}">
+    <button type="button" class="ahli-kepala" data-aksi="dok-buka" data-nilai="${esc(a.id)}" aria-expanded="${buka}">
+      <span class="ahli-avatar">${esc((a.nama || '?').trim()[0] || '?')}</span>
+      <span style="flex:1;min-width:0;text-align:left"><b>${esc(a.nama)}</b><br><span class="kecil redup">${esc(a.hubungan)}${a.berlepas ? ' · berlepas ' + fTkh(a.berlepas, 1) : ''}</span></span>
+      <span class="ahli-kemajuan"><b class="num">${lulus}/3</b><span class="kecil redup">diterima</span></span>
+    </button>
+    ${a.amaran ? `<div class="nota amaran">${ic('info')}<span>${esc(a.amaran)}</span></div>` : ''}
+    ${!buka && perlu ? `<span class="kecil" style="padding:0 16px 14px;display:block;color:var(--merah)">${perlu} dokumen perlu tindakan</span>` : ''}
+    ${buka ? `<div class="ahli-badan">
+      ${sah ? borangMrz(a, sah) : ''}
+      <div class="dok-senarai">${baris}</div>
+      <details class="maklumat-ahli"${a.nama ? '' : ' open'}><summary>Maklumat jemaah${a.maklumat && a.maklumat.waris ? '' : ' <span class="lencana amber">Belum lengkap</span>'}</summary>${borangAhli(a, demo)}</details>
+    </div>` : ''}
+  </article>`;
+}
+function borangMrz(a, m) {
+  const p = m.mrz || {};
+  return `<form class="kad pad stack mrz" data-borang="pasport" data-id="${esc(a.id)}" style="gap:10px;border:2px solid var(--dakwat)">
+    <b>${p.no ? 'Semak butiran pasport' : 'Isi butiran pasport'}</b>
+    <span class="kecil redup">${p.no ? (p.semuaSah ? 'Dibaca dari kod di bawah halaman pasport. Pastikan betul.' : 'Sebahagian butiran mungkin tidak tepat. Sila semak dengan pasport.') : 'Kod pasport tidak dapat dibaca. Sila isi sendiri seperti dalam pasport.'}</span>
+    <div class="grid-2">
+      <label class="medan">No pasport<input class="input" name="no" value="${esc(p.no || '')}" required autocapitalize="characters"></label>
+      <label class="medan">Tarikh luput<input class="input" type="date" name="luput" value="${esc(p.luput || '')}" required></label>
+      <label class="medan">Nama keluarga<input class="input" name="namaKeluarga" value="${esc(p.namaKeluarga || '')}" autocapitalize="characters"></label>
+      <label class="medan">Nama diberi<input class="input" name="namaDiberi" value="${esc(p.namaDiberi || '')}" autocapitalize="characters"></label>
+      <label class="medan">Tarikh lahir<input class="input" type="date" name="lahir" value="${esc(p.lahir || '')}"></label>
+      <label class="medan">Jantina<select class="input" name="jantina"><option value="L"${p.jantina === 'L' ? ' selected' : ''}>Lelaki</option><option value="P"${p.jantina === 'P' ? ' selected' : ''}>Perempuan</option></select></label>
+    </div>
+    <input type="hidden" name="negara" value="${esc(p.negara || 'MYS')}">
+    ${m.amaran ? `<div class="nota amaran">${ic('info')}<span>${esc(m.amaran)}</span></div>` : ''}
+    <p class="kecil" id="ralat-mrz" role="alert"></p>
+    <button class="btn" type="submit">Simpan butiran pasport</button>
+  </form>`;
+}
+function borangAhli(a, demo) {
+  const m = a.maklumat || {}, baru = a.id === 'baru';
+  return `<form class="stack" data-borang="ahli" data-id="${esc(baru ? '' : a.id)}" style="gap:12px;padding:4px 0" novalidate>
+    <div class="grid-2">
+      <label class="medan">Nama penuh seperti pasport<input class="input" name="nama" value="${esc(a.nama || (baru && !(S.dok || []).length && S.user ? (S.user.displayName || '') : ''))}" required></label>
+      <label class="medan">Hubungan dengan anda<select class="input" name="hubungan">${HUBUNGAN.filter(h => h !== 'Saya' || baru && !(S.dok || []).some(x => x.hubungan === 'Saya') || a.hubungan === 'Saya').map(h => `<option${(a.hubungan || '') === h ? ' selected' : ''}>${h}</option>`).join('')}</select></label>
+      <label class="medan">Tarikh berlepas (jika tahu)<input class="input" type="date" name="berlepas" value="${esc(a.berlepas || (baru ? tarikhBerlepasSaya() : ''))}"></label>
+      <label class="medan">No telefon jemaah<input class="input" name="tel" type="tel" inputmode="tel" value="${esc(m.tel || '')}"></label>
+      <label class="medan">Waris kecemasan (di Malaysia)<input class="input" name="waris" value="${esc(m.waris || '')}"></label>
+      <label class="medan">No telefon waris<input class="input" name="telWaris" type="tel" inputmode="tel" value="${esc(m.telWaris || '')}"></label>
+      <label class="medan">Mahram (bagi jemaah wanita)<input class="input" name="mahram" value="${esc(m.mahram || '')}" placeholder="Nama suami atau mahram"></label>
+      <label class="medan">Rakan sebilik pilihan<input class="input" name="rakanBilik" value="${esc(m.rakanBilik || '')}"></label>
+      <label class="medan">Saiz baju (untuk kit jemaah)<select class="input" name="saiz"><option value="">Pilih</option>${SAIZ.map(z => `<option${m.saiz === z ? ' selected' : ''}>${z}</option>`).join('')}</select></label>
+    </div>
+    <label class="medan">Keperluan khas (pilihan)<textarea class="input" name="khas" placeholder="Contoh: kerusi roda, diet rendah garam, ubat darah tinggi">${esc(m.khas || '')}</textarea></label>
+    <label class="setuju"><input type="checkbox" name="setuju"${a.nama ? ' checked' : ''}> <span class="kecil">Saya bersetuju Juara Travel menyimpan maklumat dan dokumen ini untuk urusan visa dan perjalanan umrah sahaja, mengikut Akta Perlindungan Data Peribadi 2010. Dokumen dipadam secara automatik selepas perjalanan.</span></label>
+    <p class="kecil" id="ralat-ahli-${esc(a.id)}" role="alert"></p>
+    <div class="grid-2">${demo ? `<button class="btn" type="button" data-aksi="toast" data-nilai="Paparan contoh: tidak disimpan">Simpan maklumat</button>` : `<button class="btn" type="submit">Simpan maklumat</button>`}
+    ${!baru && !demo ? `<button class="btn garis" type="button" data-aksi="dok-padam" data-nilai="${esc(a.id)}">Buang ahli ini</button>` : ''}</div>
+  </form>`;
+}
+function vDokumen() {
+  const demo = S.demo;
+  if (!demo && !S.user) return kosong('IL-14', 'Dokumen', 'Log masuk untuk hantar dokumen', 'Imbas pasport, gambar dan sijil vaksin terus dari telefon. Tak perlu ke cawangan.', `<a class="btn" href="#/masuk">Log masuk</a>`);
+  if (!demo && !S.dok && !S.dokRalat) muatDok();
+  const senarai = demo ? CONTOH_DOK : (S.dok || []);
+  const semua = senarai.length * 3, lulus = senarai.reduce((n, a) => n + DOK.filter(([k]) => a.dok[k].status === 'diterima').length, 0);
+  return `
+  <div class="stack" style="gap:6px"><h1>Dokumen umrah</h1><p class="redup">Hantar dokumen dari telefon. Staf Juara akan semak dan beritahu jika perlu dihantar semula.</p></div>
+  ${senarai.length ? `<div class="kad pad kemajuan-dok"><div class="baris"><b>${lulus} daripada ${semua} dokumen diterima</b><span class="kecil redup">${senarai.length} jemaah</span></div><div class="maju-dok"><span style="width:${semua ? Math.round(lulus / semua * 100) : 0}%"></span></div></div>` : ''}
+  ${S.dokRalat ? `<div class="nota amaran">${ic('info')}<span>${esc(S.dokRalat)}</span></div>` : ''}
+  ${!demo && !S.dok && !S.dokRalat ? rangka(2, 120) : `<div class="stack">${senarai.map(a => kadAhli(a, demo)).join('')}
+    ${S.dokBuka === 'baru' ? `<article class="kad ahli buka"><div class="ahli-kepala"><span class="ahli-avatar">+</span><b style="flex:1">${senarai.length ? 'Ahli keluarga baru' : 'Mula dengan maklumat anda'}</b></div><div class="ahli-badan">${borangAhli({ id: 'baru', nama: '', hubungan: senarai.length ? 'Pasangan' : 'Saya', maklumat: {} }, demo)}</div></article>`
+      : `<button class="btn garis penuh" type="button" data-aksi="dok-buka" data-nilai="baru">${ic('orang')}Tambah ahli keluarga</button>`}</div>`}
+  <div class="kad pad stack panduan-dok" style="gap:8px">
+    <b>Tip imbas pasport</b>
+    <span class="kecil">Letak pasport di atas meja gelap, buka muka surat berfoto. Pastikan 2 baris kod di bawah (&lt;&lt;&lt;) jelas. Apps akan baca nama, nombor dan tarikh luput secara automatik.</span>
+    <span class="kecil redup">Dokumen disimpan dengan selamat di pelayan Juara dan hanya boleh dilihat oleh anda dan staf yang ditetapkan.</span>
+  </div>`;
+}
+
+/* ===== Panel staf: semakan dokumen ===== */
+async function muatAdminDok() {
+  if (muatAdminDok.sedang) return; muatAdminDok.sedang = true;
+  try { S.adminDok = { data: await apiDok('/admin/dokumen') }; } catch (e) { S.adminDok = { ralat: e.message }; }
+  muatAdminDok.sedang = false; render(false);
+}
+function vAdminDok() {
+  if (!S.adminDok) { muatAdminDok(); return rangka(4, 60); }
+  if (S.adminDok.ralat) return `<div class="nota amaran">${ic('info')}<span>${esc(S.adminDok.ralat)}</span></div>`;
+  const tapis = S.adminDokTapis || 'perlu';
+  const rows = S.adminDok.data.filter(r => tapis === 'semua' || (tapis === 'perlu' ? DOK.some(([k]) => r.dok[k].status === 'disemak') : tapis === 'amaran' ? !!r.amaran : DOK.some(([k]) => r.dok[k].status === 'menunggu' || r.dok[k].status === 'semula')));
+  const sel = (r, k) => { const d = r.dok[k], [st, w] = STATUS_DOK[d.status] || STATUS_DOK.menunggu; return `<td><span class="lencana ${w}">${st}</span>${d.ada ? `<div class="aksi-dok"><button class="btn garis kecil" type="button" data-aksi="dok-lihat" data-id="${esc(r.docId)}" data-jenis="${k}">Lihat</button>${d.status !== 'diterima' ? `<button class="btn kecil" type="button" data-aksi="dok-terima" data-id="${esc(r.docId)}" data-jenis="${k}">Terima</button>` : ''}<button class="btn garis kecil" type="button" data-aksi="dok-semula" data-id="${esc(r.docId)}" data-jenis="${k}">Semula</button></div>` : ''}${S.dokSemula === r.docId + k ? `<form class="semula" data-borang="dok-semula" data-id="${esc(r.docId)}" data-jenis="${k}"><input class="input" name="nota" placeholder="Sebab (dihantar kepada jemaah)" required><button class="btn kecil" type="submit">Hantar</button></form>` : ''}</td>`; };
+  return `
+  <div class="cips" role="group" aria-label="Tapis dokumen">${[['perlu', 'Perlu disemak'], ['tertunggak', 'Belum lengkap'], ['amaran', 'Amaran pasport'], ['semua', 'Semua']].map(([k, n]) => `<button type="button" class="cip" aria-pressed="${tapis === k}" data-aksi="admin-dok-tapis" data-nilai="${k}">${n}</button>`).join('')}</div>
+  <p class="kecil redup">${rows.length} jemaah</p>
+  <div class="kad" style="overflow-x:auto"><table class="jadual-staf">
+    <thead><tr>${['Jemaah', 'Berlepas', 'Pasport', 'Gambar', 'Vaksin', 'Maklumat'].map(h => `<th>${h}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r => `<tr>
+      <td><b>${esc(r.nama)}</b><br><span class="kecil redup">${esc(r.hubungan)} · ${esc(r.emel)}</span>${r.pasport ? `<br><span class="kecil">No ${esc(r.pasport.no)} · luput ${esc(r.pasport.luput)}</span>` : ''}${r.amaran ? `<br><span class="kecil" style="color:var(--merah)">${esc(r.amaran)}</span>` : ''}</td>
+      <td class="kecil">${r.berlepas ? fTkh(r.berlepas, 1) : '-'}${r.kod ? '<br>' + esc(r.kod) : ''}</td>
+      ${sel(r, 'pasport')}${sel(r, 'gambar')}${sel(r, 'vaksin')}
+      <td class="kecil">${esc([r.maklumat.waris && 'Waris: ' + r.maklumat.waris + ' ' + (r.maklumat.telWaris || ''), r.maklumat.mahram && 'Mahram: ' + r.maklumat.mahram, r.maklumat.rakanBilik && 'Sebilik: ' + r.maklumat.rakanBilik, r.maklumat.saiz && 'Saiz ' + r.maklumat.saiz, r.maklumat.khas].filter(Boolean).join(' · ') || '-')}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+async function lihatDok(id, jenis) {
+  try {
+    const b = await apiDok(`/admin/dokumen/fail?id=${encodeURIComponent(id)}&jenis=${encodeURIComponent(jenis)}`, { blob: true });
+    const url = URL.createObjectURL(b), d = document.createElement('dialog'); d.className = 'dialog-video';
+    d.innerHTML = `<img src="${url}" alt="Dokumen jemaah" style="max-width:100%;max-height:80vh;border-radius:8px"><button type="button" class="btn garis kecil" data-tutup>Tutup</button>`;
+    document.body.appendChild(d);
+    const tutup = () => { d.close(); d.remove(); URL.revokeObjectURL(url); };
+    d.addEventListener('click', e => { if (e.target === d || e.target.hasAttribute('data-tutup')) tutup(); });
+    d.addEventListener('cancel', e => { e.preventDefault(); tutup(); });
+    d.showModal();
+  } catch (e) { toast(e.message); }
+}
+async function statusDok(docId, jenis, status, nota = '') {
+  try { await apiDok('/admin/dokumen/status', { method: 'POST', body: JSON.stringify({ docId, jenis, status, nota }) }); S.dokSemula = null; toast(status === 'diterima' ? 'Dokumen diterima' : 'Jemaah diminta hantar semula'); S.adminDok = null; render(false); }
+  catch (e) { toast(e.message); }
+}
+async function muatNaikDok(input) {
+  const f = input.files && input.files[0]; if (!f) return;
+  const id = input.dataset.id, jenis = input.dataset.muatnaik;
+  const lbl = input.closest('label'); if (lbl) { lbl.classList.add('sedang'); lbl.firstChild.textContent = 'Menghantar…'; }
+  try {
+    const data = await mampatGambar(f);
+    const t = document.querySelector(`[data-vaksin-tarikh="${id}"]`);
+    const r = await apiDok('/dokumen/muatnaik', { method: 'POST', body: JSON.stringify({ id, jenis, data, tarikh: t ? t.value : '' }) });
+    if (jenis === 'pasport') S.dokMrz = { id, mrz: r.mrz, amaran: r.amaran };
+    toast(jenis === 'pasport' ? (r.mrz ? 'Pasport dibaca. Sila semak butiran.' : 'Pasport dihantar. Sila isi butiran.') : 'Dokumen dihantar untuk semakan');
+    S.dok = null; S.dokBuka = id; await muatDok();
+  } catch (e) { toast(e.message); render(false); }
+}
+
 const NAV_TETAMU = [['', 'Utama', 'rumah'], ['pakej', 'Pakej', 'cari'], ['kursus', 'Kursus', 'buku'], ['cawangan', 'Cawangan', 'pin'], ['masuk', 'Log masuk', 'orang']];
 const NAV_JEMAAH = [['saya', 'Utama', 'rumah'], ['pakej', 'Pakej', 'cari'], ['kursus', 'Kursus', 'buku'], ['perjalanan', 'Perjalanan', 'kalendar'], ['akaun', 'Akaun', 'orang']];
 // Pautan tambahan di menu atas (desktop) untuk jemaah
-const NAV_JEMAAH_ATAS = [['cawangan', 'Cawangan'], ['bayaran', 'Bayaran'], ['persediaan', 'Persediaan'], ['mata', 'Mata Juara']];
-const JEMAAH = new Set(['saya', 'perjalanan', 'bayaran', 'persediaan', 'akaun']);
-const TAJUK = { '': 'Juara Travel', pakej: 'Pakej umrah', kursus: 'Kursus umrah', cawangan: 'Cawangan', masuk: 'Log masuk', solat: 'Waktu solat', kredit: 'Kredit gambar', admin: 'Pendaftaran', tempah: 'Tempah', bayar: 'Bayaran deposit', mata: 'Mata Juara', saya: 'Utama jemaah', perjalanan: 'Perjalanan', bayaran: 'Bayaran', persediaan: 'Persediaan', akaun: 'Akaun' };
+const NAV_JEMAAH_ATAS = [['dokumen', 'Dokumen'], ['cawangan', 'Cawangan'], ['bayaran', 'Bayaran'], ['mata', 'Mata Juara']];
+const JEMAAH = new Set(['saya', 'perjalanan', 'bayaran', 'persediaan', 'akaun', 'dokumen']);
+const TAJUK = { '': 'Juara Travel', pakej: 'Pakej umrah', kursus: 'Kursus umrah', cawangan: 'Cawangan', masuk: 'Log masuk', solat: 'Waktu solat', kredit: 'Kredit gambar', admin: 'Pendaftaran', tempah: 'Tempah', bayar: 'Bayaran deposit', mata: 'Mata Juara', dokumen: 'Dokumen umrah', saya: 'Utama jemaah', perjalanan: 'Perjalanan', bayaran: 'Bayaran', persediaan: 'Persediaan', akaun: 'Akaun' };
 
 function laluan() {
   const [nama = '', ...args] = location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent);
@@ -1132,7 +1323,7 @@ function render(alih = true) {
   jalur.hidden = !S.demo;
   if (S.demo) jalur.innerHTML = `<span>Paparan contoh: data di bawah bukan data sebenar</span><button type="button" data-aksi="keluar-contoh">Keluar</button>`;
 
-  const V = { mata: vMata, bayar: vBayar, '': vUtama, pakej: () => args[0] ? vButiran(args[0]) : vPakej(), tempah: () => vTempah(args[0], args[1]), kursus: vKursus, cawangan: vCawangan, solat: vSolat, masuk: vMasuk, kredit: vKredit, admin: vAdmin, saya: vSaya, perjalanan: vPerjalanan, bayaran: vBayaran, persediaan: vPersediaan, akaun: vAkaun };
+  const V = { dokumen: vDokumen, mata: vMata, bayar: vBayar, '': vUtama, pakej: () => args[0] ? vButiran(args[0]) : vPakej(), tempah: () => vTempah(args[0], args[1]), kursus: vKursus, cawangan: vCawangan, solat: vSolat, masuk: vMasuk, kredit: vKredit, admin: vAdmin, saya: vSaya, perjalanan: vPerjalanan, bayaran: vBayaran, persediaan: vPersediaan, akaun: vAkaun };
   $('isi').innerHTML = (V[nama] || vUtama)();
   document.body.classList.toggle('ada-bar', nama === 'pakej' && !!args[0]);
   const p = nama === 'pakej' && args[0] && cariPakej(args[0]);
@@ -1162,6 +1353,13 @@ document.addEventListener('click', e => {
   else if (a === 'bayar-ujian') bayarUjian();
   else if (a === 'cetak') window.print();
   else if (a === 'main-video') mainVideo(+v);
+  else if (a === 'dok-buka') { S.dokBuka = S.dokBuka === v ? null : v; if (!(S.dokMrz && S.dokMrz.id === v)) S.dokMrz = null; render(false); }
+  else if (a === 'dok-padam') { if (S.dokPadam !== v) { S.dokPadam = v; toast('Tekan sekali lagi untuk buang ahli dan dokumennya'); } else { apiDok('/dokumen/padam', { method: 'POST', body: JSON.stringify({ id: v }) }).then(() => { S.dok = null; S.dokBuka = null; toast('Ahli dibuang'); muatDok(); }).catch(e => toast(e.message)); } }
+  else if (a === 'admin-tab') { S.adminTab = v; render(false); }
+  else if (a === 'admin-dok-tapis') { S.adminDokTapis = v; render(false); }
+  else if (a === 'dok-lihat') lihatDok(el.dataset.id, el.dataset.jenis);
+  else if (a === 'dok-terima') statusDok(el.dataset.id, el.dataset.jenis, 'diterima');
+  else if (a === 'dok-semula') { S.dokSemula = S.dokSemula === el.dataset.id + el.dataset.jenis ? null : el.dataset.id + el.dataset.jenis; render(false); }
   else if (a === 'pilih-tarikh') { S.pilih[el.dataset.id] = el.dataset.kod; render(false); }
   else if (a === 'semua-tarikh') { S.semua[el.dataset.id] = true; render(false); }
   else if (a === 'pilih-dari-senarai') { S.pilih[el.dataset.id] = el.dataset.kod; }
@@ -1173,7 +1371,7 @@ document.addEventListener('click', e => {
   else if (a === 'admin-jenis') { S.adminJenis = v; render(false); }
   else if (a === 'kalendar-kursus') { if (S.kursusSiap && S.kursusSiap.kursus) kalendarKursus(S.kursusSiap.kursus); }
   else if (a === 'muat-csv') muatCsv();
-  else if (a === 'log-keluar') { if (AUTH) AUTH.signOut(); S.saya = null; location.hash = '#/'; toast('Anda telah log keluar'); }
+  else if (a === 'log-keluar') { if (AUTH) AUTH.signOut(); S.saya = null; S.dok = null; S.adminDok = null; location.hash = '#/'; toast('Anda telah log keluar'); }
   else if (a === 'tukar-ic') { store.set(icKunci(), ''); S.saya = null; S.sayaRalat = ''; location.hash = '#/saya'; render(false); }
 });
 document.addEventListener('change', e => {
@@ -1181,6 +1379,7 @@ document.addEventListener('change', e => {
   if (el.dataset.f) { S.f[el.dataset.f] = el.dataset.f === 'orang' ? +el.value : el.value; if (el.dataset.f === 'orang') { S.bil = {}; S.pilih = {}; if (laluan().nama === '') render(false); } if (laluan().nama === 'pakej') render(false); else { const b = el.form && el.form.querySelector('button[type=submit]'); if (b) b.textContent = `Lihat ${bilTarikh(tapis({ ...S.f, kat: 'Semua' }))} tarikh`; } }
   else if (el.dataset.aksiUbah === 'negeri-kursus') { S.kursusNegeri = el.value; S.kursusPilih = null; render(false); }
   else if (el.name === 'kursusId') { S.kursusPilih = el.value; }
+  else if (el.dataset.muatnaik) muatNaikDok(el);
   else if (el.dataset.pilih === 'bilik' || el.dataset.pilih === 'bil') {
     if (el.form && el.form.dataset.borang === 'tempah') { const fd = new FormData(el.form); S.draf = { nama: fd.get('nama'), tel: fd.get('tel'), nota: fd.get('nota'), ruj: fd.get('ruj') }; }
     if (el.dataset.pilih === 'bilik') S.bilik[el.dataset.id] = el.value; else S.bil[el.dataset.id] = +el.value;
@@ -1205,6 +1404,25 @@ document.addEventListener('submit', e => {
     hantarDaftar(d).then(r => { S.kursusSiap = { nama: String(d.nama).trim().split(/\s+/)[0], kursus: r && r.kursus }; render(); })
       .catch(err => { salah.textContent = err.message; btn.disabled = false; btn.textContent = 'Daftar kursus'; });
   }
+  else if (f.dataset.borang === 'ahli') {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(f)), salah = f.querySelector('[role=alert]'), btn = f.querySelector('button[type=submit]');
+    const ralat = String(d.nama || '').trim().length < 2 ? 'Sila isi nama penuh seperti dalam pasport.' : !d.setuju ? 'Sila tandakan persetujuan notis privasi.' : '';
+    if (ralat) { salah.textContent = ralat; salah.style.color = 'var(--merah)'; return; }
+    btn.disabled = true; btn.textContent = 'Menyimpan…';
+    apiDok('/dokumen/ahli', { method: 'POST', body: JSON.stringify({ id: f.dataset.id || undefined, nama: d.nama, hubungan: d.hubungan, berlepas: d.berlepas, setuju: true, maklumat: { tel: d.tel, waris: d.waris, telWaris: d.telWaris, mahram: d.mahram, rakanBilik: d.rakanBilik, saiz: d.saiz, khas: d.khas } }) })
+      .then(x => { toast('Maklumat disimpan'); S.dok = null; S.dokBuka = x.id; muatDok(); })
+      .catch(err => { salah.textContent = err.message; salah.style.color = 'var(--merah)'; btn.disabled = false; btn.textContent = 'Simpan maklumat'; });
+  }
+  else if (f.dataset.borang === 'pasport') {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(f)), btn = f.querySelector('button[type=submit]');
+    btn.disabled = true; btn.textContent = 'Menyimpan…';
+    apiDok('/dokumen/pasport', { method: 'POST', body: JSON.stringify({ id: f.dataset.id, ...d }) })
+      .then(x => { S.dokMrz = null; toast(x.amaran ? 'Disimpan. Sila perhatikan amaran pasport.' : 'Butiran pasport disimpan'); S.dok = null; muatDok(); })
+      .catch(err => { $('ralat-mrz').textContent = err.message; $('ralat-mrz').style.color = 'var(--merah)'; btn.disabled = false; btn.textContent = 'Simpan butiran pasport'; });
+  }
+  else if (f.dataset.borang === 'dok-semula') { e.preventDefault(); statusDok(f.dataset.id, f.dataset.jenis, 'semula', new FormData(f).get('nota')); }
   else if (f.dataset.borang === 'hubung') {
     e.preventDefault();
     const icNo = String(new FormData(f).get('ic') || '').replace(/\D/g, '');
