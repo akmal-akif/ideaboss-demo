@@ -10,7 +10,10 @@ const JT = {
   waJuara: '60120000000',
 
   // Deposit untuk setiap jemaah (RM)
-  depositSeorang: 1000,
+  depositSeorang: 100,
+
+  // Gerbang pembayaran. 'ujian' = paparan dummy (tiada caj sebenar). Tukar selepas akaun gateway (contoh ToyyibPay/Billplz/SenangPay) siap.
+  bayaran: { mod: 'ujian', penyedia: '' },
 
   // Nombor lesen KPK. Kosong = tidak dipaparkan sehingga disahkan.
   lesenKPK: '',
@@ -27,23 +30,25 @@ const JT = {
   // Contoh: { tajuk: 'Kursus Umrah Perdana', tarikh: '2026-12-06', masa: '9:00 pagi', tempat: 'Juara Travel Shah Alam' }
   kursus: [],
 
-  // Senarai cawangan. Kosong = skrin Cawangan papar "akan dikemas kini".
-  // Contoh: { nama: 'Juara Travel Shah Alam', alamat: '...', telefon: '60...', waktu: 'Isnin hingga Sabtu, 9 pagi hingga 6 petang', peta: 'https://maps.google.com/?q=...' }
-  cawangan: [],
+  // Senarai cawangan diambil terus dari sistem TravelDesk melalui /api/cawangan (sama seperti laman juaratravel.com.my).
 
   // Gambar sebenar ikut kod brief gambar. Kosong = kotak bertanda kod dipaparkan.
   // Contoh: 'PK-01': 'gambar/pk/pk-01-ekonomi-1.webp'
   // Gambar sementara dari Wikimedia Commons (kredit di skrin Kredit gambar) sehingga gambar Juara sendiri siap.
   gambar: {
-    // Kulit pakej umum: suasana Masjidil Haram dan Masjid Nabawi (bergilir ikut pakej)
-    'PK-01': 'gambar/IT/it-09-kaabah.webp',
-    'PK-01b': 'gambar/PK/pk-05-syawal-1.webp',
-    'PK-01c': 'gambar/IT/it-03-nabawi-siang.webp',
-    'PK-01d': 'gambar/PK/pk-05-syawal-2.webp',
-    'PK-02': 'gambar/IT/it-09-kaabah.webp',
-    'PK-03': 'gambar/IT/it-20-turki-1.webp',
-    'PK-04': 'gambar/PK/pk-04-iftar.webp',
-    'PK-05': 'gambar/PK/pk-05-syawal-1.webp',
+    // Foto jemaah dan petugas Juara sendiri (dari laman umrah.juaratravel.com.my)
+    'JR-01': 'gambar/JR/jr-01.webp', 'JR-02': 'gambar/JR/jr-02.webp', 'JR-03': 'gambar/JR/jr-03.webp', 'JR-04': 'gambar/JR/jr-04.webp',
+    'JR-05': 'gambar/JR/jr-05.webp', 'JR-06': 'gambar/JR/jr-06.webp', 'JR-07': 'gambar/JR/jr-07.webp', 'JR-08': 'gambar/JR/jr-08.webp',
+    // Kulit pakej: foto jemaah Juara (bergilir ikut pakej). Gambar destinasi kekal dalam galeri.
+    'PK-01': 'gambar/JR/jr-06.webp',
+    'PK-01b': 'gambar/JR/jr-08.webp',
+    'PK-01c': 'gambar/JR/jr-07.webp',
+    'PK-01d': 'gambar/JR/jr-05.webp',
+    'PK-02': 'gambar/JR/jr-07.webp',
+    'PK-03': 'gambar/JR/jr-08.webp',
+    'PK-04': 'gambar/JR/jr-05.webp',
+    'PK-05': 'gambar/JR/jr-06.webp',
+    'PK-06': 'gambar/JR/jr-03.webp',
     'IT-02': 'gambar/IT/it-02-bir-ali.webp',
     'IT-03': 'gambar/IT/it-03-nabawi-siang.webp',
     'IT-04': 'gambar/IT/it-04-kubah-hijau.webp',
