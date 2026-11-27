@@ -125,11 +125,33 @@ textarea.input{height:auto;min-height:96px;padding:12px 14px}
 .hero{display:flex;flex-wrap:wrap;gap:24px;align-items:stretch}
 .hero>*{flex:1 1 380px;min-width:0}
 
-/* Butiran pakej */
-.galeri{display:grid;gap:6px;border-radius:var(--r);overflow:hidden;margin:0 -16px}
-.galeri .gb:not(:first-child){display:none}
-@media (min-width:600px){.galeri{margin:0}}
-@media (min-width:1024px){.galeri{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:150px}.galeri .gb{aspect-ratio:auto}.galeri .gb:first-child{grid-column:span 2;grid-row:span 2}.galeri .gb:not(:first-child){display:flex}}
+/* Butiran pakej: galeri hanya gambar yang ada */
+.galeri{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px;padding:0 16px;scrollbar-width:none}
+.galeri::-webkit-scrollbar{display:none}
+.gal{position:relative;margin:0;flex:0 0 88%;scroll-snap-align:start;border-radius:var(--r);overflow:hidden}
+.galeri.n1 .gal{flex-basis:100%}
+.gal figcaption{position:absolute;left:8px;bottom:8px;background:rgba(28,25,23,.78);color:#fff;font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px}
+@media (min-width:600px){.galeri{margin:0;padding:0}}
+@media (min-width:1024px){
+  .galeri{display:grid;overflow:visible;grid-auto-rows:170px;border-radius:var(--r);overflow:hidden}
+  .gal{border-radius:0}.gal .gb{aspect-ratio:auto;height:100%}
+  .galeri.n1{grid-auto-rows:380px}
+  .galeri.n2{grid-template-columns:2fr 1fr;grid-auto-rows:340px}
+  .galeri.n3{grid-template-columns:2fr 1fr}.galeri.n3 .gal:first-child{grid-row:span 2}
+  .galeri.n4{grid-template-columns:2fr 1fr 1fr}.galeri.n4 .gal:first-child{grid-row:span 2}.galeri.n4 .gal:last-child{grid-column:span 2}
+  .galeri.n5{grid-template-columns:2fr 1fr 1fr}.galeri.n5 .gal:first-child{grid-row:span 2}
+}
+/* Kad pakej yang lebih bermaklumat */
+.pk .pk-gambar{position:relative;display:block}
+.pk-lencana{position:absolute;top:10px;left:10px}
+.pk .nama{color:var(--dakwat)}
+.pk .nama:hover{color:var(--merah)}
+.pk .ciri{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.pk .ciri li{display:flex;gap:8px;align-items:flex-start}
+.pk .ciri svg.i{width:18px;height:18px;color:var(--kelabu);margin-top:2px}
+.harga-bilik{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}
+.harga-bilik>span{display:flex;flex-direction:column;padding:6px 8px;border:1px solid var(--garis);border-radius:8px;font-size:13px;line-height:1.3}
+.pk-butang{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
 .dua-lajur{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
 .dua-lajur>.kiri{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:28px}
 .dua-lajur>.kanan{flex:1 1 320px;min-width:0}

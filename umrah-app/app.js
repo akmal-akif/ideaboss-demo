@@ -36,7 +36,9 @@ const IKON = {
   betul: '<path d="m5 12 5 5 9-10"/>',
   loceng: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
-  bulan: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'
+  bulan: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  kapal: '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
+  katil: '<path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/>'
 };
 const ic = (n, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${IKON[n] || ''}</svg>`;
 
@@ -102,6 +104,22 @@ function kodPakej(p) {
   if (/taif|badar/.test(n)) return ['PK-06', 'Taif & Badar'];
   return ({ 'Ekonomi': ['PK-01', 'Ekonomi'], 'Menara Jam': ['PK-02', 'Menara Jam'], 'Plus Turki': ['PK-03', 'Plus Turki'], 'Ramadhan': ['PK-04', 'Ramadhan'], 'Syawal': ['PK-05', 'Syawal'], 'Syaaban': ['PK-05', 'Syaaban'] })[p.kat] || ['PK-01', 'Umrah'];
 }
+const gbAda = kod => !!(JT.gambar && JT.gambar[kod]);
+const LABEL_IT = { 'IT-03': 'Masjid Nabawi', 'IT-09': 'Masjidil Haram', 'IT-15': 'Taif', 'IT-16': 'Badar', 'IT-17': 'Jeddah', 'IT-18': 'Kereta api Haramain', 'IT-20': 'Istanbul', 'IT-05': 'Masjid Quba', 'IT-06': 'Jabal Uhud' };
+// Gambar galeri pakej: hanya gambar yang benar-benar ada, ikut destinasi dalam nama pakej
+function galeriPakej(p, sel) {
+  const n = p.nama.toLowerCase(), kod = [kodPakej(p)[0]];
+  if (/taif/.test(n)) kod.push('IT-15');
+  if (/badar/.test(n)) kod.push('IT-16');
+  if (/train/.test(n)) kod.push('IT-18');
+  if (/turki|istanbul/.test(p.kat.toLowerCase() + n)) kod.push('IT-20');
+  const s = x => slug(x && x.nama);
+  if (sel.makkah) kod.push(`HT-${s(sel.makkah)}-1`);
+  kod.push('IT-09', 'IT-03');
+  if (sel.madinah) kod.push(`HT-${s(sel.madinah)}-1`);
+  kod.push('IT-05', 'IT-06');
+  return [...new Set(kod)].filter(gbAda).slice(0, 5);
+}
 function gb(kod, label, kelas = 'r169', alt = '') {
   const src = JT.gambar && JT.gambar[kod];
   if (src) return `<div class="gb ${kelas}"><img src="${esc(src)}" alt="${esc(alt || label)}" loading="lazy"></div>`;
@@ -119,22 +137,34 @@ function sumberTeks() {
 
 /* ===== Komponen ===== */
 function kadPakej(p) {
-  const [kod, lbl] = kodPakej(p), t0 = p.tarikh[0];
+  const [kod, lbl] = kodPakej(p);
+  // Tarikh paling awal yang masih ada seat menjadi wakil kad
+  const t0 = p.tarikh.find(t => t.k > 0) || p.tarikh[0];
   const hargaMin = Math.min(...p.tarikh.map(t => t.harga));
-  const info = [p.hari, t0.syarikat, t0.laluan].filter(Boolean).join(' · ');
-  const hotel = [t0.makkah && `Makkah: ${t0.makkah.nama}${jarak(t0.makkah)}`, t0.madinah && `Madinah: ${t0.madinah.nama}${jarak(t0.madinah)}`].filter(Boolean).join(' · ');
-  const pil = p.tarikh.slice(0, 3).map(t => `<span><b>${fTkh(t.d)}</b><span class="${seatTeks(t.k)[1]}">${t.k > 0 ? 'Baki ' + t.k : 'Penuh'}</span></span>`).join('');
-  return `<a class="kad pk" href="#/pakej/${esc(p.id)}">
-    ${gb(kod, lbl)}
+  const bilik = BILIK.filter(([k]) => t0.bilik && t0.bilik[k]).slice(0, 3);
+  const lain = p.tarikh.length - 1;
+  const [st, sc] = seatTeks(t0.k);
+  return `<article class="kad pk">
+    <a class="pk-gambar" href="#/pakej/${esc(p.id)}" tabindex="-1" aria-hidden="true">${gb(kod, lbl)}${t0.k > 0 && t0.k <= 5 ? `<span class="lencana amber pk-lencana">${st}</span>` : ''}</a>
     <div class="isi">
       <span class="kat">${esc(p.kat)}${p.tarikh.some(t => t.cuti) ? ' · Cuti sekolah' : ''}</span>
-      <span class="nama">${esc(p.nama)}</span>
-      <span class="kecil redup">${esc(info)}</span>
-      ${hotel ? `<span class="kecil" style="color:var(--dakwat2)">${esc(hotel)}</span>` : ''}
-      <div class="tarikh-pil">${pil}${p.tarikh.length > 3 ? `<span class="redup" style="justify-content:center">+${p.tarikh.length - 3} lagi</span>` : ''}</div>
-      <div class="harga"><span class="kecil redup">Dari, seorang</span><b class="num">${rm(hargaMin)}</b></div>
+      <a class="nama" href="#/pakej/${esc(p.id)}">${esc(p.nama)}</a>
+      <ul class="ciri">
+        <li>${ic('kalendar')}<span><b>${fTkh(t0.d)} – ${fTkh(t0.p, 1)}</b>${lain > 0 ? ` <span class="redup">· +${lain} tarikh lain</span>` : ''}</span></li>
+        <li>${ic('kapal')}<span>${esc([t0.syarikat, p.hari].filter(Boolean).join(' · '))}${t0.laluan ? ` <span class="redup">· ${esc(t0.laluan)}</span>` : ''}</span></li>
+        ${t0.makkah ? `<li>${ic('katil')}<span>${esc(t0.makkah.nama)}<span class="redup">${esc(jarak(t0.makkah))} ke Haram</span></span></li>` : ''}
+      </ul>
+      ${bilik.length ? `<div class="harga-bilik">${bilik.map(([k, n]) => `<span><span class="redup">${n}</span><b class="num">${rm(t0.bilik[k])}</b></span>`).join('')}</div>` : ''}
+      <div class="harga">
+        <span><span class="kecil redup">Dari, seorang</span><br><b class="num">${rm(hargaMin)}</b></span>
+        <span class="kecil ${sc}" style="text-align:right">${t0.k > 5 ? st : ''}</span>
+      </div>
+      <div class="pk-butang">
+        <a class="btn garis kecil" href="#/pakej/${esc(p.id)}">Butiran</a>
+        ${t0.k > 0 ? `<a class="btn kecil" href="#/tempah/${esc(p.id)}/${esc(t0.kod)}">Tempah</a>` : `<span class="btn kecil" aria-disabled="true" style="opacity:.5">Penuh</span>`}
+      </div>
     </div>
-  </a>`;
+  </article>`;
 }
 function barisRingkas({ p, t }) {
   const [kod] = kodPakej(p), [s, c] = seatTeks(t.k);
@@ -243,8 +273,8 @@ function vButiran(id) {
   const bil = S.bil[id] || 1;
   const hargaBilik = bk ? sel.bilik[bk[0]] : sel.harga;
   const hotelKad = (bandar, ho, s, masjid) => ho ? `<div class="kad hotel" style="overflow:hidden">
-      <div class="gambar3">${gb(`HT-${s}-1`, 'Fasad', '')}<div>${gb(`HT-${s}-2`, 'Bilik', '')}${gb(`HT-${s}-3`, `Laluan ke ${masjid}`, '')}</div></div>
-      <div class="pad" style="display:flex;flex-direction:column;gap:2px"><span class="kecil redup">${bandar}</span><b>${esc(ho.nama)}</b><span class="kecil" style="color:var(--dakwat2)">${esc((ho.b || []).join(' · '))}</span></div>
+      ${gbAda(`HT-${s}-1`) ? `<div class="gambar3">${gb(`HT-${s}-1`, 'Fasad', '')}<div>${gb(`HT-${s}-2`, 'Bilik', '')}${gb(`HT-${s}-3`, `Laluan ke ${masjid}`, '')}</div></div>` : ''}
+      <div class="pad" style="display:flex;flex-direction:column;gap:2px;${gbAda(`HT-${s}-1`) ? '' : 'border-left:0'}"><span class="kecil redup">${bandar}</span><b>${esc(ho.nama)}</b><span class="kecil" style="color:var(--dakwat2)">${esc((ho.b || []).join(' · '))}</span></div>
     </div>` : '';
   const penuh = sel.k <= 0;
   const ringkasan = `
@@ -259,7 +289,7 @@ function vButiran(id) {
     </div>`;
   return `
   <a href="#/pakej" class="kecil" style="font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-bottom:-12px">${ic('kembali')}Semua pakej</a>
-  <div class="galeri">${gb(kod, lbl, 'r169')}${mk ? gb(`HT-${sm}-1`, mk.nama) + gb(`HT-${sm}-2`, 'Bilik') : ''}${md ? gb(`HT-${sd}-1`, md.nama) + gb(`HT-${sd}-3`, 'Laluan ke Nabawi') : ''}</div>
+  ${(() => { const g = galeriPakej(p, sel); return g.length ? `<div class="galeri n${g.length}">${g.map((k, i) => `<figure class="gal">${gb(k, i ? (LABEL_IT[k] || '') : lbl, 'r169', i ? (LABEL_IT[k] || p.nama) : p.nama)}${i && LABEL_IT[k] ? `<figcaption>${esc(LABEL_IT[k])}</figcaption>` : ''}</figure>`).join('')}</div>` : `<div class="galeri n1"><figure class="gal">${gb(kod, lbl)}</figure></div>`; })()}
   <div class="dua-lajur">
     <div class="kiri">
       <div class="stack" style="gap:6px">
