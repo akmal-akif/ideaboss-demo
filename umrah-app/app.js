@@ -814,7 +814,8 @@ function mulaAuth() {
   if (!window.firebase || !JT.firebase) { S.authSedia = true; return; }
   const cfg = { ...JT.firebase };
   // Guna domain sendiri sebagai authDomain supaya log masuk redirect berfungsi di pelayar yang sekat kuki pihak ketiga
-  if (/\.(web\.app|firebaseapp\.com)$/.test(location.hostname)) cfg.authDomain = location.hostname;
+  // Hanya domain utama (berdaftar dalam klien OAuth). Saluran pratonton (nama--saluran.web.app) guna authDomain lalai.
+  if (/\.(web\.app|firebaseapp\.com)$/.test(location.hostname) && !location.hostname.includes('--')) cfg.authDomain = location.hostname;
   firebase.initializeApp(cfg);
   AUTH = firebase.auth();
   AUTH.useDeviceLanguage();
