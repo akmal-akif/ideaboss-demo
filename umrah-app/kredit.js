@@ -244,5 +244,33 @@ const KREDIT = [
   "lesen": "CC BY-SA 4.0",
   "sumber": "https://commons.wikimedia.org/wiki/File:Abraj_al_bait_closeup.jpg",
   "nota": "Dikecilkan ke 1280 px"
+ },
+ {
+  "fail": "gambar/HT/ht-madinah-1.webp",
+  "pencipta": "Indonesiagood",
+  "lesen": "CC BY 4.0",
+  "sumber": "https://commons.wikimedia.org/wiki/File:Hotel_di_Sekitar_Masjid_Nabawi_(Umroh_Ramadhan_2023)-1.jpg",
+  "nota": "Gambar hiasan hotel. Dikecilkan dan ditukar ke WebP"
+ },
+ {
+  "fail": "gambar/HT/ht-madinah-2.webp",
+  "pencipta": "Indonesiagood",
+  "lesen": "CC BY 4.0",
+  "sumber": "https://commons.wikimedia.org/wiki/File:Hotel_di_Sekitar_Masjid_Nabawi_(Umroh_Ramadhan_2023)-3.jpg",
+  "nota": "Gambar hiasan hotel. Dikecilkan dan ditukar ke WebP"
+ },
+ {
+  "fail": "gambar/HT/ht-madinah-3.webp",
+  "pencipta": "Imam Khairul Annas",
+  "lesen": "CC BY-SA 3.0",
+  "sumber": "https://commons.wikimedia.org/wiki/File:Hotels_near_Nabawi_Mosque.JPG",
+  "nota": "Gambar hiasan hotel. Dikecilkan dan ditukar ke WebP"
+ },
+ {
+  "fail": "gambar/HT/ht-makkah-1.webp",
+  "pencipta": "King Eliot",
+  "lesen": "CC BY-SA 4.0",
+  "sumber": "https://commons.wikimedia.org/wiki/File:Hilton_Hotel_Makkah.jpg",
+  "nota": "Gambar hiasan hotel. Dikecilkan dan ditukar ke WebP"
  }
 ];

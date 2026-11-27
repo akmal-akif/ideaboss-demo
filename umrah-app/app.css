@@ -331,3 +331,30 @@ body{background:var(--latar) url(gambar/BR/corak-latar.svg) repeat 0 0/72px 72px
 .semula{display:flex;gap:6px;margin-top:6px}.semula .input{padding:6px 8px;font-size:13px}
 .lencana.merah{background:#FEE2E2;color:#991B1B}
 @media (max-width:560px){.dok-baris{flex-wrap:wrap}.dok-baris>label.btn,.dok-baris>button.btn{flex:0 0 calc(100% - 52px);margin-left:52px;justify-content:center}}
+/* ===== Kemas UI: hotel, kad pakej, jadual, tarikh ===== */
+.hotel .gambar3{position:relative;height:190px}
+.tag-hiasan{position:absolute;left:8px;top:8px;background:rgba(28,25,23,.72);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;z-index:1}
+.fakta li.fakta-hotel{align-items:center;padding:10px}
+.fakta-hotel .gb{width:64px;height:64px;aspect-ratio:auto;border-radius:10px;flex:none}
+.pk .pk-gambar{overflow:hidden}
+.pk .pk-gambar img{animation:hanyut 9s ease-in-out infinite alternate;transform-origin:center}
+.pk:nth-child(2n) .pk-gambar img{animation-delay:-4s}
+.pk .pk-gambar:hover img,.pk .pk-gambar:active img{animation-play-state:paused;transform:scale(1.08);transition:transform .3s}
+@keyframes hanyut{from{transform:scale(1)}to{transform:scale(1.07) translate(-1.5%,-1%)}}
+.pk-lihat{position:absolute;right:10px;bottom:10px;z-index:1;display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.95);color:var(--dakwat);font-size:13px;font-weight:600;padding:6px 10px 6px 12px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.pk-lihat .i{width:16px;height:16px}
+@media (prefers-reduced-motion:reduce){.pk .pk-gambar img{animation:none}}
+.jadual-harga>div{gap:16px;align-items:flex-start}
+.jadual-harga>div>:first-child{flex:0 0 auto;max-width:48%}
+.jadual-harga>div>:last-child{text-align:right;min-width:0;overflow-wrap:anywhere}
+.tarikh-pilih{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
+.tarikh-pilih button{display:flex;flex-direction:column;gap:1px;min-height:76px}
+.tarikh-pilih button b{white-space:nowrap}
+.bawah a{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px}
+.cadangan{border-left:4px solid var(--amber)}
+.butang-baris{display:flex;flex-wrap:wrap;gap:8px}.butang-baris>.btn{flex:1 1 200px}
+.input,select.input{min-width:0;max-width:100%}
+.medan{min-width:0}
+.hotel .gambar3{overflow:hidden}
+.hotel .gambar3>div:last-child{height:100%;min-height:0;overflow:hidden;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
+.hotel .gambar3>div:last-child .gb,.hotel .gambar3>.gb{height:100%;min-height:0;aspect-ratio:auto;border-radius:0}

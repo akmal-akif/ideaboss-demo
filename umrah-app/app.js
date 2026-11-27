@@ -96,6 +96,24 @@ function tapis(f) {
   })).filter(p => p.tarikh.length && (f.kat === 'Semua' || f.kat === 'Cuti sekolah' || p.kat === f.kat));
 }
 // Satu tarikh boleh ada beberapa kumpulan (kod berbeza). Kira dan papar ikut tarikh, bukan ikut kumpulan.
+// Cadangan bila carian kosong: harga terendah bulan itu, atau bulan lain dalam bajet
+function cadanganCarian(f) {
+  const n = orangCari(), muat = t => !f.seat || t.k >= n;
+  const semua = pakejAktif().flatMap(p => p.tarikh.filter(muat).map(t => ({ p, t })));
+  const out = [];
+  if (f.bajet && f.bulan) {
+    const bulanIni = semua.filter(x => x.t.d.slice(0, 7) === f.bulan);
+    if (bulanIni.length) { const min = Math.min(...bulanIni.map(x => x.t.harga)); out.push({ teks: `Pada ${fBulan(f.bulan)}, pakej bermula dari ${rm(min)} seorang (${new Set(bulanIni.map(x => x.p.id + x.t.d)).size} tarikh).`, aksi: 'buang-bajet', butang: `Lihat pakej ${fBulan(f.bulan)}` }); }
+    const lain = semua.filter(x => x.t.harga <= +f.bajet).map(x => x.t.d.slice(0, 7)).sort();
+    if (lain.length) out.push({ teks: `Dalam bajet anda, tarikh terdekat ialah pada ${fBulan(lain[0])}.`, aksi: 'bulan-lain', butang: `Lihat bulan lain bawah ${rm(+f.bajet)}` });
+  } else if (f.bajet) {
+    const min = semua.length ? Math.min(...semua.map(x => x.t.harga)) : 0;
+    if (min) out.push({ teks: `Pakej paling murah sekarang dari ${rm(min)} seorang.`, aksi: 'buang-bajet', butang: 'Lihat semua harga' });
+  } else if (f.bulan) {
+    out.push({ teks: n > 1 ? `Tiada tarikh pada ${fBulan(f.bulan)} yang muat ${n} orang.` : `Tiada tarikh pada ${fBulan(f.bulan)}.`, aksi: 'bulan-lain', butang: 'Lihat bulan lain' });
+  }
+  return out;
+}
 const bilTarikh = senarai => senarai.reduce((a, p) => a + new Set(p.tarikh.map(t => t.d)).size, 0);
 const orangCari = () => Math.max(1, +S.f.orang || 1);
 function ikutTarikh(tarikh) {
@@ -107,7 +125,7 @@ function ikutTarikh(tarikh) {
 const terbaik = (kumpulan, n) => [...kumpulan].sort((a, b) => ((b.k >= n) - (a.k >= n)) || b.k - a.k)[0];
 const ORANG = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const pilihOrang = (nama, nilai, maks = 10, data = '') => `<select class="input" ${nama}${data}>${ORANG.filter(n => n <= Math.max(1, maks)).map(n => `<option value="${n}"${nilai === n ? ' selected' : ''}>${n} orang</option>`).join('')}</select>`;
-function seatTeks(k) { return k <= 0 ? ['Penuh', 'seat-penuh'] : [`Baki ${k} kerusi`, k <= 5 ? 'seat-sikit' : 'seat-ok']; }
+function seatTeks(k) { return k <= 0 ? ['Penuh', 'seat-penuh'] : [`Baki ${k} tempat`, k <= 5 ? 'seat-sikit' : 'seat-ok']; }
 const jarak = h => { const j = ((h && h.b) || []).find(x => /±/.test(x)); return j ? ' ' + j : ''; };
 const BILIK = [['quad', 'Quad', 4], ['triple', 'Triple', 3], ['double', 'Double', 2], ['quint', 'Quint', 5]];
 
@@ -143,6 +161,11 @@ function galeriPakej(p, sel) {
   if (sel.madinah) kod.push(`HT-${s(sel.madinah)}-1`);
   kod.push('JR-kumpulan-quba', 'JR-kaabah-malam', 'IT-05', 'IT-06');
   return [...new Set(kod)].filter(gbAda).slice(0, 5);
+}
+// Set gambar hotel: gambar sebenar (HT-<slug>-1..3) jika ada, jika tiada gambar hiasan hotel di bandar itu
+function gambarHotel(bandar, slugH) {
+  if (gbAda(`HT-${slugH}-1`)) return { hiasan: false, set: [1, 2, 3].map(n => gbAda(`HT-${slugH}-${n}`) ? `HT-${slugH}-${n}` : (bandar === 'Makkah' ? ['HT-makkah-1', 'JP-07', 'IT-09p'] : ['HT-madinah-1', 'HT-madinah-2', 'HT-madinah-3'])[n - 1]) };
+  return { hiasan: true, set: bandar === 'Makkah' ? ['HT-makkah-1', 'JP-07', 'IT-09p'] : ['HT-madinah-1', 'HT-madinah-2', 'HT-madinah-3'] };
 }
 function gb(kod, label, kelas = 'r169', alt = '') {
   const src = JT.gambar && JT.gambar[kod];
@@ -186,7 +209,7 @@ function kadPakej(p) {
   const lain = tarikhK.length - 1;
   const [st, sc] = seatTeks(t0.k);
   return `<article class="kad pk">
-    <a class="pk-gambar" href="#/pakej/${esc(p.id)}" tabindex="-1" aria-hidden="true">${gb(kod, lbl)}${t0.k > 0 && t0.k <= 5 ? `<span class="lencana amber pk-lencana">${st}</span>` : ''}</a>
+    <a class="pk-gambar" href="#/pakej/${esc(p.id)}" tabindex="-1" aria-hidden="true">${gb(kod, lbl)}<span class="pk-lihat">Lihat butiran ${ic('kanan')}</span>${t0.k > 0 && t0.k <= 5 ? `<span class="lencana amber pk-lencana">${st}</span>` : ''}</a>
     <div class="isi">
       <span class="kat">${esc(p.kat)}${p.tarikh.some(t => t.cuti) ? ' · Cuti sekolah' : ''}</span>
       <a class="nama" href="#/pakej/${esc(p.id)}">${esc(p.nama)}</a>
@@ -262,7 +285,8 @@ function vUtama() {
         <label class="medan">Bulan berlepas<select class="input" data-f="bulan"><option value="">Semua bulan</option>${senaraiBulan().map(b => `<option value="${b}"${f.bulan === b ? ' selected' : ''}>${fBulan(b)}</option>`).join('')}</select></label>
         <label class="medan">Berapa orang?${pilihOrang('data-f="orang"', n)}</label>
         <label class="medan">Bajet seorang<select class="input" data-f="bajet">${BAJET.map(([v, n]) => `<option value="${v}"${f.bajet === v ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
-        <button class="btn" type="submit">Lihat ${bil} tarikh yang sesuai</button>
+        <button class="btn" type="submit">${bil ? `Lihat ${bil} tarikh yang sesuai` : 'Lihat pilihan lain'}</button>
+        ${bil ? '' : `<p class="kecil" style="margin:0;color:var(--amber)">${esc((cadanganCarian({ ...f, kat: 'Semua' })[0] || { teks: 'Tiada tarikh yang padan. Cuba ubah bulan atau bajet.' }).teks)}</p>`}
       </form>
       <div class="cips" role="group" aria-label="Jenis pakej">${senaraiKat().slice(1).map(k => `<button type="button" class="cip" data-aksi="kat" data-nilai="${esc(k)}">${esc(k)}</button>`).join('')}</div>
     </div>
@@ -277,7 +301,7 @@ function vUtama() {
     <div class="stack" style="gap:12px">
       <img src="gambar/BR/25-tahun.webp" alt="25 tahun berpengalaman" class="lencana-25" width="200">
       <h2>Bersama jemaah Juara</h2>
-      <p class="redup">Petugas Juara bersama anda dari kaunter KLIA hingga pulang. Setiap kumpulan dibimbing mutawwif dan petugas lapangan sepanjang di Tanah Suci.</p>
+      <p class="redup">Petugas Juara ada bersama anda dari kaunter KLIA sampai pulang. Setiap kumpulan ada mutawwif sendiri sepanjang di Tanah Suci.</p>
       <div class="jj-kecil">${gb('JR-kumpulan-quba', '', '', 'Kumpulan jemaah Juara di Masjid Quba')}${gb('JR-ziarah-makkah', '', '', 'Ziarah Makkah bersama Juara')}${gb('JR-04', '', '', 'Petugas lapangan Juara')}</div>
     </div>
   </section>
@@ -307,7 +331,7 @@ function vUtama() {
       <div class="baris"><span class="redup">Harga & seat</span><b>Terus dari sistem Juara</b></div>
       <a class="btn garis" href="${wa('Assalamualaikum Juara Travel. Saya ingin bertanya tentang pakej umrah.')}" target="_blank" rel="noopener">${ic('telefon')}Tanya melalui WhatsApp</a>
     </div>
-    <div class="stack"><a class="kad pad kad-mata" href="#/mata" style="display:flex;flex-direction:column;gap:2px"><b>Mata Juara</b><span class="kecil" style="opacity:.85">Kumpul mata setiap trip dan rujukan. Tebus untuk pakej seterusnya.</span></a><a class="kad pad" href="#/cawangan" style="color:var(--dakwat);display:flex;gap:12px;align-items:center">${ic('pin')}<span><b>Cawangan Juara</b><br><span class="kecil redup">Alamat, waktu buka dan arah</span></span></a></div>
+    <div class="stack"><a class="kad pad kad-mata" href="#/mata" style="display:flex;flex-direction:column;gap:2px"><b>Mata Juara</b><span class="kecil" style="opacity:.85">Dapat mata setiap kali umrah dan bila kawan tempah guna kod anda. Guna untuk potongan pakej.</span></a><a class="kad pad" href="#/cawangan" style="color:var(--dakwat);display:flex;gap:12px;align-items:center">${ic('pin')}<span><b>Cawangan Juara</b><br><span class="kecil redup">Alamat, waktu buka dan arah</span></span></a></div>
   </section>`;
 }
 
@@ -330,7 +354,7 @@ function vPakej() {
     <p class="kecil redup">${esc(sumberTeks())}</p>
   </div>
   ${hasil.length ? `<div class="grid-pakej">${hasil.map(kadPakej).join('')}</div>`
-    : kosong('IL-07', 'Tiada hasil', orangCari() > 1 ? `Tiada tarikh yang muat ${orangCari()} orang` : 'Tiada tarikh yang sepadan', orangCari() > 1 ? 'Kumpulan sebelah mungkin masih ada tempat, atau staf kami boleh susun tarikh lain untuk keluarga anda.' : 'Cuba bulan lain atau bajet yang lebih tinggi.',
+    : (() => { const c = cadanganCarian(f); return c.length ? `<div class="kad pad stack cadangan" style="gap:12px"><h2>Tiada pakej yang padan dengan carian ini</h2>${c.map(x => `<p style="margin:0">${esc(x.teks)}</p>`).join('')}<div class="butang-baris">${c.map((x, i) => `<button class="btn${i ? ' garis' : ''}" type="button" data-aksi="${x.aksi}">${esc(x.butang)}</button>`).join('')}<a class="btn garis" href="${wa(`Assalamualaikum Juara Travel. Saya cari pakej umrah untuk ${orangCari()} orang${f.bulan ? ' pada ' + fBulan(f.bulan) : ''}${f.bajet ? ', bajet ' + rm(+f.bajet) + ' seorang' : ''}.`)}" target="_blank" rel="noopener">Tanya Juara</a></div></div>` : null; })() || kosong('IL-07', 'Tiada hasil', orangCari() > 1 ? `Tiada tarikh yang muat ${orangCari()} orang` : 'Tiada tarikh yang sepadan', orangCari() > 1 ? 'Kumpulan sebelah mungkin masih ada tempat, atau staf kami boleh susun tarikh lain untuk keluarga anda.' : 'Cuba bulan lain atau bajet yang lebih tinggi.',
       `<div class="grid-2">${f.bulan ? '<button class="btn garis" type="button" data-aksi="bulan-lain">Lihat bulan lain</button>' : '<button class="btn garis" type="button" data-aksi="set-semula">Papar semua pakej</button>'}<a class="btn" href="${wa(`Assalamualaikum Juara Travel. Saya cari tarikh umrah untuk ${orangCari()} orang${f.bulan ? ' pada ' + fBulan(f.bulan) : ''}.`)}" target="_blank" rel="noopener">Tanya Juara</a></div>`)}`;
 }
 
@@ -350,17 +374,11 @@ function vButiran(id) {
   const bk = bilikAda.find(([k]) => k === S.bilik[id]) || bilikAda[0];
   const bil = Math.min(nCari, Math.max(1, sel.k));
   const hargaBilik = bk ? sel.bilik[bk[0]] : sel.harga;
-  // Gambar hotel sebenar jika ada (HT-<slug>-1..3). Jika tiada, gambar kawasan masjid dilabel jelas, bukan gambar hotel.
   const hotelKad = (bandar, ho, s, masjid) => {
     if (!ho) return '';
-    const ada = gbAda(`HT-${s}-1`), lebih = gbAda(`HT-${s}-2`);
-    const kawasan = bandar === 'Makkah' ? 'IT-09' : 'IT-03';
-    const peta = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${ho.nama} hotel ${bandar}`)}`;
-    const gambar = ada
-      ? (lebih ? `<div class="gambar3">${gb(`HT-${s}-1`, 'Fasad', '', ho.nama)}<div>${gb(`HT-${s}-2`, 'Bilik', '', `Bilik ${ho.nama}`)}${gbAda(`HT-${s}-3`) ? gb(`HT-${s}-3`, `Laluan ke ${masjid}`, '') : ''}</div></div>`
-        : `<figure class="hotel-gb">${gb(`HT-${s}-1`, '', '', ho.nama)}</figure>`)
-      : gbAda(kawasan) ? `<figure class="hotel-gb">${gb(kawasan, '', '', `Kawasan ${masjid}`)}<figcaption>Kawasan ${masjid === 'Haram' ? 'Masjidil Haram' : 'Masjid Nabawi'}</figcaption></figure>` : '';
-    return `<div class="kad hotel" style="overflow:hidden">${gambar}
+    const g = gambarHotel(bandar, s), peta = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${ho.nama} hotel ${bandar}`)}`;
+    return `<div class="kad hotel" style="overflow:hidden">
+      <div class="gambar3">${gb(g.set[0], '', '', ho.nama)}<div>${gb(g.set[1], '', '', 'Kawasan hotel')}${gb(g.set[2], '', '', `Laluan ke ${masjid}`)}</div>${g.hiasan ? '<span class="tag-hiasan">Gambar hiasan</span>' : ''}</div>
       <div class="pad" style="display:flex;flex-direction:column;gap:2px"><span class="kecil redup">${bandar}</span><b>${esc(ho.nama)}</b><span class="kecil" style="color:var(--dakwat2)">${esc((ho.b || []).join(' · '))}</span>
       <a class="kecil" href="${esc(peta)}" target="_blank" rel="noopener" style="font-weight:600;margin-top:6px">Lihat hotel di peta</a></div>
     </div>`;
@@ -388,8 +406,8 @@ function vButiran(id) {
         <span class="redup">${esc([p.hari, sel.syarikat, sel.laluan].filter(Boolean).join(' · '))}</span>
       </div>
       <ul class="fakta">
-        ${mk ? `<li>${ic('katil')}<span><b>${esc(jarak(mk).trim() || 'Makkah')}</b><span class="kecil redup">ke Masjidil Haram · ${esc(mk.nama)}</span></span></li>` : ''}
-        ${md ? `<li>${ic('katil')}<span><b>${esc(jarak(md).trim() || 'Madinah')}</b><span class="kecil redup">ke Masjid Nabawi · ${esc(md.nama)}</span></span></li>` : ''}
+        ${mk ? `<li class="fakta-hotel">${gb(gambarHotel('Makkah', sm).set[0], '', '', mk.nama)}<span><b>${esc(jarak(mk).trim() || 'Makkah')} ke Masjidil Haram</b><span class="kecil redup">${esc(mk.nama)}, Makkah</span></span></li>` : ''}
+        ${md ? `<li class="fakta-hotel">${gb(gambarHotel('Madinah', sd).set[0], '', '', md.nama)}<span><b>${esc(jarak(md).trim() || 'Madinah')} ke Masjid Nabawi</b><span class="kecil redup">${esc(md.nama)}, Madinah</span></span></li>` : ''}
         ${(mk && mk.b || []).find(x => /sajian/.test(x)) ? `<li>${ic('betul')}<span><b>${esc((mk.b.find(x => /sajian/.test(x))))}</b><span class="kecil redup">${(mk.b || []).includes('menu Malaysia') ? 'menu Malaysia' : 'setiap hari'}</span></span></li>` : ''}
         ${sel.syarikat ? `<li>${ic('kapal')}<span><b>${esc(sel.syarikat)}</b><span class="kecil redup">${esc(sel.laluan || 'penerbangan terus')}</span></span></li>` : ''}
       </ul>
@@ -398,7 +416,7 @@ function vButiran(id) {
         ${(() => { const hari = ikutTarikh(p.tarikh), tunjuk = S.semua[id] || hari.length <= 8 ? hari : hari.slice(0, 8).concat(hari.slice(8).filter(g => g[0].d === sel.d));
           return `<div class="tarikh-pilih">${tunjuk.map(g => { const t = terbaik(g, nCari), kosongS = g.every(x => x.k <= 0), muat = g.some(x => x.k >= nCari), maks = Math.max(...g.map(x => x.k));
             const teks = kosongS ? 'Penuh' : g.length > 1 ? `${g.filter(x => x.k > 0).length} kumpulan` : 'Baki ' + maks;
-            return `<button type="button" data-aksi="pilih-tarikh" data-id="${esc(id)}" data-kod="${esc(t.kod)}" aria-pressed="${g[0].d === sel.d}"${kosongS ? ' disabled' : ''}><b>${fHari(t.d)}, ${fTkh(t.d)}</b><br><span class="kecil ${kosongS ? 'seat-penuh' : !muat ? 'seat-sikit' : maks <= 5 ? 'seat-sikit' : 'seat-ok'}">${teks}${!kosongS && !muat ? ' · tak muat ' + nCari : ''}</span></button>`; }).join('')}</div>`; })()}
+            return `<button type="button" data-aksi="pilih-tarikh" data-id="${esc(id)}" data-kod="${esc(t.kod)}" aria-pressed="${g[0].d === sel.d}"${kosongS ? ' disabled' : ''}><span class="kecil redup">${fHari(t.d)}</span><b>${fTkh(t.d)}</b><span class="kecil ${kosongS ? 'seat-penuh' : !muat ? 'seat-sikit' : maks <= 5 ? 'seat-sikit' : 'seat-ok'}">${teks}${!kosongS && !muat ? ' · tak muat ' + nCari : ''}</span></button>`; }).join('')}</div>`; })()}
         ${kumpulanSel.length > 1 ? `<div class="stack" style="gap:8px"><span class="kecil" style="font-weight:600">${kumpulanSel.length} kumpulan berlepas ${fTkh(sel.d, 1)}. Pilih kumpulan yang muat untuk anda:</span>${kumpulanSel.map(t => `<button type="button" class="kad pilihan-kumpulan" data-aksi="pilih-kumpulan" data-id="${esc(id)}" data-kod="${esc(t.kod)}" aria-pressed="${t.kod === sel.kod}"${t.k <= 0 ? ' disabled' : ''}><span><b>${esc(t.kod)}</b><span class="kecil redup"> · ${esc([t.syarikat, t.laluan].filter(Boolean).join(' · '))}</span></span><span class="kecil ${t.k <= 0 ? 'seat-penuh' : t.k < nCari ? 'seat-sikit' : 'seat-ok'}">${t.k <= 0 ? 'Penuh' : `Baki ${t.k}${t.k < nCari ? ', tak muat ' + nCari : ''}`}</span></button>`).join('')}</div>` : ''}
         ${!S.semua[id] && ikutTarikh(p.tarikh).length > 8 ? `<button type="button" class="btn garis kecil" data-aksi="semua-tarikh" data-id="${esc(id)}">Lihat semua ${ikutTarikh(p.tarikh).length} tarikh</button>` : ''}
         <span class="kecil redup">Pulang ${fHari(sel.p)}, ${fTkh(sel.p, 1)} · Kod kumpulan ${esc(sel.kod)} · ${sel.isi} daripada ${sel.seat} seat diisi</span>
@@ -411,7 +429,7 @@ function vButiran(id) {
       ${mk || md ? `<section class="stack"><h2>Hotel</h2><div class="grid-pakej">${hotelKad('Makkah', mk, sm, 'Haram')}${hotelKad('Madinah', md, sd, 'Nabawi')}</div></section>` : ''}
       <section class="stack">
         <h2>Itinerari</h2>
-        <div class="nota">${ic('info')}<span>Itinerari harian bergambar untuk pakej ini sedang disediakan. Tanya kami untuk jadual perjalanan penuh.</span></div>
+        <div class="nota">${ic('info')}<span>Jadual harian pakej ini sedang disiapkan. WhatsApp kami untuk jadual penuh.</span></div>
       </section>
     </div>
     <aside class="kanan" aria-label="Ringkasan tempahan">${ringkasan}</aside>
@@ -559,8 +577,8 @@ function vKursus() {
       <h1 style="font-size:1.6rem">Terima kasih, ${esc(S.kursusSiap.nama)}</h1>
       ${k ? `<div class="kad pad stack" style="gap:4px"><b>${fHari(k.tarikh)}, ${fTkh(k.tarikh, 1)} · ${esc(fJam(k.mula))}${k.tamat ? ' hingga ' + esc(fJam(k.tamat)) : ''}</b><span>${esc(k.tempat)}</span>${k.penceramah ? `<span class="kecil redup">Penceramah: ${esc(k.penceramah)}</span>` : ''}</div>
       <div class="grid-2"><a class="btn garis" href="${esc(k.peta)}" target="_blank" rel="noopener">${ic('pin')}Buka peta</a><button class="btn garis" type="button" data-aksi="kalendar-kursus">${ic('kalendar')}Simpan ke kalendar</button></div>
-      <p class="redup">Pengesahan dan peringatan akan dihantar melalui WhatsApp ke nombor anda, bersama lokasi dan nota kursus.</p>`
-      : `<p class="redup">Staf Juara akan menghubungi anda untuk mencadangkan sesi kursus yang terdekat.</p>`}
+      <p class="redup">Kami akan WhatsApp pengesahan, lokasi dan nota kursus. Peringatan dihantar malam sebelum dan 2 jam sebelum kursus.</p>`
+      : `<p class="redup">Staf Juara akan hubungi anda untuk cadangkan sesi kursus yang paling dekat.</p>`}
       <a href="#/pakej" style="text-align:center;font-weight:600">Lihat pakej umrah</a>
     </div>`;
   }
@@ -591,9 +609,9 @@ function vKursus() {
   <section class="kursus-atas">
     <div class="stack" style="gap:8px"><h1>Kursus umrah percuma</h1><p class="redup">Terbuka kepada semua, walaupun belum tempah pakej. Pilih sesi, daftar, dan kami hantar lokasi serta peringatan melalui WhatsApp.</p></div>
     <ul class="usp">
-      <li>${ic('orang')}<span><b>Dibimbing ustaz berpengalaman</b><span class="kecil redup">Ustaz dan penceramah Juara, syarikat dengan 25 tahun pengalaman</span></span></li>
+      <li>${ic('orang')}<span><b>Dibimbing ustaz berpengalaman</b><span class="kecil redup">Ustaz yang dah lama membimbing jemaah Juara</span></span></li>
       <li>${ic('pin')}<span><b>${data ? `${semua.length} sesi di ${negeri.length} negeri` : 'Sesi di seluruh Malaysia'}</b><span class="kecil redup">Di masjid dan surau berhampiran anda</span></span></li>
-      <li>${ic('buku')}<span><b>Faham umrah langkah demi langkah</b><span class="kecil redup">Niat, ihram, tawaf, saie, tahallul dan persediaan</span></span></li>
+      <li>${ic('buku')}<span><b>Belajar cara buat umrah dengan betul</b><span class="kecil redup">Niat, ihram, tawaf, saie, tahallul dan persediaan</span></span></li>
       <li>${ic('telefon')}<span><b>Lokasi dan peringatan WhatsApp</b><span class="kecil redup">Malam sebelum dan 2 jam sebelum kursus</span></span></li>
     </ul>
   </section>
@@ -1032,7 +1050,7 @@ function vAkaun() {
    Peraturan dalam JT.mata. Mata dikira daripada bayaran sebenar TravelDesk untuk trip yang sudah pulang.
    Bonus rujukan, kursus dan testimoni direkod oleh staf (akan datang dalam Panel staf). */
 const TAHAP = [
-  { k: 'jemaah', n: 'Jemaah', trip: 1, ruj: 0, faedah: ['Kumpul mata setiap trip', 'Kod rujukan peribadi'] },
+  { k: 'jemaah', n: 'Jemaah', trip: 1, ruj: 0, faedah: ['Dapat mata setiap kali umrah', 'Kod rujukan sendiri'] },
   { k: 'setia', n: 'Jemaah Setia', trip: 2, ruj: 0, faedah: ['Simpan tempat 48 jam tanpa deposit', 'Keutamaan pilih bilik'] },
   { k: 'duta', n: 'Duta Juara', trip: 3, ruj: 3, faedah: ['Keutamaan tarikh puncak (Ramadhan, cuti sekolah)', 'Kursus ulangan percuma untuk keluarga', 'Hadiah khas setiap rujukan berjaya'] }
 ];
@@ -1049,7 +1067,7 @@ function kiraMata(tempahan, rujukan = 0) {
   return { mata, menunggu, trip, rujukan, tahap, seterusnya, sejarah, nilai: Math.floor(mata / 100) * m.rmSe100 };
 }
 function kadMataRingkas(r) {
-  return `<a class="kad pad kad-mata" href="#/mata"><span class="kecil" style="opacity:.8">Mata Juara · ${esc(r.tahap ? r.tahap.n : 'Ahli baru')}</span><b class="num" style="font-size:28px;line-height:1.1">${r.mata.toLocaleString('ms-MY')} mata</b><span class="kecil" style="opacity:.8">${r.menunggu ? `+${r.menunggu.toLocaleString('ms-MY')} mata selepas trip akan datang` : `Bernilai ${rm(r.nilai)} untuk pakej seterusnya`}</span></a>`;
+  return `<a class="kad pad kad-mata" href="#/mata"><span class="kecil" style="opacity:.8">Mata Juara · ${esc(r.tahap ? r.tahap.n : 'Ahli baru')}</span><b class="num" style="font-size:28px;line-height:1.1">${r.mata.toLocaleString('ms-MY')} mata</b><span class="kecil" style="opacity:.8">${r.menunggu ? `+${r.menunggu.toLocaleString('ms-MY')} mata selepas umrah akan datang` : `Bernilai ${rm(r.nilai)} untuk pakej seterusnya`}</span></a>`;
 }
 function vMata() {
   const m = JT.mata;
@@ -1058,23 +1076,23 @@ function vMata() {
     <section class="stack"><h2>Cara kumpul mata</h2>
       <div class="kad jadual-harga">
         <div><span>Setiap ${rm(m.rmSeMata)} dibayar untuk pakej (dikira selepas pulang)</span><b class="num">1 mata</b></div>
-        <div><span>Rakan atau saudara guna kod rujukan anda dan berlepas</span><b class="num">${m.bonusRujukan.toLocaleString('ms-MY')}</b></div>
+        <div><span>Kawan atau saudara tempah guna kod anda (dikira bila mereka berlepas)</span><b class="num">${m.bonusRujukan.toLocaleString('ms-MY')}</b></div>
         <div><span>Hadir kursus umrah Juara</span><b class="num">${m.bonusKursus}</b></div>
         <div><span>Bayar penuh 90 hari sebelum berlepas</span><b class="num">+10%</b></div>
-        <div><span>Kongsi testimoni video yang diluluskan</span><b class="num">${m.bonusTestimoni}</b></div>
+        <div><span>Kongsi video pengalaman umrah anda</span><b class="num">${m.bonusTestimoni}</b></div>
       </div></section>
     <section class="stack"><h2>Guna mata</h2>
       <div class="grid-2 lebar">
         <div class="kad pad stack" style="gap:4px"><b>Potongan pakej</b><span class="redup kecil">100 mata = ${rm(m.rmSe100)} untuk pakej seterusnya</span></div>
-        <div class="kad pad stack" style="gap:4px"><b>Naik taraf bilik</b><span class="redup kecil">Quad ke Triple atau Double, tertakluk kekosongan</span></div>
+        <div class="kad pad stack" style="gap:4px"><b>Naik taraf bilik</b><span class="redup kecil">Dari Quad ke Triple atau Double, jika ada bilik kosong</span></div>
         <div class="kad pad stack" style="gap:4px"><b>Tambahan perjalanan</b><span class="redup kecil">Ziarah Taif, tiket tren Haramain, naik taraf kelas perniagaan</span></div>
         <div class="kad pad stack" style="gap:4px"><b>Tabung umrah asnaf</b><span class="redup kecil">Sumbang mata untuk membantu jemaah yang memerlukan</span></div>
       </div></section>
     <section class="stack"><h2>Tahap ahli</h2>
-      <div class="grid-pakej">${TAHAP.map(t => `<div class="kad pad stack" style="gap:6px"><b>${t.n}</b><span class="kecil redup">${t.trip} trip${t.ruj ? ` atau ${t.ruj} rujukan berjaya` : ''}</span><ul class="senarai-faedah">${t.faedah.map(f => `<li>${ic('betul')}${esc(f)}</li>`).join('')}</ul></div>`).join('')}</div>
-      <p class="kecil redup">Mata ialah rebat bernilai tetap tanpa cabutan bertuah. Mata keluarga boleh dikongsi. Mata luput 3 tahun selepas diperoleh. Terma penuh akan diumumkan oleh Juara.</p></section>`;
+      <div class="grid-pakej">${TAHAP.map(t => `<div class="kad pad stack" style="gap:6px"><b>${t.n}</b><span class="kecil redup">${t.trip} kali umrah${t.ruj ? ` atau ${t.ruj} rujukan berjaya` : ''}</span><ul class="senarai-faedah">${t.faedah.map(f => `<li>${ic('betul')}${esc(f)}</li>`).join('')}</ul></div>`).join('')}</div>
+      <p class="kecil redup">Nilai mata tetap, tiada cabutan bertuah. Mata boleh dikongsi dengan keluarga dan sah selama 3 tahun. Terma penuh akan dimaklumkan oleh Juara.</p></section>`;
   if (!S.demo && !S.user) return `
-    <div class="stack" style="gap:6px"><h1>Mata Juara</h1><p class="redup">Program ganjaran untuk jemaah dan keluarga yang kembali bersama Juara.</p></div>
+    <div class="stack" style="gap:6px"><h1>Mata Juara</h1><p class="redup">Ganjaran untuk jemaah yang pergi lagi dengan Juara, atau ajak keluarga dan kawan.</p></div>
     <div class="kad pad stack kad-mata" style="gap:10px;max-width:560px"><b style="font-size:20px">Log masuk untuk lihat mata anda</b><span style="opacity:.85">Mata dikira daripada bayaran tempahan anda dalam sistem Juara.</span><a class="btn" href="#/masuk" style="background:#fff;color:var(--dakwat)">Log masuk</a></div>
     ${cara}`;
   const r = S.demo ? { mata: 1840, menunggu: 400, trip: 2, rujukan: 1, tahap: TAHAP[1], seterusnya: TAHAP[2], nilai: 180, sejarah: [{ tajuk: 'Umrah Syawal', tarikh: '2025-05-02', mata: 840 }, { tajuk: '1 rujukan berjaya', tarikh: '', mata: 1000 }] }
@@ -1088,8 +1106,8 @@ function vMata() {
     <div class="kad pad stack kad-mata" style="gap:10px">
       <span class="kecil" style="opacity:.8">${esc(r.tahap ? r.tahap.n : 'Ahli baru')}</span>
       <b class="num" style="font-size:40px;line-height:1">${r.mata.toLocaleString('ms-MY')}<span style="font-size:16px"> mata</span></b>
-      <span style="opacity:.85">Bernilai ${rm(r.nilai)} untuk pakej seterusnya${r.menunggu ? ` · +${r.menunggu.toLocaleString('ms-MY')} mata selepas trip akan datang` : ''}</span>
-      ${r.seterusnya ? `<div class="maju" aria-label="Kemajuan ke ${esc(r.seterusnya.n)}"><span style="width:${maju}%"></span></div><span class="kecil" style="opacity:.85">${r.trip} daripada ${r.seterusnya.trip} trip ke ${esc(r.seterusnya.n)}${r.seterusnya.ruj ? `, atau ${r.seterusnya.ruj} rujukan` : ''}</span>` : ''}
+      <span style="opacity:.85">Bernilai ${rm(r.nilai)} untuk pakej seterusnya${r.menunggu ? ` · +${r.menunggu.toLocaleString('ms-MY')} mata selepas umrah akan datang` : ''}</span>
+      ${r.seterusnya ? `<div class="maju" aria-label="Kemajuan ke ${esc(r.seterusnya.n)}"><span style="width:${maju}%"></span></div><span class="kecil" style="opacity:.85">${r.trip} daripada ${r.seterusnya.trip} kali umrah untuk jadi ${esc(r.seterusnya.n)}${r.seterusnya.ruj ? `, atau ${r.seterusnya.ruj} rujukan` : ''}</span>` : ''}
     </div>
     <div class="kad pad stack" style="gap:10px">
       <span class="kecil redup">Kod rujukan anda</span>
@@ -1104,7 +1122,7 @@ function vMata() {
 
 /* ===== Dokumen jemaah: imbas pasport, gambar, vaksin, maklumat, urus keluarga ===== */
 const DOK = [
-  ['pasport', 'Pasport', 'Muka surat berfoto. Letak rata, tiada silau, keempat-empat bucu kelihatan.', 'Imbas pasport'],
+  ['pasport', 'Pasport', 'Halaman bergambar. Letak rata, tiada silau, nampak keempat-empat bucu.', 'Imbas pasport'],
   ['gambar', 'Gambar berukuran pasport', 'Latar putih, muka penuh ke depan, tanpa cermin mata gelap.', 'Ambil gambar'],
   ['vaksin', 'Sijil vaksin meningitis', 'Sijil ACYW, diambil sekurang-kurangnya 10 hari sebelum berlepas.', 'Muat naik sijil']
 ];
@@ -1231,7 +1249,7 @@ function vDokumen() {
   <div class="kad pad stack panduan-dok" style="gap:8px">
     <b>Tip imbas pasport</b>
     <span class="kecil">Letak pasport di atas meja gelap, buka muka surat berfoto. Pastikan 2 baris kod di bawah (&lt;&lt;&lt;) jelas. Apps akan baca nama, nombor dan tarikh luput secara automatik.</span>
-    <span class="kecil redup">Dokumen disimpan dengan selamat di pelayan Juara dan hanya boleh dilihat oleh anda dan staf yang ditetapkan.</span>
+    <span class="kecil redup">Dokumen disimpan dengan selamat. Hanya anda dan staf Juara yang boleh lihat.</span>
   </div>`;
 }
 
@@ -1347,6 +1365,7 @@ document.addEventListener('click', e => {
   else if (a === 'seat') { S.f.seat = !S.f.seat; render(false); }
   else if (a === 'set-semula') { S.f = { bulan: '', bajet: '', kat: 'Semua', seat: true, orang: S.f.orang || 1 }; render(false); }
   else if (a === 'bulan-lain') { S.f.bulan = ''; render(false); }
+  else if (a === 'buang-bajet') { S.f.bajet = ''; render(false); }
   else if (a === 'pilih-kumpulan') { S.pilih[el.dataset.id] = el.dataset.kod; render(false); }
   else if (a === 'zon') { S.zon = v; render(false); }
   else if (a === 'kaedah') { S.kaedah = v; render(false); }
@@ -1376,7 +1395,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('change', e => {
   const el = e.target;
-  if (el.dataset.f) { S.f[el.dataset.f] = el.dataset.f === 'orang' ? +el.value : el.value; if (el.dataset.f === 'orang') { S.bil = {}; S.pilih = {}; if (laluan().nama === '') render(false); } if (laluan().nama === 'pakej') render(false); else { const b = el.form && el.form.querySelector('button[type=submit]'); if (b) b.textContent = `Lihat ${bilTarikh(tapis({ ...S.f, kat: 'Semua' }))} tarikh`; } }
+  if (el.dataset.f) { S.f[el.dataset.f] = el.dataset.f === 'orang' ? +el.value : el.value; if (el.dataset.f === 'orang') { S.bil = {}; S.pilih = {}; if (laluan().nama === '') render(false); } if (laluan().nama === 'pakej') render(false); else { const b = el.form && el.form.querySelector('button[type=submit]'); if (b) render(false); } }
   else if (el.dataset.aksiUbah === 'negeri-kursus') { S.kursusNegeri = el.value; S.kursusPilih = null; render(false); }
   else if (el.name === 'kursusId') { S.kursusPilih = el.value; }
   else if (el.dataset.muatnaik) muatNaikDok(el);
