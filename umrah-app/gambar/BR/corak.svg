@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <!-- Corak bintang lapan ilham daripada beg jemaah Juara: hijau limau, merah, kuning, ungu -->
+  <rect width="48" height="48" fill="#8CC63F"/>
+  <g transform="translate(24 24)">
+    <rect x="-13" y="-13" width="26" height="26" fill="#C8151B"/>
+    <rect x="-13" y="-13" width="26" height="26" fill="#C8151B" transform="rotate(45)"/>
+    <rect x="-8" y="-8" width="16" height="16" fill="#F4C20D" transform="rotate(45)"/>
+    <rect x="-4" y="-4" width="8" height="8" fill="#5B2A6E"/>
+  </g>
+  <g fill="#5B2A6E">
+    <path d="M0 -5 5 0 0 5 -5 0z"/><path d="M48 -5 53 0 48 5 43 0z"/>
+    <path d="M0 43 5 48 0 53 -5 48z"/><path d="M48 43 53 48 48 53 43 48z"/>
+  </g>
+  <g fill="#F4C20D"><circle cx="0" cy="0" r="1.6"/><circle cx="48" cy="0" r="1.6"/><circle cx="0" cy="48" r="1.6"/><circle cx="48" cy="48" r="1.6"/></g>
+</svg>

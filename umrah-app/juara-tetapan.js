@@ -12,6 +12,9 @@ const JT = {
   // Deposit untuk setiap jemaah (RM)
   depositSeorang: 100,
 
+  // Kulit pakej: setiap pakej dapat satu foto jemaah yang berbeza (bukan staf). Tambah lagi jika pakej bertambah.
+  poolPakej: ['JR-melambai', 'JP-02', 'JR-08', 'JP-04', 'JR-nabawi-payung', 'JP-05', 'JR-05', 'JP-18', 'JR-kumpulan-quba', 'JP-03', 'JR-06', 'JP-11', 'JR-tren', 'JP-16', 'JR-07', 'JP-17', 'JR-ziarah-makkah', 'JP-06', 'JR-cerita-poster', 'JP-12', 'JR-madinah-poster', 'JP-19', 'JP-01', 'JP-20', 'JP-07', 'JP-21', 'JP-08', 'JP-13', 'JP-09', 'JP-14', 'JP-10', 'JP-15', 'JP-22', 'JP-23', 'JP-24', 'JP-25', 'JP-26', 'JP-27'],
+
   // Gerbang pembayaran. 'ujian' = paparan dummy (tiada caj sebenar). Tukar selepas akaun gateway (contoh ToyyibPay/Billplz/SenangPay) siap.
   bayaran: { mod: 'ujian', penyedia: '' },
 
@@ -46,6 +49,8 @@ const JT = {
     'JR-melambai': 'gambar/JR/jr-melambai.webp', 'JR-kaabah-siang': 'gambar/JR/jr-kaabah-siang.webp', 'JR-kaabah-malam': 'gambar/JR/jr-kaabah-malam.webp',
     'JR-nabawi-payung': 'gambar/JR/jr-nabawi-payung.webp', 'JR-tren': 'gambar/JR/jr-tren.webp', 'JR-ziarah-makkah': 'gambar/JR/jr-ziarah-makkah.webp',
     'JR-kumpulan-quba': 'gambar/JR/jr-kumpulan-quba.webp', 'JR-cerita-poster': 'gambar/JR/jr-cerita-poster.webp', 'JR-madinah-poster': 'gambar/JR/jr-madinah-poster.webp',
+    // Bingkai jemaah tambahan (rakaman RAW - UMRAH), untuk kulit pakej yang tidak berulang
+    'JP-01': 'gambar/JP/jp-01.webp', 'JP-02': 'gambar/JP/jp-02.webp', 'JP-03': 'gambar/JP/jp-03.webp', 'JP-04': 'gambar/JP/jp-04.webp', 'JP-05': 'gambar/JP/jp-05.webp', 'JP-06': 'gambar/JP/jp-06.webp', 'JP-07': 'gambar/JP/jp-07.webp', 'JP-08': 'gambar/JP/jp-08.webp', 'JP-09': 'gambar/JP/jp-09.webp', 'JP-10': 'gambar/JP/jp-10.webp', 'JP-11': 'gambar/JP/jp-11.webp', 'JP-12': 'gambar/JP/jp-12.webp', 'JP-13': 'gambar/JP/jp-13.webp', 'JP-14': 'gambar/JP/jp-14.webp', 'JP-15': 'gambar/JP/jp-15.webp', 'JP-16': 'gambar/JP/jp-16.webp', 'JP-17': 'gambar/JP/jp-17.webp', 'JP-18': 'gambar/JP/jp-18.webp', 'JP-19': 'gambar/JP/jp-19.webp', 'JP-20': 'gambar/JP/jp-20.webp', 'JP-21': 'gambar/JP/jp-21.webp', 'JP-22': 'gambar/JP/jp-22.webp', 'JP-23': 'gambar/JP/jp-23.webp', 'JP-24': 'gambar/JP/jp-24.webp', 'JP-25': 'gambar/JP/jp-25.webp', 'JP-26': 'gambar/JP/jp-26.webp', 'JP-27': 'gambar/JP/jp-27.webp',
     // Kulit pakej: foto jemaah Juara (bergilir ikut pakej). Gambar destinasi kekal dalam galeri.
     'PK-01': 'gambar/JR/jr-06.webp',
     'PK-01b': 'gambar/JR/jr-08.webp',

@@ -8,7 +8,7 @@
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--latar);color:var(--dakwat);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--latar);color:var(--dakwat);font-family:Poppins,system-ui,sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
 a{color:var(--merah);text-decoration:none}
 a:hover{color:var(--merah-g)}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -251,3 +251,33 @@ textarea.input{height:auto;min-height:96px;padding:12px 14px}
 .dialog-video::backdrop{background:rgba(0,0,0,.75)}
 .dialog-video video{width:100%;max-height:78vh;border-radius:8px;background:#000}
 .lencana-25{width:180px;height:auto;margin-bottom:-4px}
+/* ===== Identiti beg Juara: banner, corak songket, akses pantas ===== */
+.corak{height:18px;background:url(gambar/BR/corak.svg) repeat-x center/18px 18px}
+.banner{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);border-radius:16px;overflow:hidden;background:linear-gradient(120deg,#7A0E13,#C8151B);color:#fff;min-height:240px}
+.banner-teks{padding:28px 24px 40px;display:flex;flex-direction:column;gap:10px;justify-content:center;z-index:1}
+.banner-teks h1{font-size:clamp(1.9rem,5vw,3rem);font-style:italic;font-weight:700;line-height:1.05;color:#fff}
+.banner-teks p{margin:0;opacity:.9}
+.banner-gambar{margin:0;position:relative}
+.banner-gambar .gb{position:absolute;inset:0;border-radius:0;aspect-ratio:auto;height:100%}
+.banner-gambar::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#B3131A 0%,rgba(179,19,26,0) 45%);z-index:1}
+.banner>.corak{position:absolute;left:0;right:0;bottom:0}
+.btn.putih{background:#fff;color:var(--dakwat);align-self:flex-start;border-color:#fff}
+@media (max-width:640px){.banner{grid-template-columns:1.15fr .85fr;min-height:200px}.banner-teks{padding:18px 14px 32px;gap:8px}.banner-teks h1{font-size:1.75rem}.banner-teks p{font-size:13px;line-height:1.4}.banner-gambar::before{background:linear-gradient(90deg,#B3131A 0%,rgba(179,19,26,0) 30%)}}
+.btn.putih{white-space:nowrap}
+.akses-pantas{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.akses-pantas a{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--dakwat);font-weight:500;font-size:15px;text-align:center}
+.ikon-akses{width:60px;height:60px;border-radius:16px;border:2px solid var(--merah);display:grid;place-items:center;color:var(--merah);background:var(--kad)}
+.ikon-akses .i{width:28px;height:28px}
+.senarai-pautan{display:flex;flex-direction:column;gap:8px}
+.senarai-pautan a{display:flex;align-items:center;gap:12px;color:var(--dakwat);font-weight:500}
+.senarai-pautan a>span{flex:1}
+.senarai-pautan .i{color:var(--merah)}
+.kursus-atas{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:20px;align-items:center}
+@media (max-width:760px){.kursus-atas{grid-template-columns:1fr}}
+.usp{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:520px){.usp{grid-template-columns:1fr}}
+.usp li{display:flex;gap:10px;align-items:flex-start;background:var(--kad);border:1px solid var(--garis);border-left:4px solid var(--merah);border-radius:10px;padding:12px}
+.usp li .i{color:var(--merah);flex:none;margin-top:2px}
+.usp li>span{display:flex;flex-direction:column;gap:2px}
+.kaki{border-top:0;position:relative;padding-top:22px}
+.kaki::before{content:"";position:absolute;left:0;right:0;top:0;height:10px;background:url(gambar/BR/corak.svg) repeat-x center/10px 10px;opacity:.9}
