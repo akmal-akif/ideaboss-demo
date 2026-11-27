@@ -38,6 +38,7 @@ const IKON = {
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
   bulan: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
   kapal: '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
+  main: '<path d="M7 4v16l13-8z" fill="currentColor" stroke="none"/>',
   katil: '<path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/>'
 };
 const ic = (n, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${IKON[n] || ''}</svg>`;
@@ -120,19 +121,19 @@ function kodPakej(p) {
   return [pool[h % pool.length], 'Umrah'];
 }
 const gbAda = kod => !!(JT.gambar && JT.gambar[kod]);
-const LABEL_IT = { 'IT-03': 'Masjid Nabawi', 'IT-09': 'Masjidil Haram', 'IT-15': 'Taif', 'IT-16': 'Badar', 'IT-17': 'Jeddah', 'IT-18': 'Kereta api Haramain', 'IT-20': 'Istanbul', 'IT-05': 'Masjid Quba', 'IT-06': 'Jabal Uhud' };
+const LABEL_IT = { 'JR-kaabah-siang': 'Masjidil Haram', 'JR-kaabah-malam': 'Masjidil Haram, malam', 'JR-nabawi-payung': 'Masjid Nabawi', 'JR-tren': 'Tren Haramain', 'JR-ziarah-makkah': 'Ziarah Makkah', 'JR-kumpulan-quba': 'Masjid Quba', 'IT-03': 'Masjid Nabawi', 'IT-09': 'Masjidil Haram', 'IT-15': 'Taif', 'IT-16': 'Badar', 'IT-17': 'Jeddah', 'IT-18': 'Kereta api Haramain', 'IT-20': 'Istanbul', 'IT-05': 'Masjid Quba', 'IT-06': 'Jabal Uhud' };
 // Gambar galeri pakej: hanya gambar yang benar-benar ada, ikut destinasi dalam nama pakej
 function galeriPakej(p, sel) {
   const n = p.nama.toLowerCase(), kod = [kodPakej(p)[0]];
   if (/taif/.test(n)) kod.push('IT-15');
   if (/badar/.test(n)) kod.push('IT-16');
-  if (/train/.test(n)) kod.push('IT-18');
+  if (/train/.test(n)) kod.push('JR-tren');
   if (/turki|istanbul/.test(p.kat.toLowerCase() + n)) kod.push('IT-20');
   const s = x => slug(x && x.nama);
   if (sel.makkah) kod.push(`HT-${s(sel.makkah)}-1`);
-  kod.push('IT-09', 'IT-03');
+  kod.push('JR-kaabah-siang', 'JR-nabawi-payung');
   if (sel.madinah) kod.push(`HT-${s(sel.madinah)}-1`);
-  kod.push('IT-05', 'IT-06');
+  kod.push('JR-kumpulan-quba', 'JR-kaabah-malam', 'IT-05', 'IT-06');
   return [...new Set(kod)].filter(gbAda).slice(0, 5);
 }
 function gb(kod, label, kelas = 'r169', alt = '') {
@@ -148,6 +149,22 @@ function sumberTeks() {
   return S.sumber === 'langsung'
     ? `Harga dan seat terus dari sistem tempahan Juara. Dikemas kini ${masa}.`
     : `Salinan data pada ${masa}. Sahkan seat dengan kami sebelum tempah.`;
+}
+
+/* Video jemaah (dimampatkan dari folder RAW - UMRAH). Tajuk neutral sehingga audio disemak staf. */
+const VIDEO_JEMAAH = [
+  { src: 'video/cerita-jemaah-1.mp4', poster: 'JR-cerita-poster', masa: '0:41', tajuk: 'Jemaah Juara berkongsi' },
+  { src: 'video/suasana-madinah.mp4', poster: 'JR-madinah-poster', masa: '0:10', tajuk: 'Suasana di Madinah' }
+];
+function mainVideo(i) {
+  const v = VIDEO_JEMAAH[i]; if (!v) return;
+  const d = document.createElement('dialog'); d.className = 'dialog-video';
+  d.innerHTML = `<video src="${esc(v.src)}" controls autoplay playsinline poster="${esc(JT.gambar[v.poster] || '')}"></video><button type="button" class="btn garis kecil" data-tutup>Tutup</button>`;
+  document.body.appendChild(d);
+  const tutup = () => { d.querySelector('video').pause(); d.close(); d.remove(); };
+  d.addEventListener('click', e => { if (e.target === d || e.target.hasAttribute('data-tutup')) tutup(); });
+  d.addEventListener('cancel', e => { e.preventDefault(); tutup(); });
+  d.showModal();
 }
 
 /* ===== Komponen ===== */
@@ -236,17 +253,25 @@ function vUtama() {
   </section>
 
   <section class="jemaah-juara">
-    <figure class="jj-utama">${gb('JR-06', '', '', 'Jemaah Juara Travel di Makkah')}</figure>
+    <figure class="jj-utama">${gb('JR-melambai', '', '', 'Jemaah Juara melambai ke kamera')}</figure>
     <div class="stack" style="gap:12px">
+      <img src="gambar/BR/25-tahun.webp" alt="25 tahun berpengalaman" class="lencana-25" width="200">
       <h2>Bersama jemaah Juara</h2>
       <p class="redup">Petugas Juara bersama anda dari kaunter KLIA hingga pulang. Setiap kumpulan dibimbing mutawwif dan petugas lapangan sepanjang di Tanah Suci.</p>
-      <div class="jj-kecil">${gb('JR-03', '', '', 'Petugas Juara menyambut jemaah')}${gb('JR-04', '', '', 'Petugas lapangan Juara')}${gb('JR-08', '', '', 'Kumpulan jemaah Juara')}</div>
+      <div class="jj-kecil">${gb('JR-kumpulan-quba', '', '', 'Kumpulan jemaah Juara di Masjid Quba')}${gb('JR-ziarah-makkah', '', '', 'Ziarah Makkah bersama Juara')}${gb('JR-04', '', '', 'Petugas lapangan Juara')}</div>
     </div>
   </section>
 
   <section>
     <div class="tajuk-seksyen"><h2>Ikut jenis pakej</h2></div>
     <div class="grid-2 lebar">${kat}</div>
+  </section>
+
+  <section class="stack">
+    <div class="tajuk-seksyen"><h2>Cerita jemaah Juara</h2></div>
+    <div class="video-jemaah">
+      ${VIDEO_JEMAAH.map((v, i) => `<button type="button" class="kad-video" data-aksi="main-video" data-nilai="${i}" aria-label="Main video: ${esc(v.tajuk)}">${gb(v.poster, '', '', v.tajuk)}<span class="main">${ic('main')}</span><span class="durasi">${v.masa}</span><span class="tajuk-video">${esc(v.tajuk)}</span></button>`).join('')}
+    </div>
   </section>
 
   <section class="grid-pakej">
@@ -1104,6 +1129,7 @@ document.addEventListener('click', e => {
   else if (a === 'kaedah') { S.kaedah = v; render(false); }
   else if (a === 'bayar-ujian') bayarUjian();
   else if (a === 'cetak') window.print();
+  else if (a === 'main-video') mainVideo(+v);
   else if (a === 'pilih-tarikh') { S.pilih[el.dataset.id] = el.dataset.kod; render(false); }
   else if (a === 'semua-tarikh') { S.semua[el.dataset.id] = true; render(false); }
   else if (a === 'pilih-dari-senarai') { S.pilih[el.dataset.id] = el.dataset.kod; }

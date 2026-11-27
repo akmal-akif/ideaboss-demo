@@ -42,6 +42,10 @@ const JT = {
     // Foto jemaah dan petugas Juara sendiri (dari laman umrah.juaratravel.com.my)
     'JR-01': 'gambar/JR/jr-01.webp', 'JR-02': 'gambar/JR/jr-02.webp', 'JR-03': 'gambar/JR/jr-03.webp', 'JR-04': 'gambar/JR/jr-04.webp',
     'JR-05': 'gambar/JR/jr-05.webp', 'JR-06': 'gambar/JR/jr-06.webp', 'JR-07': 'gambar/JR/jr-07.webp', 'JR-08': 'gambar/JR/jr-08.webp',
+    // Bingkai dari rakaman jemaah Juara (folder RAW - UMRAH)
+    'JR-melambai': 'gambar/JR/jr-melambai.webp', 'JR-kaabah-siang': 'gambar/JR/jr-kaabah-siang.webp', 'JR-kaabah-malam': 'gambar/JR/jr-kaabah-malam.webp',
+    'JR-nabawi-payung': 'gambar/JR/jr-nabawi-payung.webp', 'JR-tren': 'gambar/JR/jr-tren.webp', 'JR-ziarah-makkah': 'gambar/JR/jr-ziarah-makkah.webp',
+    'JR-kumpulan-quba': 'gambar/JR/jr-kumpulan-quba.webp', 'JR-cerita-poster': 'gambar/JR/jr-cerita-poster.webp', 'JR-madinah-poster': 'gambar/JR/jr-madinah-poster.webp',
     // Kulit pakej: foto jemaah Juara (bergilir ikut pakej). Gambar destinasi kekal dalam galeri.
     'PK-01': 'gambar/JR/jr-06.webp',
     'PK-01b': 'gambar/JR/jr-08.webp',
