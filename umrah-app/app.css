@@ -1,0 +1,177 @@
+/* Apps Juara Travel. Token design ikut "Prinsip design" dalam draf revamp. */
+:root{
+  --merah:#C8151B; --merah-g:#9D0F14; --merah-l:#FDECEC;
+  --dakwat:#1C1917; --dakwat2:#44403C; --kelabu:#57534E; --garis:#E7E5E4; --garis2:#D6D3D1;
+  --latar:#FAFAF9; --kad:#FFFFFF; --gambar:#E7E2DA;
+  --hijau:#15803D; --amber:#B45309; --biru:#1D4ED8;
+  --r:12px; --r-btn:10px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--latar);color:var(--dakwat);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+a{color:var(--merah);text-decoration:none}
+a:hover{color:var(--merah-g)}
+button,input,select,textarea{font:inherit;color:inherit}
+img{display:block;max-width:100%}
+h1,h2,h3{margin:0;line-height:1.2;letter-spacing:-.01em}
+h1{font-size:clamp(1.6rem,4vw,2.6rem)}
+h2{font-size:1.2rem}
+p{margin:0}
+svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.langkau{position:absolute;left:-999px;top:0;background:var(--dakwat);color:#fff;padding:10px 14px;z-index:50}
+.langkau:focus{left:8px}
+:focus-visible{outline:3px solid var(--biru);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.kecil{font-size:.875rem}
+.redup{color:var(--kelabu)}
+[hidden]{display:none!important}
+
+/* Bekas */
+main{max-width:1200px;margin:0 auto;padding:12px 16px 112px;display:flex;flex-direction:column;gap:28px;outline:none}
+@media (min-width:600px){main{padding:20px 24px 112px}}
+@media (min-width:1024px){main{padding:32px 24px 64px;gap:48px}}
+
+/* Header: telefon (logo + butang), desktop (menu atas) */
+.atas{background:var(--kad);border-bottom:1px solid var(--garis);position:sticky;top:0;z-index:20}
+.atas .dalam{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:24px;min-height:60px}
+.atas .logo img{width:78px;height:auto}
+.atas nav{display:none;gap:24px;flex:1;font-weight:600;font-size:15px}
+.atas nav a{color:var(--dakwat);padding:8px 0;border-bottom:2px solid transparent}
+.atas nav a[aria-current=page]{color:var(--merah);border-color:var(--merah)}
+.atas .kanan{margin-left:auto;display:flex;gap:10px;align-items:center}
+@media (min-width:1024px){.atas nav{display:flex}.atas .dalam{padding:12px 24px}}
+
+/* Menu bawah (telefon & tablet) */
+.bawah{position:fixed;left:0;right:0;bottom:0;background:var(--kad);border-top:1px solid var(--garis);display:grid;grid-auto-flow:column;grid-auto-columns:1fr;padding-bottom:env(safe-area-inset-bottom);z-index:20}
+.bawah a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:64px;color:var(--kelabu);font-size:12px;font-weight:600}
+.bawah a[aria-current=page]{color:var(--merah)}
+@media (min-width:1024px){.bawah{display:none}}
+
+.contoh-jalur{background:var(--dakwat);color:#fff;font-size:14px;text-align:center;padding:8px 16px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;align-items:center}
+.contoh-jalur button{background:none;border:1px solid #fff;border-radius:999px;color:#fff;padding:4px 12px;cursor:pointer}
+
+/* Butang */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 20px;border-radius:var(--r-btn);border:0;background:var(--merah);color:#fff;font-weight:700;cursor:pointer;text-align:center}
+.btn:hover{background:var(--merah-g);color:#fff}
+.btn.garis{background:var(--kad);color:var(--dakwat);border:1px solid var(--garis2);font-weight:600}
+.btn.garis:hover{background:#F5F5F4;color:var(--dakwat)}
+.btn.kecil{min-height:44px;padding:0 16px;font-size:15px}
+.btn.penuh{width:100%}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.pil{min-height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--garis2);background:var(--kad);color:var(--dakwat);font-weight:600;font-size:15px;display:inline-flex;align-items:center;cursor:pointer}
+.cip{flex:none;min-height:38px;padding:0 14px;border-radius:999px;border:1px solid var(--garis2);background:var(--kad);font-size:14px;display:inline-flex;align-items:center;cursor:pointer;color:var(--dakwat)}
+.cip[aria-pressed=true]{background:var(--dakwat);border-color:var(--dakwat);color:#fff;font-weight:600}
+.cips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
+.cips::-webkit-scrollbar{display:none}
+@media (min-width:600px){.cips{flex-wrap:wrap;margin:0;padding:0}}
+
+/* Kad & senarai */
+.kad{background:var(--kad);border:1px solid var(--garis);border-radius:var(--r)}
+.pad{padding:16px}
+.baris{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.tajuk-seksyen{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
+.tajuk-seksyen a{font-weight:600;font-size:15px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.grid-pakej{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (min-width:600px){.grid-2.lebar{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* Tempat gambar: kotak bertanda kod sehingga gambar sebenar dihantar */
+.gb{background:var(--gambar);color:var(--kelabu);display:flex;align-items:flex-end;padding:6px 8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;line-height:1.3;overflow:hidden;position:relative}
+.gb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.r169{aspect-ratio:16/9}.r43{aspect-ratio:4/3}.r11{aspect-ratio:1/1}
+
+/* Kad pakej */
+.pk{display:flex;flex-direction:column;overflow:hidden;color:var(--dakwat)}
+.pk:hover{color:var(--dakwat);border-color:var(--garis2)}
+.pk .isi{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.pk .kat{font-size:13px;font-weight:600;color:var(--kelabu)}
+.pk .nama{font-size:18px;font-weight:700;line-height:1.3}
+.pk .harga{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid #F0EEEC;padding-top:10px;margin-top:auto}
+.pk .harga b{font-size:20px}
+.tarikh-pil{display:flex;gap:6px;flex-wrap:wrap}
+.tarikh-pil span{display:flex;flex-direction:column;padding:6px 10px;border:1px solid var(--garis);border-radius:8px;font-size:13px;line-height:1.3}
+
+/* Baris ringkas (berlepas tidak lama lagi) */
+.ringkas{display:flex;gap:12px;padding:12px;color:var(--dakwat);align-items:stretch}
+.ringkas:hover{color:var(--dakwat);border-color:var(--garis2)}
+.ringkas .gb{width:92px;height:92px;flex:none;border-radius:8px}
+.ringkas .t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ringkas .t b{line-height:1.3}
+
+.seat-ok{color:var(--hijau);font-weight:600}
+.seat-sikit{color:var(--amber);font-weight:600}
+.seat-penuh{color:var(--kelabu);font-weight:600}
+
+/* Borang */
+label.medan{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;color:var(--kelabu)}
+.input,select.input{height:52px;border:1px solid var(--garis2);border-radius:var(--r-btn);padding:0 14px;background:var(--kad);color:var(--dakwat);font-size:16px;font-weight:400;width:100%}
+textarea.input{height:auto;min-height:96px;padding:12px 14px}
+.input:focus{border-color:var(--dakwat);outline:none;box-shadow:0 0 0 3px rgba(29,78,216,.25)}
+.carian{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.carian .btn{grid-column:1/-1}
+@media (min-width:1024px){.carian{grid-template-columns:1fr 1fr auto;align-items:end}.carian .btn{grid-column:auto}}
+
+/* Hero utama (tanpa gambar skrin penuh) */
+.hero{display:flex;flex-wrap:wrap;gap:24px;align-items:stretch}
+.hero>*{flex:1 1 380px;min-width:0}
+
+/* Butiran pakej */
+.galeri{display:grid;gap:6px;border-radius:var(--r);overflow:hidden;margin:0 -16px}
+.galeri .gb:not(:first-child){display:none}
+@media (min-width:600px){.galeri{margin:0}}
+@media (min-width:1024px){.galeri{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:150px}.galeri .gb{aspect-ratio:auto}.galeri .gb:first-child{grid-column:span 2;grid-row:span 2}.galeri .gb:not(:first-child){display:flex}}
+.dua-lajur{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
+.dua-lajur>.kiri{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:28px}
+.dua-lajur>.kanan{flex:1 1 320px;min-width:0}
+@media (min-width:1024px){.dua-lajur>.kanan{position:sticky;top:92px}}
+.tarikh-pilih{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.tarikh-pilih button{padding:10px;border-radius:10px;border:1px solid var(--garis2);background:var(--kad);text-align:left;cursor:pointer;line-height:1.35}
+.tarikh-pilih button[aria-pressed=true]{border:2px solid var(--dakwat);padding:9px}
+.tarikh-pilih button[disabled]{background:#F5F5F4;color:#78716C;cursor:not-allowed}
+.jadual-harga>div{display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #F0EEEC}
+.jadual-harga>div:last-child{border-bottom:0}
+.hotel .gambar3{display:grid;grid-template-columns:2fr 1fr;gap:2px;height:170px}
+.hotel .gambar3>div:last-child{display:grid;grid-template-rows:1fr 1fr;gap:2px}
+.ringkasan{display:flex;flex-direction:column;gap:14px;padding:20px}
+.bar-tempah{position:fixed;left:0;right:0;bottom:0;background:var(--kad);border-top:1px solid var(--garis);padding:10px 16px calc(12px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:12px;z-index:25}
+@media (min-width:1024px){.bar-tempah{display:none}}
+.ada-bar main{padding-bottom:120px}
+.ada-bar .bawah{display:none}
+
+/* Status & nota */
+.lencana{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:13px;font-weight:700}
+.lencana.amber{background:#FEF3C7;color:#92400E}
+.lencana.hijau{background:#DCFCE7;color:#166534}
+.lencana.merah{background:var(--merah-l);color:var(--merah-g)}
+.lencana.kelabu{background:#F5F5F4;color:var(--dakwat2)}
+.nota{display:flex;gap:10px;padding:12px 14px;border-radius:10px;background:#F5F5F4;color:var(--dakwat2);font-size:15px}
+.kosong{text-align:center;padding:32px 20px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.kosong .gb{width:120px;height:120px;border-radius:12px}
+
+/* Solat */
+.solat-kad{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--r);background:var(--dakwat);color:#fff}
+.solat-kad:hover{color:#fff}
+.solat-kad span{color:#D6D3D1;font-size:13px}
+.waktu>div{display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #F0EEEC;font-size:17px}
+.waktu>div:last-child{border-bottom:0}
+.waktu>div.kini{background:var(--merah-l);font-weight:700}
+
+/* Skeleton */
+.rangka{background:linear-gradient(90deg,#EEECEA 25%,#F5F4F2 50%,#EEECEA 75%);background-size:200% 100%;animation:kilat 1.2s infinite;border-radius:12px}
+@keyframes kilat{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.rangka{animation:none}}
+
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--dakwat);color:#fff;padding:10px 16px;border-radius:10px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:40;max-width:calc(100% - 32px)}
+.toast.on{opacity:1}
+
+/* Jemaah (paparan contoh) */
+.perjalanan .gb{height:150px}
+.tindakan{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.semak{display:flex;gap:8px;align-items:center;color:var(--kelabu);font-size:15px}
+.hari-kad .aktiviti{display:grid;grid-template-columns:46px 56px minmax(0,1fr);gap:10px;align-items:start}
+.hari-kad .aktiviti .gb{width:56px;height:42px;border-radius:6px;font-size:8px;padding:3px}
+.tab{display:flex;gap:20px;border-bottom:1px solid var(--garis);overflow-x:auto}
+.tab a{padding:10px 0;color:var(--kelabu);font-weight:600;white-space:nowrap;border-bottom:2px solid transparent}
+.tab a[aria-current=page]{color:var(--dakwat);border-color:var(--merah)}
+.ar{font-family:Amiri,serif;direction:rtl}
