@@ -383,40 +383,77 @@ async function hantarDaftar(d, keepalive) {
   return j.data;
 }
 function vKursus() {
-  const sesi = (JT.kursus || []).filter(k => k.tarikh >= hariIni());
-  if (S.kursusSiap) return `
-    <div class="kad kosong" style="max-width:640px;margin:0 auto">
-      <span class="lencana hijau">${ic('betul')}Pendaftaran diterima</span>
-      <h1 style="font-size:1.6rem">Terima kasih, ${esc(S.kursusSiap)}</h1>
-      <p class="redup" style="max-width:460px">Staf Juara akan menghubungi anda untuk mengesahkan tarikh dan tempat kursus. Simpan nombor WhatsApp Juara supaya anda menerima peringatan.</p>
-      <a class="btn garis" href="${wa('Assalamualaikum Juara Travel. Saya baru mendaftar kursus umrah melalui apps.')}" target="_blank" rel="noopener">${ic('telefon')}WhatsApp Juara</a>
-      <a href="#/pakej">Lihat pakej umrah</a>
+  if (S.kursusSiap) {
+    const k = S.kursusSiap.kursus;
+    return `
+    <div class="kad kosong" style="max-width:640px;margin:0 auto;text-align:left;align-items:stretch">
+      <span class="lencana hijau" style="align-self:flex-start">${ic('betul')}Pendaftaran diterima</span>
+      <h1 style="font-size:1.6rem">Terima kasih, ${esc(S.kursusSiap.nama)}</h1>
+      ${k ? `<div class="kad pad stack" style="gap:4px"><b>${fHari(k.tarikh)}, ${fTkh(k.tarikh, 1)} · ${esc(fJam(k.mula))}${k.tamat ? ' hingga ' + esc(fJam(k.tamat)) : ''}</b><span>${esc(k.tempat)}</span>${k.penceramah ? `<span class="kecil redup">Penceramah: ${esc(k.penceramah)}</span>` : ''}</div>
+      <div class="grid-2"><a class="btn garis" href="${esc(k.peta)}" target="_blank" rel="noopener">${ic('pin')}Buka peta</a><button class="btn garis" type="button" data-aksi="kalendar-kursus">${ic('kalendar')}Simpan ke kalendar</button></div>
+      <p class="redup">Pengesahan dan peringatan akan dihantar melalui WhatsApp ke nombor anda, bersama lokasi dan nota kursus.</p>`
+      : `<p class="redup">Staf Juara akan menghubungi anda untuk mencadangkan sesi kursus yang terdekat.</p>`}
+      <a href="#/pakej" style="text-align:center;font-weight:600">Lihat pakej umrah</a>
     </div>`;
+  }
+  const data = S.kursusData;
+  if (!data) { muatKursus(); }
+  const semua = data ? data.kursus : [];
+  const negeri = [...new Set(semua.map(k => k.negeri).filter(Boolean))].sort();
+  const pilihN = S.kursusNegeri || '';
+  const tapisan = semua.filter(k => !pilihN || k.negeri === pilihN);
+  const ikutTarikh = {};
+  tapisan.forEach(k => (ikutTarikh[k.tarikh] = ikutTarikh[k.tarikh] || []).push(k));
+  const senaraiSesi = !data ? (S.kursusRalat ? `<div class="nota">${ic('info')}<span>${esc(S.kursusRalat)}</span></div>` : rangka(3, 90))
+    : !tapisan.length ? `<div class="nota">${ic('info')}<span>Tiada sesi akan datang di negeri ini. Pilih "Hubungi saya" di bawah dan staf kami akan cadangkan sesi terdekat.</span></div>`
+    : Object.entries(ikutTarikh).map(([t, L]) => `
+      <div class="stack" style="gap:8px">
+        <h3 style="font-size:15px;color:var(--kelabu)">${fHari(t)}, ${fTkh(t, 1)}</h3>
+        ${L.map(k => `<label class="kad pad sesi-kursus" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer">
+          <input type="radio" name="kursusId" value="${esc(k.id)}"${S.kursusPilih === k.id ? ' checked' : ''} style="width:22px;height:22px;flex:none;accent-color:var(--merah);margin-top:2px">
+          <span style="display:flex;flex-direction:column;gap:2px;min-width:0">
+            <b>${esc(fJam(k.mula))}${k.tamat ? ' – ' + esc(fJam(k.tamat)) : ''} · ${esc(k.kawasan || k.negeri)}</b>
+            <span>${esc(k.tempat)}</span>
+            <span class="kecil redup">${esc(k.penceramah)}${k.negeri ? ' · ' + esc(k.negeri) : ''}</span>
+            <a class="kecil" href="${esc(k.peta)}" target="_blank" rel="noopener" style="font-weight:600">Lihat peta</a>
+          </span>
+        </label>`).join('')}
+      </div>`).join('');
   return `
-  <div class="stack" style="gap:6px"><h1>Kursus umrah percuma</h1><p class="redup">Terbuka kepada semua, walaupun anda belum tempah pakej. Daftar dan staf kami akan sahkan tarikh serta tempat.</p></div>
+  <div class="stack" style="gap:6px"><h1>Kursus umrah percuma</h1><p class="redup">Terbuka kepada semua, walaupun belum tempah pakej. Pilih sesi, daftar, dan kami hantar lokasi serta peringatan melalui WhatsApp.</p></div>
   <div class="dua-lajur">
     <form class="kiri" data-borang="kursus" novalidate>
-      ${sesi.length ? `<section class="stack"><h2>Sesi akan datang</h2>${sesi.map(k => `<label class="kad pad" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer"><input type="radio" name="sesi" value="${esc(`${k.tajuk}, ${fTkh(k.tarikh, 1)} ${k.masa || ''}, ${k.tempat || ''}`)}" style="width:22px;height:22px;accent-color:var(--merah);margin-top:2px"><span><b>${esc(k.tajuk)}</b><br><span class="redup">${fHari(k.tarikh)}, ${fTkh(k.tarikh, 1)}${k.masa ? ' · ' + esc(k.masa) : ''}</span><br><span class="kecil redup">${esc(k.tempat || '')}</span></span></label>`).join('')}</section>` : ''}
-      <label class="medan">Bila anda mahu hadir kursus?<select class="input" name="${sesi.length ? 'sesiBulan' : 'sesi'}">
-        <option value="Sesi terdekat">Sesi yang terdekat</option>
-        ${bulanDepan(4).map(b => `<option value="${fBulan(b)}">${fBulan(b)}</option>`).join('')}
-      </select></label>
-      <label class="medan">Anggaran bila mahu pergi umrah?<select class="input" name="anggaran">
-        <option value="">Pilih bulan</option>
-        ${bulanDepan(18, 1).map(b => `<option value="${b}">${fBulan(b)}</option>`).join('')}
-        <option value="Belum pasti">Belum pasti</option>
-      </select></label>
-      <label class="medan">Nama penuh<input class="input" name="nama" autocomplete="name" required></label>
-      <div class="grid-2">
-        <label class="medan">Nombor telefon<input class="input" name="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="012-345 6789" required></label>
-        <label class="medan">Bilangan peserta<select class="input" name="bil">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<option value="${n}">${n} orang</option>`).join('')}</select></label>
-      </div>
-      <label style="display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--dakwat2)"><input type="checkbox" name="setuju" style="width:22px;height:22px;flex:none;accent-color:var(--merah);margin-top:1px"><span>${NOTIS_PDPA}</span></label>
-      <p class="kecil" id="ralat-kursus" role="alert" style="color:var(--merah)"></p>
-      <button class="btn penuh" type="submit">Daftar kursus</button>
+      <section class="stack">
+        <div class="baris" style="flex-wrap:wrap;align-items:center"><h2>1. Pilih sesi kursus</h2>${data ? `<span class="kecil redup">${tapisan.length} sesi akan datang</span>` : ''}</div>
+        <label class="medan">Negeri<select class="input" data-aksi-ubah="negeri-kursus"><option value="">Semua negeri</option>${negeri.map(n => `<option value="${esc(n)}"${pilihN === n ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select></label>
+        <div class="stack senarai-sesi" style="max-height:560px;overflow:auto;padding-right:4px">${senaraiSesi}</div>
+        <label class="kad pad" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer"><input type="radio" name="kursusId" value=""${S.kursusPilih === '' ? ' checked' : ''} style="width:22px;height:22px;flex:none;accent-color:var(--merah);margin-top:2px"><span><b>Tiada sesi yang sesuai</b><br><span class="kecil redup">Hubungi saya untuk cadangan sesi terdekat</span></span></label>
+      </section>
+      <section class="stack">
+        <h2>2. Maklumat anda</h2>
+        <label class="medan">Nama penuh<input class="input" name="nama" autocomplete="name" required></label>
+        <div class="grid-2">
+          <label class="medan">No telefon (WhatsApp)<input class="input" name="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="012-345 6789" required></label>
+          <label class="medan">Bilangan peserta<select class="input" name="bil">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<option value="${n}">${n} orang</option>`).join('')}</select></label>
+        </div>
+        <label class="medan">Anggaran bila mahu pergi umrah?<select class="input" name="anggaran">
+          <option value="">Pilih bulan</option>
+          ${bulanDepan(18, 1).map(b => `<option value="${b}">${fBulan(b)}</option>`).join('')}
+          <option value="Belum pasti">Belum pasti</option>
+        </select></label>
+        <label style="display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--dakwat2)"><input type="checkbox" name="setuju" style="width:22px;height:22px;flex:none;accent-color:var(--merah);margin-top:1px"><span>${NOTIS_PDPA}</span></label>
+        <p class="kecil" id="ralat-kursus" role="alert" style="color:var(--merah)"></p>
+        <button class="btn penuh" type="submit">Daftar kursus</button>
+      </section>
     </form>
     <aside class="kanan stack">
       ${gb('IT-09', 'Masjidil Haram', 'r169').replace('class="gb r169"', 'class="gb r169" style="border-radius:12px"')}
+      <div class="kad pad stack" style="gap:8px">
+        <b>Selepas mendaftar</b>
+        <span class="semak">${ic('betul')}Pengesahan WhatsApp bersama lokasi</span>
+        <span class="semak">${ic('betul')}Nota kursus umrah (PDF)</span>
+        <span class="semak">${ic('betul')}Peringatan malam sebelum dan pagi kursus</span>
+      </div>
       <div class="kad pad stack" style="gap:8px">
         <b>Apa yang anda pelajari</b>
         <span class="semak">${ic('betul')}Niat dan pakaian ihram</span>
@@ -426,6 +463,29 @@ function vKursus() {
       </div>
     </aside>
   </div>`;
+}
+function fJam(hm) { const [h, m] = String(hm || '0:0').split(':').map(Number); const ap = h < 12 ? 'pagi' : h < 14 ? 'tengah hari' : h < 19 ? 'petang' : 'malam'; return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ap}`; }
+async function muatKursus() {
+  if (muatKursus.sedang) return; muatKursus.sedang = true;
+  try {
+    const api = (JT.apiJuara || '').replace(/\/$/, '');
+    if (!api) throw new Error('Jadual kursus belum tersedia dalam paparan ini.');
+    const r = await fetch(api + '/kursus', { headers: { Accept: 'application/json' } });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.ralat || 'Jadual kursus tidak dapat dimuat. Cuba lagi.');
+    S.kursusData = j.data; S.kursusRalat = '';
+  } catch (e) { S.kursusRalat = e.message; S.kursusData = null; }
+  muatKursus.sedang = false;
+  if (laluan().nama === 'kursus') render(false);
+}
+function kalendarKursus(k) {
+  const z = s => s.replace(/[-:]/g, '');
+  const mula = new Date(Date.parse(`${k.tarikh}T${k.mula}:00+08:00`)).toISOString().replace(/\.\d+Z$/, 'Z');
+  const tamat = new Date(Date.parse(`${k.tarikh}T${k.tamat || k.mula}:00+08:00`) + (k.tamat ? 0 : 3 * 3600e3)).toISOString().replace(/\.\d+Z$/, 'Z');
+  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Juara Travel//Kursus Umrah//MS', 'BEGIN:VEVENT', `UID:kursus-${k.id}@juaratravel`, `DTSTAMP:${z(new Date().toISOString().replace(/\.\d+Z$/, 'Z'))}`, `DTSTART:${z(mula)}`, `DTEND:${z(tamat)}`, 'SUMMARY:Kursus Umrah Juara Travel', `LOCATION:${k.tempat.replace(/[,;]/g, '\\$&')}`, `DESCRIPTION:${(k.penceramah ? 'Penceramah: ' + k.penceramah + '\\n' : '') + k.peta}`, 'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Kursus umrah', 'TRIGGER:-PT2H', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+  a.download = 'kursus-umrah-juara.ics'; document.body.appendChild(a); a.click(); a.remove();
 }
 
 function vAdmin() {
@@ -818,6 +878,7 @@ document.addEventListener('click', e => {
   else if (a === 'toast') toast(v);
   else if (a === 'masuk-google') masukGoogle();
   else if (a === 'admin-jenis') { S.adminJenis = v; render(false); }
+  else if (a === 'kalendar-kursus') { if (S.kursusSiap && S.kursusSiap.kursus) kalendarKursus(S.kursusSiap.kursus); }
   else if (a === 'muat-csv') muatCsv();
   else if (a === 'log-keluar') { if (AUTH) AUTH.signOut(); S.saya = null; location.hash = '#/'; toast('Anda telah log keluar'); }
   else if (a === 'tukar-ic') { store.set(icKunci(), ''); S.saya = null; S.sayaRalat = ''; location.hash = '#/saya'; render(false); }
@@ -825,6 +886,8 @@ document.addEventListener('click', e => {
 document.addEventListener('change', e => {
   const el = e.target;
   if (el.dataset.f) { S.f[el.dataset.f] = el.value; if (laluan().nama === 'pakej') render(false); else { const b = el.form && el.form.querySelector('button[type=submit]'); if (b) b.textContent = `Lihat ${bilTarikh(tapis({ ...S.f, kat: 'Semua' }))} tarikh`; } }
+  else if (el.dataset.aksiUbah === 'negeri-kursus') { S.kursusNegeri = el.value; S.kursusPilih = null; render(false); }
+  else if (el.name === 'kursusId') { S.kursusPilih = el.value; }
   else if (el.dataset.pilih === 'bilik') { S.bilik[el.dataset.id] = el.value; render(false); }
   else if (el.dataset.pilih === 'bil') { S.bil[el.dataset.id] = +el.value; render(false); }
 });
@@ -834,14 +897,16 @@ document.addEventListener('submit', e => {
   else if (f.dataset.borang === 'kursus') {
     e.preventDefault();
     const fd = new FormData(f), salah = $('ralat-kursus'), btn = f.querySelector('button[type=submit]');
+    const kid = fd.get('kursusId');
     const d = { jenis: 'kursus', nama: fd.get('nama'), tel: fd.get('tel'), bil: fd.get('bil'), anggaran: fd.get('anggaran'), setuju: fd.get('setuju') === 'on',
-      sesi: [fd.get('sesi'), fd.get('sesiBulan')].filter(Boolean).join(' · ') };
+      kursusId: kid || '', sesi: kid ? '' : 'Minta dihubungi untuk sesi terdekat' + (S.kursusNegeri ? ' (' + S.kursusNegeri + ')' : '') };
+    if (kid === null) { salah.textContent = 'Sila pilih sesi kursus, atau "Tiada sesi yang sesuai".'; return; }
     if (String(d.nama || '').trim().length < 2) { salah.textContent = 'Sila isi nama penuh.'; return; }
     if (String(d.tel || '').replace(/\D/g, '').length < 9) { salah.textContent = 'Sila isi nombor telefon yang sah.'; return; }
     if (!d.anggaran) { salah.textContent = 'Sila pilih anggaran bila mahu pergi umrah.'; return; }
     if (!d.setuju) { salah.textContent = 'Sila tandakan persetujuan notis privasi.'; return; }
     btn.disabled = true; btn.textContent = 'Sedang hantar…'; salah.textContent = '';
-    hantarDaftar(d).then(() => { S.kursusSiap = String(d.nama).trim().split(/\s+/)[0]; render(); })
+    hantarDaftar(d).then(r => { S.kursusSiap = { nama: String(d.nama).trim().split(/\s+/)[0], kursus: r && r.kursus }; render(); })
       .catch(err => { salah.textContent = err.message; btn.disabled = false; btn.textContent = 'Daftar kursus'; });
   }
   else if (f.dataset.borang === 'hubung') {
