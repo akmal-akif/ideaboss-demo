@@ -99,10 +99,14 @@ const BILIK = [['quad', 'Quad', 4], ['triple', 'Triple', 3], ['double', 'Double'
 
 /* Gambar: kod ikut brief gambar. Jika JT.gambar ada fail, papar gambar sebenar. */
 function kodPakej(p) {
-  const n = p.nama.toLowerCase();
+  const n = (p.nama || '').toLowerCase();
   if (/train/.test(n)) return ['IT-18', 'Kereta api Haramain'];
-  if (/taif|badar/.test(n)) return ['PK-06', 'Taif & Badar'];
-  return ({ 'Ekonomi': ['PK-01', 'Ekonomi'], 'Menara Jam': ['PK-02', 'Menara Jam'], 'Plus Turki': ['PK-03', 'Plus Turki'], 'Ramadhan': ['PK-04', 'Ramadhan'], 'Syawal': ['PK-05', 'Syawal'], 'Syaaban': ['PK-05', 'Syaaban'] })[p.kat] || ['PK-01', 'Umrah'];
+  const khas = ({ 'Menara Jam': ['PK-02', 'Menara Jam'], 'Plus Turki': ['PK-03', 'Plus Turki'], 'Ramadhan': ['PK-04', 'Ramadhan'], 'Syawal': ['PK-05', 'Syawal'], 'Syaaban': ['PK-05', 'Syaaban'] })[p.kat];
+  if (khas) return khas;
+  // Pakej umum: gambar suasana Haram/Nabawi bergilir supaya senarai tidak berulang
+  const pool = ['PK-01', 'PK-01b', 'PK-01c', 'PK-01d'];
+  let h = 0; for (const c of (p.id || n)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return [pool[h % pool.length], 'Umrah'];
 }
 const gbAda = kod => !!(JT.gambar && JT.gambar[kod]);
 const LABEL_IT = { 'IT-03': 'Masjid Nabawi', 'IT-09': 'Masjidil Haram', 'IT-15': 'Taif', 'IT-16': 'Badar', 'IT-17': 'Jeddah', 'IT-18': 'Kereta api Haramain', 'IT-20': 'Istanbul', 'IT-05': 'Masjid Quba', 'IT-06': 'Jabal Uhud' };
@@ -361,11 +365,100 @@ function vTempah(id, kod) {
   </div>`;
 }
 
+/* Senarai bulan ke hadapan untuk pilihan "bila" */
+function bulanDepan(n, mula = 0) {
+  const d = new Date(Date.now() + 8 * 3600e3), out = [];
+  for (let i = mula; i < mula + n; i++) { const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + i, 1)); out.push(x.toISOString().slice(0, 7)); }
+  return out;
+}
+const NOTIS_PDPA = 'Saya bersetuju maklumat ini digunakan oleh Juara Travel untuk menghubungi saya tentang kursus dan pakej umrah, mengikut Akta Perlindungan Data Peribadi 2010.';
+async function hantarDaftar(d, keepalive) {
+  const api = (JT.apiJuara || '').replace(/\/$/, '');
+  if (!api) throw new Error('Pendaftaran belum tersedia dalam paparan ini.');
+  const h = { 'Content-Type': 'application/json', Accept: 'application/json' };
+  if (S.user) { try { h.Authorization = 'Bearer ' + await S.user.getIdToken(); } catch (e) { /* tanpa log masuk */ } }
+  const r = await fetch(api + '/daftar', { method: 'POST', headers: h, body: JSON.stringify(d), keepalive: !!keepalive });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.ralat || 'Pendaftaran gagal. Cuba lagi.');
+  return j.data;
+}
 function vKursus() {
+  const sesi = (JT.kursus || []).filter(k => k.tarikh >= hariIni());
+  if (S.kursusSiap) return `
+    <div class="kad kosong" style="max-width:640px;margin:0 auto">
+      <span class="lencana hijau">${ic('betul')}Pendaftaran diterima</span>
+      <h1 style="font-size:1.6rem">Terima kasih, ${esc(S.kursusSiap)}</h1>
+      <p class="redup" style="max-width:460px">Staf Juara akan menghubungi anda untuk mengesahkan tarikh dan tempat kursus. Simpan nombor WhatsApp Juara supaya anda menerima peringatan.</p>
+      <a class="btn garis" href="${wa('Assalamualaikum Juara Travel. Saya baru mendaftar kursus umrah melalui apps.')}" target="_blank" rel="noopener">${ic('telefon')}WhatsApp Juara</a>
+      <a href="#/pakej">Lihat pakej umrah</a>
+    </div>`;
   return `
-  <div class="stack" style="gap:6px"><h1>Kursus umrah</h1><p class="redup">Percuma dan terbuka kepada semua, walaupun anda belum tempah pakej.</p></div>
-  ${kosong('OR-05', 'Suasana kursus', 'Jadual kursus akan dipaparkan di sini', 'Kami sedang menyambungkan jadual kursus dari sistem Juara. Sementara itu, tanya tarikh kursus terdekat melalui WhatsApp.',
-    `<a class="btn" href="${wa('Assalamualaikum Juara Travel. Bila kursus umrah yang terdekat? Saya ingin hadir.')}" target="_blank" rel="noopener">${ic('telefon')}Tanya jadual kursus</a>`)}`;
+  <div class="stack" style="gap:6px"><h1>Kursus umrah percuma</h1><p class="redup">Terbuka kepada semua, walaupun anda belum tempah pakej. Daftar dan staf kami akan sahkan tarikh serta tempat.</p></div>
+  <div class="dua-lajur">
+    <form class="kiri" data-borang="kursus" novalidate>
+      ${sesi.length ? `<section class="stack"><h2>Sesi akan datang</h2>${sesi.map(k => `<label class="kad pad" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer"><input type="radio" name="sesi" value="${esc(`${k.tajuk}, ${fTkh(k.tarikh, 1)} ${k.masa || ''}, ${k.tempat || ''}`)}" style="width:22px;height:22px;accent-color:var(--merah);margin-top:2px"><span><b>${esc(k.tajuk)}</b><br><span class="redup">${fHari(k.tarikh)}, ${fTkh(k.tarikh, 1)}${k.masa ? ' · ' + esc(k.masa) : ''}</span><br><span class="kecil redup">${esc(k.tempat || '')}</span></span></label>`).join('')}</section>` : ''}
+      <label class="medan">Bila anda mahu hadir kursus?<select class="input" name="${sesi.length ? 'sesiBulan' : 'sesi'}">
+        <option value="Sesi terdekat">Sesi yang terdekat</option>
+        ${bulanDepan(4).map(b => `<option value="${fBulan(b)}">${fBulan(b)}</option>`).join('')}
+      </select></label>
+      <label class="medan">Anggaran bila mahu pergi umrah?<select class="input" name="anggaran">
+        <option value="">Pilih bulan</option>
+        ${bulanDepan(18, 1).map(b => `<option value="${b}">${fBulan(b)}</option>`).join('')}
+        <option value="Belum pasti">Belum pasti</option>
+      </select></label>
+      <label class="medan">Nama penuh<input class="input" name="nama" autocomplete="name" required></label>
+      <div class="grid-2">
+        <label class="medan">Nombor telefon<input class="input" name="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="012-345 6789" required></label>
+        <label class="medan">Bilangan peserta<select class="input" name="bil">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<option value="${n}">${n} orang</option>`).join('')}</select></label>
+      </div>
+      <label style="display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--dakwat2)"><input type="checkbox" name="setuju" style="width:22px;height:22px;flex:none;accent-color:var(--merah);margin-top:1px"><span>${NOTIS_PDPA}</span></label>
+      <p class="kecil" id="ralat-kursus" role="alert" style="color:var(--merah)"></p>
+      <button class="btn penuh" type="submit">Daftar kursus</button>
+    </form>
+    <aside class="kanan stack">
+      ${gb('IT-09', 'Masjidil Haram', 'r169').replace('class="gb r169"', 'class="gb r169" style="border-radius:12px"')}
+      <div class="kad pad stack" style="gap:8px">
+        <b>Apa yang anda pelajari</b>
+        <span class="semak">${ic('betul')}Niat dan pakaian ihram</span>
+        <span class="semak">${ic('betul')}Tawaf, saie dan tahallul</span>
+        <span class="semak">${ic('betul')}Ziarah Makkah dan Madinah</span>
+        <span class="semak">${ic('betul')}Persediaan dokumen dan barang</span>
+      </div>
+    </aside>
+  </div>`;
+}
+
+function vAdmin() {
+  if (!S.user) return kosong('IL-09', 'Log masuk', 'Log masuk staf diperlukan', 'Log masuk dengan akaun Google staf Juara.', `<a class="btn" href="#/masuk">Log masuk</a>`);
+  if (!S.admin) { muatAdmin(); return rangka(1, 60) + rangka(5, 44); }
+  if (S.admin.ralat) return kosong('IL-09', 'Tiada akses', 'Tiada akses', esc(S.admin.ralat), '');
+  const rows = S.admin.data.filter(r => !S.adminJenis || r.jenis === S.adminJenis);
+  const tTkh = s => s ? new Date(s).toLocaleString('ms-MY', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '';
+  return `
+  <div class="baris" style="flex-wrap:wrap"><h1>Pendaftaran</h1><button class="btn garis kecil" type="button" data-aksi="muat-csv">Muat turun Excel (CSV)</button></div>
+  <div class="cips" role="group" aria-label="Jenis">${[['', 'Semua'], ['kursus', 'Kursus'], ['tempah', 'Tempahan']].map(([k, n]) => `<button type="button" class="cip" aria-pressed="${(S.adminJenis || '') === k}" data-aksi="admin-jenis" data-nilai="${k}">${n}</button>`).join('')}</div>
+  <p class="kecil redup">${rows.length} rekod</p>
+  <div class="kad" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:14px;min-width:760px">
+    <thead><tr style="text-align:left;color:var(--kelabu)">${['Masa', 'Jenis', 'Nama', 'Telefon', 'Kursus / Pakej', 'Anggaran umrah', 'Bil.'].map(h => `<th style="padding:10px 12px;border-bottom:1px solid var(--garis)">${h}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r => `<tr>${[tTkh(r.masa), r.jenis, r.nama, `<a href="https://wa.me/${esc(String(r.tel).replace(/\D/g, '').replace(/^0/, '60'))}" target="_blank" rel="noopener">${esc(r.tel)}</a>`, esc(r.jenis === 'kursus' ? r.sesi : [r.pakej, r.tarikh, r.bilik].filter(Boolean).join(' · ')), esc(r.anggaran ? (/^\d{4}-\d{2}$/.test(r.anggaran) ? fBulan(r.anggaran) : r.anggaran) : ''), r.bil].map((c, i) => `<td style="padding:10px 12px;border-bottom:1px solid #F0EEEC">${i === 3 || i === 4 || i === 5 ? c : esc(c)}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table></div>`;
+}
+async function muatAdmin() {
+  if (muatAdmin.sedang) return; muatAdmin.sedang = true;
+  try {
+    const t = await S.user.getIdToken();
+    const r = await fetch((JT.apiJuara || '').replace(/\/$/, '') + '/admin/pendaftaran', { headers: { Authorization: 'Bearer ' + t, Accept: 'application/json' } });
+    const j = await r.json().catch(() => ({}));
+    S.admin = r.ok ? { data: j.data || [] } : { ralat: j.ralat || 'Tiada akses.' };
+  } catch (e) { S.admin = { ralat: 'Sistem tidak dapat dihubungi.' }; }
+  muatAdmin.sedang = false; render(false);
+}
+async function muatCsv() {
+  const t = await S.user.getIdToken();
+  const r = await fetch((JT.apiJuara || '').replace(/\/$/, '') + '/admin/pendaftaran?format=csv' + (S.adminJenis ? '&jenis=' + S.adminJenis : ''), { headers: { Authorization: 'Bearer ' + t } });
+  if (!r.ok) return toast('Muat turun gagal');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(await r.blob());
+  a.download = `pendaftaran-juara-${hariIni()}.csv`; document.body.appendChild(a); a.click(); a.remove();
 }
 
 function vCawangan() {
@@ -657,6 +750,7 @@ function vAkaun() {
   <div class="stack" style="max-width:560px">
     ${ic ? `<button class="btn garis" type="button" data-aksi="tukar-ic">Tukar IC</button>` : ''}
     <button class="btn garis" type="button" data-aksi="log-keluar">Log keluar</button>
+    <a class="kecil" href="#/admin" style="text-align:center">Panel staf: senarai pendaftaran</a>
   </div>`;
 }
 
@@ -664,7 +758,7 @@ function vAkaun() {
 const NAV_TETAMU = [['', 'Utama', 'rumah'], ['pakej', 'Pakej', 'cari'], ['kursus', 'Kursus', 'buku'], ['cawangan', 'Cawangan', 'pin'], ['masuk', 'Log masuk', 'orang']];
 const NAV_JEMAAH = [['saya', 'Utama', 'rumah'], ['perjalanan', 'Perjalanan', 'kalendar'], ['bayaran', 'Bayaran', 'dompet'], ['persediaan', 'Persediaan', 'buku'], ['akaun', 'Akaun', 'orang']];
 const JEMAAH = new Set(['saya', 'perjalanan', 'bayaran', 'persediaan', 'akaun']);
-const TAJUK = { '': 'Juara Travel', pakej: 'Pakej umrah', kursus: 'Kursus umrah', cawangan: 'Cawangan', masuk: 'Log masuk', solat: 'Waktu solat', kredit: 'Kredit gambar', tempah: 'Tempah', saya: 'Utama jemaah', perjalanan: 'Perjalanan', bayaran: 'Bayaran', persediaan: 'Persediaan', akaun: 'Akaun' };
+const TAJUK = { '': 'Juara Travel', pakej: 'Pakej umrah', kursus: 'Kursus umrah', cawangan: 'Cawangan', masuk: 'Log masuk', solat: 'Waktu solat', kredit: 'Kredit gambar', admin: 'Pendaftaran', tempah: 'Tempah', saya: 'Utama jemaah', perjalanan: 'Perjalanan', bayaran: 'Bayaran', persediaan: 'Persediaan', akaun: 'Akaun' };
 
 function laluan() {
   const [nama = '', ...args] = location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent);
@@ -692,7 +786,7 @@ function render(alih = true) {
   jalur.hidden = !S.demo;
   if (S.demo) jalur.innerHTML = `<span>Paparan contoh: data di bawah bukan data sebenar</span><button type="button" data-aksi="keluar-contoh">Keluar</button>`;
 
-  const V = { '': vUtama, pakej: () => args[0] ? vButiran(args[0]) : vPakej(), tempah: () => vTempah(args[0], args[1]), kursus: vKursus, cawangan: vCawangan, solat: vSolat, masuk: vMasuk, kredit: vKredit, saya: vSaya, perjalanan: vPerjalanan, bayaran: vBayaran, persediaan: vPersediaan, akaun: vAkaun };
+  const V = { '': vUtama, pakej: () => args[0] ? vButiran(args[0]) : vPakej(), tempah: () => vTempah(args[0], args[1]), kursus: vKursus, cawangan: vCawangan, solat: vSolat, masuk: vMasuk, kredit: vKredit, admin: vAdmin, saya: vSaya, perjalanan: vPerjalanan, bayaran: vBayaran, persediaan: vPersediaan, akaun: vAkaun };
   $('isi').innerHTML = (V[nama] || vUtama)();
   document.body.classList.toggle('ada-bar', nama === 'pakej' && !!args[0]);
   const p = nama === 'pakej' && args[0] && cariPakej(args[0]);
@@ -723,6 +817,8 @@ document.addEventListener('click', e => {
   else if (a === 'muat-semula') { S.ralat = ''; render(false); muat(); }
   else if (a === 'toast') toast(v);
   else if (a === 'masuk-google') masukGoogle();
+  else if (a === 'admin-jenis') { S.adminJenis = v; render(false); }
+  else if (a === 'muat-csv') muatCsv();
   else if (a === 'log-keluar') { if (AUTH) AUTH.signOut(); S.saya = null; location.hash = '#/'; toast('Anda telah log keluar'); }
   else if (a === 'tukar-ic') { store.set(icKunci(), ''); S.saya = null; S.sayaRalat = ''; location.hash = '#/saya'; render(false); }
 });
@@ -735,6 +831,19 @@ document.addEventListener('change', e => {
 document.addEventListener('submit', e => {
   const f = e.target;
   if (f.dataset.borang === 'cari') { e.preventDefault(); S.f.kat = 'Semua'; location.hash = '#/pakej'; }
+  else if (f.dataset.borang === 'kursus') {
+    e.preventDefault();
+    const fd = new FormData(f), salah = $('ralat-kursus'), btn = f.querySelector('button[type=submit]');
+    const d = { jenis: 'kursus', nama: fd.get('nama'), tel: fd.get('tel'), bil: fd.get('bil'), anggaran: fd.get('anggaran'), setuju: fd.get('setuju') === 'on',
+      sesi: [fd.get('sesi'), fd.get('sesiBulan')].filter(Boolean).join(' · ') };
+    if (String(d.nama || '').trim().length < 2) { salah.textContent = 'Sila isi nama penuh.'; return; }
+    if (String(d.tel || '').replace(/\D/g, '').length < 9) { salah.textContent = 'Sila isi nombor telefon yang sah.'; return; }
+    if (!d.anggaran) { salah.textContent = 'Sila pilih anggaran bila mahu pergi umrah.'; return; }
+    if (!d.setuju) { salah.textContent = 'Sila tandakan persetujuan notis privasi.'; return; }
+    btn.disabled = true; btn.textContent = 'Sedang hantar…'; salah.textContent = '';
+    hantarDaftar(d).then(() => { S.kursusSiap = String(d.nama).trim().split(/\s+/)[0]; render(); })
+      .catch(err => { salah.textContent = err.message; btn.disabled = false; btn.textContent = 'Daftar kursus'; });
+  }
   else if (f.dataset.borang === 'hubung') {
     e.preventDefault();
     const icNo = String(new FormData(f).get('ic') || '').replace(/\D/g, '');
@@ -752,10 +861,12 @@ document.addEventListener('submit', e => {
     const msg = ['Assalamualaikum Juara Travel. Saya ingin menempah:', `Pakej: ${p.nama}`, `Berlepas: ${fHari(t.d)}, ${fTkh(t.d, 1)} (${t.kod})`, `Bilik: ${bk ? bk[1] : d.bilik} · ${rm(t.bilik[d.bilik])} seorang`, `Bilangan: ${d.bil} orang`, `Nama: ${String(d.nama).trim()}`, `Telefon: ${tel}`].concat(d.nota && d.nota.trim() ? [`Nota: ${d.nota.trim()}`] : []).join('\n');
     S.tempahWa = wa(msg); S.tempahSiap = kod;
     window.open(S.tempahWa, '_blank', 'noopener');
+    // Simpan juga sebagai rekod bakal pelanggan untuk susulan staf
+    hantarDaftar({ jenis: 'tempah', nama: d.nama, tel, bil: d.bil, pakej: p.nama, tarikh: t.d, kod: t.kod, bilik: d.bilik, nota: d.nota, setuju: true }, true).catch(() => {});
     render();
   }
 });
-window.addEventListener('hashchange', () => { if (laluan().nama !== 'tempah') S.tempahSiap = null; render(); });
+window.addEventListener('hashchange', () => { const n = laluan().nama; if (n !== 'tempah') S.tempahSiap = null; if (n !== 'kursus') S.kursusSiap = null; if (n !== 'admin') S.admin = null; render(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - S.dimuat > 15 * 60 * 1000) muat(); });
 setInterval(() => { const n = laluan().nama; if (n === '' || n === 'solat' || n === 'saya') render(false); }, 60000);
 

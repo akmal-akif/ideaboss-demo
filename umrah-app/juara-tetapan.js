@@ -23,6 +23,10 @@ const JT = {
     appId: '1:878219715391:web:a2254cd2773ea9bfd2e98a'
   },
 
+  // Sesi kursus umrah akan datang (diisi staf sehingga jadual TravelDesk disambung).
+  // Contoh: { tajuk: 'Kursus Umrah Perdana', tarikh: '2026-12-06', masa: '9:00 pagi', tempat: 'Juara Travel Shah Alam' }
+  kursus: [],
+
   // Senarai cawangan. Kosong = skrin Cawangan papar "akan dikemas kini".
   // Contoh: { nama: 'Juara Travel Shah Alam', alamat: '...', telefon: '60...', waktu: 'Isnin hingga Sabtu, 9 pagi hingga 6 petang', peta: 'https://maps.google.com/?q=...' }
   cawangan: [],
@@ -31,12 +35,15 @@ const JT = {
   // Contoh: 'PK-01': 'gambar/pk/pk-01-ekonomi-1.webp'
   // Gambar sementara dari Wikimedia Commons (kredit di skrin Kredit gambar) sehingga gambar Juara sendiri siap.
   gambar: {
-    'PK-01': 'gambar/IT/it-09-pintu-haram.webp',
-    'PK-02': 'gambar/PK/pk-02-menara-jam-2.webp',
+    // Kulit pakej umum: suasana Masjidil Haram dan Masjid Nabawi (bergilir ikut pakej)
+    'PK-01': 'gambar/IT/it-09-kaabah.webp',
+    'PK-01b': 'gambar/PK/pk-05-syawal-1.webp',
+    'PK-01c': 'gambar/IT/it-03-nabawi-siang.webp',
+    'PK-01d': 'gambar/PK/pk-05-syawal-2.webp',
+    'PK-02': 'gambar/IT/it-09-kaabah.webp',
     'PK-03': 'gambar/IT/it-20-turki-1.webp',
     'PK-04': 'gambar/PK/pk-04-iftar.webp',
     'PK-05': 'gambar/PK/pk-05-syawal-1.webp',
-    'PK-06': 'gambar/PK/pk-06-taif-jalan-1.webp',
     'IT-02': 'gambar/IT/it-02-bir-ali.webp',
     'IT-03': 'gambar/IT/it-03-nabawi-siang.webp',
     'IT-04': 'gambar/IT/it-04-kubah-hijau.webp',
@@ -50,7 +57,7 @@ const JT = {
     'IT-12': 'gambar/IT/it-12-mina.webp',
     'IT-13': 'gambar/IT/it-13-nur.webp',
     'IT-14': 'gambar/IT/it-14-tanim.webp',
-    'IT-15': 'gambar/IT/it-15-taif.webp',
+    'IT-15': 'gambar/IT/it-15-taif-ros.webp',
     'IT-16': 'gambar/IT/it-16-badar.webp',
     'IT-17': 'gambar/IT/it-17-jeddah.webp',
     'IT-18': 'gambar/IT/it-18-haramain.webp',
