@@ -276,10 +276,21 @@ function vButiran(id) {
   const bk = bilikAda.find(([k]) => k === S.bilik[id]) || bilikAda[0];
   const bil = S.bil[id] || 1;
   const hargaBilik = bk ? sel.bilik[bk[0]] : sel.harga;
-  const hotelKad = (bandar, ho, s, masjid) => ho ? `<div class="kad hotel" style="overflow:hidden">
-      ${gbAda(`HT-${s}-1`) ? `<div class="gambar3">${gb(`HT-${s}-1`, 'Fasad', '')}<div>${gb(`HT-${s}-2`, 'Bilik', '')}${gb(`HT-${s}-3`, `Laluan ke ${masjid}`, '')}</div></div>` : ''}
-      <div class="pad" style="display:flex;flex-direction:column;gap:2px;${gbAda(`HT-${s}-1`) ? '' : 'border-left:0'}"><span class="kecil redup">${bandar}</span><b>${esc(ho.nama)}</b><span class="kecil" style="color:var(--dakwat2)">${esc((ho.b || []).join(' · '))}</span></div>
-    </div>` : '';
+  // Gambar hotel sebenar jika ada (HT-<slug>-1..3). Jika tiada, gambar kawasan masjid dilabel jelas, bukan gambar hotel.
+  const hotelKad = (bandar, ho, s, masjid) => {
+    if (!ho) return '';
+    const ada = gbAda(`HT-${s}-1`), lebih = gbAda(`HT-${s}-2`);
+    const kawasan = bandar === 'Makkah' ? 'IT-09' : 'IT-03';
+    const peta = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${ho.nama} hotel ${bandar}`)}`;
+    const gambar = ada
+      ? (lebih ? `<div class="gambar3">${gb(`HT-${s}-1`, 'Fasad', '', ho.nama)}<div>${gb(`HT-${s}-2`, 'Bilik', '', `Bilik ${ho.nama}`)}${gbAda(`HT-${s}-3`) ? gb(`HT-${s}-3`, `Laluan ke ${masjid}`, '') : ''}</div></div>`
+        : `<figure class="hotel-gb">${gb(`HT-${s}-1`, '', '', ho.nama)}</figure>`)
+      : gbAda(kawasan) ? `<figure class="hotel-gb">${gb(kawasan, '', '', `Kawasan ${masjid}`)}<figcaption>Kawasan ${masjid === 'Haram' ? 'Masjidil Haram' : 'Masjid Nabawi'}</figcaption></figure>` : '';
+    return `<div class="kad hotel" style="overflow:hidden">${gambar}
+      <div class="pad" style="display:flex;flex-direction:column;gap:2px"><span class="kecil redup">${bandar}</span><b>${esc(ho.nama)}</b><span class="kecil" style="color:var(--dakwat2)">${esc((ho.b || []).join(' · '))}</span>
+      <a class="kecil" href="${esc(peta)}" target="_blank" rel="noopener" style="font-weight:600;margin-top:6px">Lihat hotel di peta</a></div>
+    </div>`;
+  };
   const penuh = sel.k <= 0;
   const ringkasan = `
     <div class="kad ringkasan">

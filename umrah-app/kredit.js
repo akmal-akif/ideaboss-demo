@@ -237,5 +237,12 @@ const KREDIT = [
   "lesen": "Aset jenama Juara",
   "sumber": "https://juaratravel.com.my/",
   "nota": "Dipotong ke 16:9 dan ditukar ke WebP"
+ },
+ {
+  "fail": "gambar/HT/ht-menara-jam.jpg",
+  "pencipta": "King Eliot",
+  "lesen": "CC BY-SA 4.0",
+  "sumber": "https://commons.wikimedia.org/wiki/File:Abraj_al_bait_closeup.jpg",
+  "nota": "Dikecilkan ke 1280 px"
  }
 ];

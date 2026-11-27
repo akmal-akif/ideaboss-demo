@@ -62,6 +62,8 @@ const JT = {
     'IT-17': 'gambar/IT/it-17-jeddah.webp',
     'IT-18': 'gambar/IT/it-18-haramain.webp',
     'IT-20': 'gambar/IT/it-20-turki-2.webp',
+    // Hotel: HT-<nama-hotel-slug>-1 (fasad), -2 (bilik), -3 (laluan ke masjid). Tambah bila gambar hotel sebenar diterima.
+    'HT-kompleks-menara-jam-1': 'gambar/HT/ht-menara-jam.jpg',
     'IL-07': 'gambar/IL/il-07-tiada-tempahan.svg',
     'IL-08': 'gambar/IL/il-08-tiada-internet.svg',
     'IL-09': 'gambar/IL/il-09-ralat-sistem.svg'
