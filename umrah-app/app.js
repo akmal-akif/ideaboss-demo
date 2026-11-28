@@ -40,6 +40,7 @@ const IKON = {
   kapal: '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
   bintang: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
   kanan: '<path d="m9 6 6 6-6 6"/>',
+  loceng: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
   main: '<path d="M7 4v16l13-8z" fill="currentColor" stroke="none"/>',
   katil: '<path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/>'
 };
@@ -560,6 +561,7 @@ function vTempah(id, kod) {
       <h2 style="margin-top:8px">Maklumat anda</h2>
       <label class="medan">Nama penuh<input class="input" name="nama" autocomplete="name" required value="${esc(draf.nama || '')}"></label>
       <label class="medan">Nombor telefon (WhatsApp)<input class="input" name="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="012-345 6789" required value="${esc(draf.tel || '')}"></label>
+      <label class="medan">Emel (untuk resit)<input class="input" name="emel" type="email" inputmode="email" autocomplete="email" value="${esc(draf.emel || (S.user && S.user.email) || '')}"></label>
       <label class="medan">Kod rujukan (pilihan)<input class="input" name="ruj" autocapitalize="characters" placeholder="Contoh: JT4K9Q2A" value="${esc(draf.ruj || store.get('ruj', ''))}"></label>
       <label class="medan">Nota (pilihan)<textarea class="input" name="nota" placeholder="Contoh: warga emas, perlu kerusi roda">${esc(draf.nota || '')}</textarea></label>
       <p class="kecil redup" id="ralat-tempah" role="alert"></p>
@@ -570,15 +572,35 @@ function vTempah(id, kod) {
   </div>`;
 }
 
-const BANK_FPX = ['Maybank2u', 'CIMB Clicks', 'Bank Islam', 'Bank Rakyat', 'RHB Now', 'Public Bank', 'Hong Leong Connect', 'AmBank', 'Affin Bank', 'Bank Muamalat', 'BSN', 'Agrobank'];
+const BANK_FPX = [['maybank', 'Maybank2u', 'gambar/BANK/maybank.png'], ['cimb', 'CIMB Clicks', 'gambar/BANK/cimb.png'], ['bimb', 'Bank Islam', ''], ['rakyat', 'Bank Rakyat', ''], ['rhb', 'RHB Now', ''], ['pbb', 'Public Bank', ''], ['hlb', 'Hong Leong Connect', ''], ['ambank', 'AmOnline', ''], ['affin', 'Affin Bank', ''], ['muamalat', 'Bank Muamalat', ''], ['bsn', 'myBSN', ''], ['agro', 'Agronet', '']];
+// Pustaka QR dimuat bila perlu sahaja
+function muatQr() {
+  if (window.QRCode || muatQr.p) return muatQr.p || Promise.resolve();
+  muatQr.p = new Promise((ok, gagal) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; s.onload = ok; s.onerror = gagal; document.head.appendChild(s); });
+  return muatQr.p;
+}
+function lukisQr() {
+  const el = $('qr-ujian'); if (!el || !S.bayar) return;
+  muatQr().then(() => { el.innerHTML = ''; new QRCode(el, { text: `UJIAN-JUARA|DEPOSIT|${S.bayar.kod}|RM${S.bayar.jumlah}|TIDAK-SAH-UNTUK-BAYARAN`, width: 220, height: 220, colorDark: '#1C1917', colorLight: '#ffffff' }); }).catch(() => { el.textContent = 'Kod QR tidak dapat dipaparkan.'; });
+}
 function vBayar() {
   const b = S.bayar;
   if (!b) return kosong('IL-07', 'Tiada', 'Tiada bayaran untuk diproses', 'Mulakan dari halaman pakej.', `<a class="btn" href="#/pakej">Senarai pakej</a>`);
   if (b.resit) return vResit(b);
-  const k = S.kaedah || 'fpx';
-  const kaedahIsi = k === 'fpx' ? `<label class="medan">Pilih bank<select class="input" id="bank-ujian">${BANK_FPX.map(x => `<option>${x}</option>`).join('')}</select></label>`
+  if (b.alih) return `
+  <div class="kad kosong" style="max-width:480px;margin:0 auto">
+    ${b.bankLogo ? `<img src="${esc(b.bankLogo)}" alt="${esc(b.bankNama)}" style="height:56px;object-fit:contain">` : `<b style="font-size:22px">${esc(b.bankNama)}</b>`}
+    <h1 style="font-size:1.4rem">Membawa anda ke ${esc(b.bankNama)}…</h1>
+    <p class="redup">Mod ujian: dalam mod sebenar, anda log masuk ke perbankan internet ${esc(b.bankNama)} dan sahkan bayaran ${rm(b.jumlah)} kepada Juara Travel & Tours Sdn Bhd.</p>
+    <div class="pemutar" aria-hidden="true"></div>
+  </div>`;
+  const k = S.kaedah || 'fpx', bank = S.bankPilih || 'maybank';
+  const kaedahIsi = k === 'fpx'
+    ? `<div class="senarai-bank" role="radiogroup" aria-label="Pilih bank">${BANK_FPX.map(([id, n, logo]) => `<button type="button" role="radio" aria-checked="${bank === id}" class="bank${bank === id ? ' dipilih' : ''}" data-aksi="pilih-bank" data-nilai="${id}">${logo ? `<img src="${logo}" alt="${esc(n)}">` : `<span>${esc(n)}</span>`}</button>`).join('')}</div>`
     : k === 'kad' ? `<div class="nota">${ic('info')}<span>Dalam mod sebenar, anda dibawa ke halaman selamat penyedia pembayaran untuk isi butiran kad. Apps Juara tidak menyimpan nombor kad.</span></div>`
-    : `<div class="nota">${ic('info')}<span>Dalam mod sebenar, kod DuitNow QR dipaparkan untuk diimbas dengan Touch 'n Go, Boost, GrabPay atau apps bank.</span></div>`;
+    : `<div class="qr-kotak"><span class="qr-label">DuitNow QR · CONTOH</span><div id="qr-ujian" class="qr" aria-label="Kod QR contoh"></div><b class="num" style="font-size:22px">${rm(b.jumlah)}</b><span class="kecil redup">Imbas dengan Touch 'n Go, Boost, GrabPay, MAE atau apps bank.<br><b>Kod ini contoh sahaja dan tidak boleh digunakan untuk bayar.</b></span></div>`;
+  if (k === 'qr') setTimeout(lukisQr, 0);
+  const bankN = (BANK_FPX.find(x => x[0] === bank) || BANK_FPX[0])[1];
   return `
   <div class="stack" style="gap:16px;max-width:560px;margin:0 auto">
     <div class="jalur-ujian">${ic('info')}<span><b>Mod ujian.</b> Ini paparan contoh gerbang pembayaran. Tiada wang sebenar ditolak dan tiada maklumat bank diminta.</span></div>
@@ -588,24 +610,26 @@ function vBayar() {
       <span class="redup">Deposit ${b.bil} jemaah · ${esc(b.pakej)} · ${fTkh(b.d, 1)} (${esc(b.kod)})</span>
     </div>
     <h2>Kaedah bayaran</h2>
-    <div class="cips" role="group" aria-label="Kaedah bayaran">${[['fpx', 'FPX perbankan internet'], ['kad', 'Kad debit / kredit'], ['ewallet', 'DuitNow QR / e-Wallet']].map(([v, n]) => `<button type="button" class="cip" aria-pressed="${k === v}" data-aksi="kaedah" data-nilai="${v}">${n}</button>`).join('')}</div>
+    <div class="cips" role="group" aria-label="Kaedah bayaran">${[['fpx', 'FPX perbankan internet'], ['qr', 'DuitNow QR'], ['kad', 'Kad debit / kredit']].map(([v, n]) => `<button type="button" class="cip" aria-pressed="${k === v}" data-aksi="kaedah" data-nilai="${v}">${n}</button>`).join('')}</div>
     ${kaedahIsi}
-    <button class="btn penuh" type="button" data-aksi="bayar-ujian"${b.proses ? ' disabled' : ''}>${b.proses ? 'Sedang memproses…' : `Bayar ${rm(b.jumlah)} (ujian)`}</button>
+    <button class="btn penuh" type="button" data-aksi="bayar-ujian"${b.proses ? ' disabled' : ''}>${b.proses ? 'Sedang memproses…' : k === 'qr' ? 'Saya dah imbas dan bayar (ujian)' : k === 'fpx' ? `Bayar ${rm(b.jumlah)} dengan ${esc(bankN)} (ujian)` : `Bayar ${rm(b.jumlah)} (ujian)`}</button>
     <a href="#/tempah/${esc(b.id)}/${esc(b.kod)}" style="text-align:center">Kembali ke tempahan</a>
   </div>`;
 }
 function bayarUjian() {
   const b = S.bayar; if (!b || b.proses) return;
+  const k = S.kaedah || 'fpx', bank = BANK_FPX.find(x => x[0] === (S.bankPilih || 'maybank')) || BANK_FPX[0];
+  b.kaedah = k === 'kad' ? 'Kad debit / kredit' : k === 'qr' ? 'DuitNow QR' : 'FPX · ' + bank[1];
   b.proses = true;
-  b.kaedah = S.kaedah === 'kad' ? 'Kad debit / kredit' : S.kaedah === 'ewallet' ? 'DuitNow QR' : 'FPX · ' + (($('bank-ujian') || {}).value || 'Maybank2u');
+  if (k === 'fpx') { b.alih = true; b.bankNama = bank[1]; b.bankLogo = bank[2]; }
   render(false);
   setTimeout(() => {
     const d = new Date(Date.now() + 8 * 3600e3);
     b.resit = 'JT' + d.toISOString().slice(2, 10).replace(/-/g, '') + '-' + Math.random().toString(36).slice(2, 7).toUpperCase();
-    b.masa = new Date().toISOString(); b.proses = false;
-    hantarDaftar({ jenis: 'tempah', nama: b.nama, tel: b.tel, bil: b.bil, pakej: b.pakej, tarikh: b.d, kod: b.kod, bilik: b.bilik, nota: [b.nota, `Deposit UJIAN ${rm(b.jumlah)} · ${b.kaedah} · resit ${b.resit}`].filter(Boolean).join(' | '), resit: b.resit, kaedah: b.kaedah, setuju: true }, true).then(simpanTuntut).then(() => muatTempahanApps()).catch(() => {});
+    b.masa = new Date().toISOString(); b.proses = false; b.alih = false;
+    hantarDaftar({ jenis: 'tempah', nama: b.nama, tel: b.tel, emel: b.emel, bil: b.bil, pakej: b.pakej, tarikh: b.d, kod: b.kod, bilik: b.bilik, nota: [b.nota, `Deposit UJIAN ${rm(b.jumlah)} · ${b.kaedah} · resit ${b.resit}`].filter(Boolean).join(' | '), resit: b.resit, kaedah: b.kaedah, setuju: true }, true).then(simpanTuntut).then(() => muatTempahanApps()).catch(() => {});
     render();
-  }, 1400);
+  }, k === 'fpx' ? 2600 : 1400);
 }
 function vResit(b) {
   const msg = ['Assalamualaikum Juara Travel. Saya telah membayar deposit (UJIAN):', `No resit: ${b.resit}`, `Jumlah: ${rm(b.jumlah)} (${b.kaedah})`, `Pakej: ${b.pakej}`, `Berlepas: ${fTkh(b.d, 1)} (${b.kod})`, `Bilik: ${b.bilikN} · ${b.bil} orang`, `Nama: ${b.nama}`, `Telefon: ${b.tel}`].join('\n');
@@ -625,6 +649,7 @@ function vResit(b) {
         <div><span>Deposit dibayar</span><b class="num">${rm(b.jumlah)}</b></div>
         <div><span class="redup">Baki anggaran</span><span class="num redup">${rm(b.jumlahPenuh - b.jumlah)}</span></div>
       </div>
+      ${b.emel ? `<p class="kecil" style="margin:0">${ic('betul')} Salinan resit akan dihantar ke <b>${esc(b.emel)}</b>.</p>` : ''}
       <p class="redup kecil">Staf Juara akan hubungi anda dalam 1 hari bekerja untuk sahkan tempat dan senarai dokumen. ${S.user ? 'Status tempahan boleh disemak di Utama.' : 'Log masuk dengan Google untuk semak status tempahan ini kemudian.'}</p>
       ${S.user ? '' : '<a class="btn garis" href="#/masuk">Log masuk untuk semak status</a>'}
     </div>
@@ -662,7 +687,8 @@ function kadTempahanProses() {
   if (!L.length) return '';
   return `<section class="stack"><div class="tajuk-seksyen" style="margin:0"><h2>Tempahan anda</h2></div>${L.map(t => {
     const i = Math.max(0, LANGKAH.findIndex(([k]) => k === t.status)), bk = BILIK.find(([k]) => k === t.bilik);
-    return `<article class="kad pad stack proses" style="gap:12px">
+    const pk = S.data && S.data.pakej.find(p => p.nama === t.pakej), gbr = pk ? kodPakej(pk)[0] : 'JR-melambai';
+    return `<article class="kad stack proses" style="gap:0;overflow:hidden"><div class="proses-gambar">${gb(gbr, '', '', t.pakej || 'Pakej umrah')}</div><div class="pad stack" style="gap:12px">
       <div class="baris" style="align-items:flex-start"><span><b style="font-size:17px">${esc(t.pakej || 'Pakej umrah')}</b><br><span class="kecil redup">${t.tarikh ? `${fHari(t.tarikh)}, ${fTkh(t.tarikh, 1)}` : ''}${t.kod ? ' · ' + esc(t.kod) : ''}</span></span><span class="lencana ${i === 2 ? 'hijau' : 'amber'}">${i === 2 ? 'Disahkan' : 'Dalam proses'}</span></div>
       <ol class="langkah">${LANGKAH.map(([k, n], j) => `<li class="${j < i ? 'siap' : j === i ? 'kini' : ''}">${n}</li>`).join('')}</ol>
       <div class="jadual-harga" style="border:1px solid var(--garis);border-radius:10px">
@@ -671,7 +697,7 @@ function kadTempahanProses() {
         <div><span>Deposit</span><b>${t.deposit ? `${rm(t.deposit)} (ujian) · ${esc(t.resit)}` : 'Belum dibayar'}</b></div>
       </div>
       <p class="kecil redup" style="margin:0">${i === 2 ? 'Tempahan ini dah ada dalam sistem Juara. Masukkan IC anda di bawah untuk lihat baki bayaran dan jadual.' : 'Staf Juara akan hubungi anda untuk sahkan tempat. Selepas disahkan, baki bayaran dan jadual perjalanan akan muncul di sini.'}</p>
-    </article>`; }).join('')}</section>`;
+    </div></article>`; }).join('')}</section>`;
 }
 async function hantarDaftar(d, keepalive) {
   const api = (JT.apiJuara || '').replace(/\/$/, '');
@@ -1047,6 +1073,7 @@ async function muatSaya(icBaru) {
     const t = await S.user.getIdToken();
     const r = await fetch((JT.apiJuara || '').replace(/\/$/, '') + '/saya?ic=' + encodeURIComponent(ic), { headers: { Authorization: 'Bearer ' + t, Accept: 'application/json' } });
     const j = await r.json().catch(() => ({}));
+    S.sayaHubungi = (j.data && j.data.hubungi) || [];
     if (!r.ok) throw new Error(j.ralat || 'Sistem Juara tidak dapat dihubungi. Cuba lagi.');
     S.saya = j.data; store.set(icKunci(), ic);
   } catch (e) { S.sayaRalat = e.message; if (icBaru) S.saya = null; }
@@ -1072,7 +1099,8 @@ function vHubung() {
       <p class="kecil" id="ralat-hubung" role="alert" style="color:var(--merah)">${esc(S.sayaRalat)}</p>
       <button class="btn penuh" type="submit"${S.sayaMuat ? ' disabled' : ''}>${S.sayaMuat ? 'Sedang semak…' : 'Cari tempahan saya'}</button>
     </form>
-    <div class="nota">${ic('info')}<span>Emel dalam rekod Juara berbeza? Hubungi kami untuk kemas kini, atau log masuk dengan WhatsApp bila dibuka nanti.</span></div>
+    ${(S.sayaHubungi || []).length ? `<div class="kad pad stack" style="gap:10px"><b>Hubungi untuk kemas kini emel</b>${S.sayaHubungi.map(h => `<div class="baris" style="align-items:center"><span><span class="kecil redup">${esc(h.peranan)}</span><br><b>${esc(h.nama || '-')}</b></span>${h.tel ? `<a class="btn garis kecil" href="https://wa.me/${esc(String(h.tel).split('/')[0].replace(/\D/g, '').replace(/^0/, '60'))}" target="_blank" rel="noopener">${ic('telefon')}${esc(h.tel)}</a>` : ''}</div>`).join('')}</div>` : ''}
+    <div class="nota">${ic('info')}<span>Apps memadankan emel log masuk anda dengan emel dalam rekod tempahan Juara. Jika emel berbeza atau kosong, minta ejen atau cawangan kemas kini emel anda.</span></div>
     <a class="btn garis penuh" href="${wa('Assalamualaikum Juara Travel. Saya ingin kemas kini emel dalam rekod tempahan saya untuk apps Juara.')}" target="_blank" rel="noopener">${ic('telefon')}Hubungi Juara</a>
     <a href="#/pakej" style="text-align:center;font-weight:600">Belum tempah? Lihat pakej</a>
   </div>`;
@@ -1424,12 +1452,66 @@ async function muatNaikDok(input) {
   } catch (e) { toast(e.message); render(false); }
 }
 
+/* ===== Notifikasi jemaah: jadual bayaran, senarai barang, hari berlepas, dokumen ===== */
+const BARANG = [
+  ['Dokumen', ['Pasport (sah lebih 6 bulan)', 'Salinan pasport dan IC', 'Kad vaksin meningitis', 'Tiket dan kad jemaah Juara']],
+  ['Pakaian', ['Kain ihram 2 helai (lelaki)', 'Telekung dan pakaian menutup aurat (wanita)', 'Baju untuk 10 hari', 'Selipar dan kasut selesa', 'Stokin']],
+  ['Kesihatan', ['Ubat harian (cukup untuk seluruh perjalanan)', 'Ubat demam, selsema dan sakit perut', 'Pelembap bibir dan kulit', 'Topeng muka']],
+  ['Ibadah', ['Al-Quran kecil dan buku doa', 'Tasbih', 'Beg kecil untuk selipar di masjid']],
+  ['Lain-lain', ['Wang Riyal dan kad debit', 'Pengecas dan power bank', 'Botol air', 'Payung kecil']]
+];
+const hariKe = d => Math.round((tkh(d) - tkh(hariIni())) / 86400000);
+const tambahHari = (d, n) => { const x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+// Bina senarai notifikasi daripada data tempahan sebenar (atau contoh)
+function senaraiNotis() {
+  const out = [], akhirHari = (JT.bayaran && JT.bayaran.akhirHari) || 45;
+  const tempahan = S.demo ? [{ pakej: CONTOH.pakej, berlepas: CONTOH.berlepas, bayaran: { baki: CONTOH.harga - CONTOH.dibayar, dibayar: CONTOH.dibayar, jumlah: CONTOH.harga } }] : (S.saya || []);
+  for (const t of tempahan) {
+    if (!t.berlepas) continue;
+    const h = hariKe(t.berlepas), akhir = tambahHari(t.berlepas, -akhirHari);
+    if (t.bayaran && t.bayaran.baki > 0 && h > 0) {
+      const bulan = Math.max(1, Math.ceil(Math.max(0, hariKe(akhir)) / 30));
+      out.push({ k: 'bayar', tahap: hariKe(akhir) <= 14 ? 'merah' : 'amber', ikon: 'dompet', tajuk: `Baki ${rm(t.bayaran.baki)} perlu dijelaskan`, teks: hariKe(akhir) > 0 ? `Sebelum ${fTkh(akhir, 1)} (${hariKe(akhir)} hari lagi). Cadangan: ${rm(Math.ceil(t.bayaran.baki / bulan))} sebulan untuk ${bulan} bulan.` : `Tarikh akhir bayaran sudah lepas. Sila jelaskan segera.`, pautan: '#/bayaran', butang: 'Lihat bayaran' });
+    }
+    if (h <= 21 && h > 0) out.push({ k: 'barang', tahap: 'biru', ikon: 'buku', tajuk: `${h} hari lagi. Mula sediakan barang`, teks: `${kiraBarang()} daripada ${BARANG.flatMap(x => x[1]).length} barang ditanda siap.`, pautan: '#/senarai-barang', butang: 'Buka senarai' });
+    if (h === 1) out.push({ k: 'esok', tahap: 'hijau', ikon: 'kalendar', tajuk: 'Esok anda berlepas', teks: 'Berkumpul di kaunter Juara KLIA Terminal 1. Bawa pasport dan tiba 3 jam sebelum penerbangan.', pautan: '#/perjalanan', butang: 'Jadual hari pertama' });
+    if (h === 0) out.push({ k: 'hari1', tahap: 'hijau', ikon: 'kapal', tajuk: 'Hari ini anda berlepas. Selamat menunaikan umrah', teks: 'Semak jadual hari pertama dan nombor mutawwif kumpulan anda.', pautan: '#/perjalanan', butang: 'Jadual hari ini' });
+    if (h > 21 && h <= 60) out.push({ k: 'kursus', tahap: 'biru', ikon: 'buku', tajuk: 'Sudah hadir kursus umrah?', teks: 'Kursus membantu anda faham setiap langkah umrah sebelum berangkat.', pautan: '#/kursus', butang: 'Jadual kursus' });
+  }
+  for (const a of (S.dok || [])) for (const [k, n] of DOK) {
+    const d = a.dok[k];
+    if (d.status === 'semula') out.push({ k: 'dok', tahap: 'merah', ikon: 'buku', tajuk: `${n} perlu dihantar semula`, teks: `${a.nama}: ${d.nota || 'Sila semak dan hantar semula.'}`, pautan: '#/dokumen', butang: 'Buka dokumen' });
+  }
+  if (S.demo) out.push({ k: 'barang', tahap: 'biru', ikon: 'buku', tajuk: 'Senarai barang umrah', teks: 'Tanda barang yang sudah disediakan.', pautan: '#/senarai-barang', butang: 'Buka senarai' });
+  const urut = { merah: 0, amber: 1, hijau: 2, biru: 3 };
+  return out.sort((a, b) => urut[a.tahap] - urut[b.tahap]);
+}
+const tandaBarang = () => store.get('barang', {});
+const kiraBarang = () => Object.values(tandaBarang()).filter(Boolean).length;
+function vNotifikasi() {
+  if (!S.demo && !S.user) return kosong('IL-07', 'Notifikasi', 'Log masuk untuk lihat notifikasi', 'Peringatan bayaran, persediaan dan hari berlepas akan dipaparkan di sini.', `<a class="btn" href="#/masuk">Log masuk</a>`);
+  if (!S.demo && !S.dok && !S.dokRalat) muatDok();
+  const L = senaraiNotis();
+  return `
+  <div class="stack" style="gap:6px"><h1>Notifikasi</h1><p class="redup">Peringatan ikut tarikh berlepas dan bayaran anda.</p></div>
+  ${L.length ? `<div class="stack">${L.map(n => `<a class="kad pad notis ${n.tahap}" href="${n.pautan}"><span class="notis-ikon">${ic(n.ikon)}</span><span class="notis-isi"><b>${esc(n.tajuk)}</b><span class="kecil">${esc(n.teks)}</span><span class="kecil pautan-notis">${esc(n.butang)} ${ic('kanan')}</span></span></a>`).join('')}</div>`
+    : `<div class="nota">${ic('info')}<span>Tiada notifikasi buat masa ini. ${S.saya ? '' : 'Hubungkan tempahan anda di Utama supaya peringatan bayaran dan perjalanan muncul di sini.'}</span></div>`}
+  <a class="kad pad tindakan" href="#/senarai-barang" style="color:var(--dakwat)"><span><b>Senarai barang umrah</b><br><span class="kecil redup">${kiraBarang()} daripada ${BARANG.flatMap(x => x[1]).length} sudah siap</span></span><span class="btn garis kecil">Buka</span></a>`;
+}
+function vSenaraiBarang() {
+  const t = tandaBarang(), jumlah = BARANG.flatMap(x => x[1]).length, siap = kiraBarang();
+  return `
+  <div class="stack" style="gap:6px"><h1>Senarai barang umrah</h1><p class="redup">Tanda barang yang sudah disediakan. Senarai ini disimpan dalam telefon anda.</p></div>
+  <div class="kad pad kemajuan-dok"><div class="baris"><b>${siap} daripada ${jumlah} siap</b></div><div class="maju-dok"><span style="width:${Math.round(siap / jumlah * 100)}%"></span></div></div>
+  ${BARANG.map(([kumpulan, L]) => `<section class="stack" style="gap:8px"><h2>${kumpulan}</h2><div class="kad senarai-tanda">${L.map(b => { const id = kumpulan + ':' + b; return `<label><input type="checkbox" data-barang="${esc(id)}"${t[id] ? ' checked' : ''}><span>${esc(b)}</span></label>`; }).join('')}</div></section>`).join('')}`;
+}
+
 const NAV_TETAMU = [['', 'Utama', 'rumah'], ['pakej', 'Umrah', 'cari'], ['lawatan', 'Percutian', 'kapal'], ['kursus', 'Kursus', 'buku'], ['masuk', 'Log masuk', 'orang']];
 const NAV_JEMAAH = [['saya', 'Utama', 'rumah'], ['pakej', 'Umrah', 'cari'], ['lawatan', 'Percutian', 'kapal'], ['perjalanan', 'Perjalanan', 'kalendar'], ['akaun', 'Akaun', 'orang']];
 // Pautan tambahan di menu atas (desktop) untuk jemaah
 const NAV_JEMAAH_ATAS = [['kursus', 'Kursus'], ['dokumen', 'Dokumen'], ['cawangan', 'Cawangan'], ['bayaran', 'Bayaran'], ['mata', 'Mata Juara']];
 const JEMAAH = new Set(['saya', 'perjalanan', 'bayaran', 'persediaan', 'akaun', 'dokumen']);
-const TAJUK = { '': 'Juara Travel', pakej: 'Pakej umrah', kursus: 'Kursus umrah', cawangan: 'Cawangan', masuk: 'Log masuk', solat: 'Waktu solat', kredit: 'Kredit gambar', admin: 'Pendaftaran', tempah: 'Tempah', bayar: 'Bayaran deposit', mata: 'Mata Juara', lawatan: 'Pelancongan', dokumen: 'Dokumen umrah', saya: 'Utama jemaah', perjalanan: 'Perjalanan', bayaran: 'Bayaran', persediaan: 'Persediaan', akaun: 'Akaun' };
+const TAJUK = { '': 'Juara Travel', pakej: 'Pakej umrah', kursus: 'Kursus umrah', cawangan: 'Cawangan', masuk: 'Log masuk', solat: 'Waktu solat', kredit: 'Kredit gambar', admin: 'Pendaftaran', tempah: 'Tempah', bayar: 'Bayaran deposit', mata: 'Mata Juara', lawatan: 'Pelancongan', notifikasi: 'Notifikasi', 'senarai-barang': 'Senarai barang', dokumen: 'Dokumen umrah', saya: 'Utama jemaah', perjalanan: 'Perjalanan', bayaran: 'Bayaran', persediaan: 'Persediaan', akaun: 'Akaun' };
 
 function laluan() {
   const [nama = '', ...args] = location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent);
@@ -1450,14 +1532,14 @@ function render(alih = true) {
   $('atas').innerHTML = `<div class="dalam">
     <a class="logo" href="#/${jemaah ? 'saya' : ''}" aria-label="Juara Travel, utama"><img src="logo-juara.png" alt="Juara Travel"></a>
     <nav aria-label="Menu utama">${nav.filter(([k]) => k !== 'masuk' && k !== 'akaun').map(([k, n]) => `<a href="#/${k}"${kini(k)}>${n}</a>`).join('')}${jemaah ? NAV_JEMAAH_ATAS.map(([k, n]) => `<a href="#/${k}"${kini(k)}>${n}</a>`).join('') : '<a href="#/cawangan"' + kini('cawangan') + '>Cawangan</a><a href="#/mata"' + kini('mata') + '>Mata Juara</a>'}</nav>
-    <span class="kanan">${jemaah ? `<a class="pil" href="#/akaun">${ic('orang')}Akaun</a>` : `<a class="pil" href="#/masuk">Log masuk</a>`}</span>
+    <span class="kanan">${jemaah ? `<a class="pil loceng" href="#/notifikasi" aria-label="Notifikasi">${ic('loceng')}${(n => n ? `<span class="bilangan">${n}</span>` : '')(senaraiNotis().filter(x => x.tahap === 'merah' || x.tahap === 'amber').length)}</a><a class="pil" href="#/akaun">${ic('orang')}Akaun</a>` : `<a class="pil" href="#/masuk">Log masuk</a>`}</span>
   </div>`;
   $('bawah').innerHTML = nav.map(([k, n, i]) => `<a href="#/${k}"${kini(k)}>${ic(i)}${n}</a>`).join('');
   const jalur = $('contoh');
   jalur.hidden = !S.demo;
   if (S.demo) jalur.innerHTML = `<span>Paparan contoh: data di bawah bukan data sebenar</span><button type="button" data-aksi="keluar-contoh">Keluar</button>`;
 
-  const V = { lawatan: () => args[0] ? vLawatanButiran(args[0]) : vLawatan(), dokumen: vDokumen, mata: vMata, bayar: vBayar, '': vUtama, pakej: () => args[0] ? vButiran(args[0]) : vPakej(), tempah: () => vTempah(args[0], args[1]), kursus: vKursus, cawangan: vCawangan, solat: vSolat, masuk: vMasuk, kredit: vKredit, admin: vAdmin, saya: vSaya, perjalanan: vPerjalanan, bayaran: vBayaran, persediaan: vPersediaan, akaun: vAkaun };
+  const V = { notifikasi: vNotifikasi, 'senarai-barang': vSenaraiBarang, lawatan: () => args[0] ? vLawatanButiran(args[0]) : vLawatan(), dokumen: vDokumen, mata: vMata, bayar: vBayar, '': vUtama, pakej: () => args[0] ? vButiran(args[0]) : vPakej(), tempah: () => vTempah(args[0], args[1]), kursus: vKursus, cawangan: vCawangan, solat: vSolat, masuk: vMasuk, kredit: vKredit, admin: vAdmin, saya: vSaya, perjalanan: vPerjalanan, bayaran: vBayaran, persediaan: vPersediaan, akaun: vAkaun };
   $('isi').innerHTML = (V[nama] || vUtama)();
   document.body.classList.toggle('ada-bar', (nama === 'pakej' || nama === 'lawatan') && !!args[0]);
   const p = nama === 'pakej' && args[0] ? cariPakej(args[0]) : nama === 'lawatan' && args[0] ? (t => t && { nama: t.tajuk })(cariLawatan(args[0])) : null;
@@ -1488,6 +1570,7 @@ document.addEventListener('click', e => {
   else if (a === 'bayar-ujian') bayarUjian();
   else if (a === 'cetak') window.print();
   else if (a === 'main-video') mainVideo(+v);
+  else if (a === 'pilih-bank') { S.bankPilih = v; render(false); }
   else if (a === 'pilih-bulan') { S.f.bulan = v; S.f.kat = 'Semua'; location.hash = '#/pakej'; }
   else if (a === 'lawatan-negara') { S.lawatanNegara = v; render(false); }
   else if (a === 'lawatan-tarikh') { S.lawatanPilih = v; render(false); }
@@ -1520,9 +1603,10 @@ document.addEventListener('change', e => {
   else if (el.dataset.aksiUbah === 'negeri-kursus') { S.kursusNegeri = el.value; S.kursusPilih = null; render(false); }
   else if (el.name === 'kursusId') { S.kursusPilih = el.value; }
   else if (el.dataset.muatnaik) muatNaikDok(el);
+  else if (el.dataset.barang) { const t = tandaBarang(); t[el.dataset.barang] = el.checked; store.set('barang', t); render(false); }
   else if (el.dataset.tempahStatus) { apiDok('/admin/tempahan/status', { method: 'POST', body: JSON.stringify({ id: el.dataset.tempahStatus, status: el.value }) }).then(() => toast('Status dikemas kini')).catch(e => toast(e.message)); }
   else if (el.dataset.pilih === 'bilik' || el.dataset.pilih === 'bil') {
-    if (el.form && el.form.dataset.borang === 'tempah') { const fd = new FormData(el.form); S.draf = { nama: fd.get('nama'), tel: fd.get('tel'), nota: fd.get('nota'), ruj: fd.get('ruj') }; }
+    if (el.form && el.form.dataset.borang === 'tempah') { const fd = new FormData(el.form); S.draf = { nama: fd.get('nama'), tel: fd.get('tel'), emel: fd.get('emel'), nota: fd.get('nota'), ruj: fd.get('ruj') }; }
     if (el.dataset.pilih === 'bilik') S.bilik[el.dataset.id] = el.value; else S.bil[el.dataset.id] = +el.value;
     render(false);
   }
@@ -1577,10 +1661,10 @@ document.addEventListener('submit', e => {
     const salah = !String(d.nama || '').trim() ? 'Sila isi nama penuh.' : tel.replace(/\D/g, '').length < 9 ? 'Sila isi nombor telefon yang sah.' : '';
     if (salah) { $('ralat-tempah').textContent = salah; $('ralat-tempah').style.color = 'var(--merah)'; return; }
     const p = cariPakej(id), t = p.tarikh.find(x => x.kod === kod), bk = BILIK.find(([k]) => k === d.bilik);
-    S.bilik[id] = d.bilik; S.bil[id] = +d.bil; S.draf = { nama: d.nama, tel: d.tel, nota: d.nota, ruj: d.ruj };
+    S.bilik[id] = d.bilik; S.bil[id] = +d.bil; S.draf = { nama: d.nama, tel: d.tel, emel: d.emel, nota: d.nota, ruj: d.ruj };
     const ruj = String(d.ruj || '').trim().toUpperCase(); if (ruj) d.nota = [d.nota && d.nota.trim(), 'Kod rujukan: ' + ruj].filter(Boolean).join(' | ');
     if (e.submitter && e.submitter.value === 'bayar') {
-      S.bayar = { id, kod, d: t.d, pakej: p.nama, nama: String(d.nama).trim(), tel, bil: +d.bil, bilik: d.bilik, bilikN: bk ? bk[1] : d.bilik, nota: (d.nota || '').trim(), jumlah: JT.depositSeorang * +d.bil, jumlahPenuh: (t.bilik[d.bilik] || t.harga) * +d.bil };
+      S.bayar = { id, kod, d: t.d, pakej: p.nama, nama: String(d.nama).trim(), tel, emel: String(d.emel || '').trim(), bil: +d.bil, bilik: d.bilik, bilikN: bk ? bk[1] : d.bilik, nota: (d.nota || '').trim(), jumlah: JT.depositSeorang * +d.bil, jumlahPenuh: (t.bilik[d.bilik] || t.harga) * +d.bil };
       location.hash = '#/bayar'; return;
     }
     const msg = ['Assalamualaikum Juara Travel. Saya ingin menempah:', `Pakej: ${p.nama}`, `Berlepas: ${fHari(t.d)}, ${fTkh(t.d, 1)} (${t.kod})`, `Bilik: ${bk ? bk[1] : d.bilik} · ${rm(t.bilik[d.bilik])} seorang`, `Bilangan: ${d.bil} orang`, `Jumlah anggaran: ${rm(t.bilik[d.bilik] * d.bil)} · deposit ${rm(JT.depositSeorang * d.bil)}`, `Nama: ${String(d.nama).trim()}`, `Telefon: ${tel}`].concat(d.nota && d.nota.trim() ? [`Nota: ${d.nota.trim()}`] : []).join('\n');

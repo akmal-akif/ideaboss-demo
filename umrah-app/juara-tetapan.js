@@ -6,8 +6,8 @@ const JT = {
   // deploy.sh menukar nilai ini kepada '/api' semasa deploy ke Firebase.
   apiJuara: '',
 
-  // Nombor WhatsApp Juara untuk tempahan dan pertanyaan (CONTOH, ganti dengan nombor sebenar)
-  waJuara: '60120000000',
+  // Nombor WhatsApp khidmat pelanggan Juara (seperti di laman juaratravel.com.my)
+  waJuara: '601157824603',
 
   // Deposit untuk setiap jemaah (RM)
   depositSeorang: 100,
@@ -16,7 +16,7 @@ const JT = {
   poolPakej: ['JR-melambai', 'JP-02', 'JR-08', 'JP-04', 'JR-nabawi-payung', 'JP-05', 'JR-05', 'JP-18', 'JR-kumpulan-quba', 'JP-03', 'JR-06', 'JP-11', 'JR-tren', 'JP-16', 'JR-07', 'JP-17', 'JR-ziarah-makkah', 'JP-06', 'JR-cerita-poster', 'JP-12', 'JR-madinah-poster', 'JP-19', 'JP-01', 'JP-20', 'JP-07', 'JP-21', 'JP-08', 'JP-13', 'JP-09', 'JP-14', 'JP-10', 'JP-15', 'JP-22', 'JP-23', 'JP-24', 'JP-25', 'JP-26', 'JP-27'],
 
   // Gerbang pembayaran. 'ujian' = paparan dummy (tiada caj sebenar). Tukar selepas akaun gateway (contoh ToyyibPay/Billplz/SenangPay) siap.
-  bayaran: { mod: 'ujian', penyedia: '' },
+  bayaran: { mod: 'ujian', penyedia: '', akhirHari: 45 },
 
   // Mata Juara (loyalty). Cadangan awal, tukar ikut keputusan Juara.
   mata: { rmSeMata: 10, rmSe100: 10, bonusRujukan: 1000, bonusKursus: 100, bonusTestimoni: 200 },
